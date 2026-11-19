@@ -350,7 +350,7 @@
     <header class="max-w-5xl mx-auto w-full px-4 sm:px-6 pt-8 pb-6 motion-masthead">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6">
             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-                <div class="saj-logo-box px-3 py-2 shrink-0 flex items-center justify-center border border-editorial-rule bg-editorial-sheet rounded-[4px] transition-colors hover:border-editorial-brass">
+                <div class="saj-logo-box px-4 py-2 shrink-0 flex items-center justify-center border border-editorial-rule bg-editorial-sheet rounded-[4px] transition-colors hover:border-editorial-brass">
                     <div id="masthead-logo-slot" class="h-16 sm:h-20 w-auto"></div>
                 </div>
                 <div>
@@ -604,13 +604,14 @@
                             <input type="text" id="input-author" required placeholder="الاسم واللقب" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
                         </div>
                         <div>
-                            <label data-i18n="lbl_year" class="block text-xs font-bold text-editorial-ink mb-1">المستوى الجامعي *</label>
+                            <label data-i18n="lbl_year" class="block text-xs font-bold text-editorial-ink mb-1">المستوى الجامعي (6 سنوات) *</label>
                             <select id="input-year" required class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
                                 <option value="السنة الأولى">السنة الأولى / 1ère Année</option>
                                 <option value="السنة الثانية">السنة الثانية / 2ème Année</option>
-                                <option value="السنة الثالثة (أستاذ تعليم متوسط)">السنة الثالثة (PEM) / 3ème Année</option>
+                                <option value="السنة الثالثة">السنة الثالثة / 3ème Année</option>
                                 <option value="السنة الرابعة">السنة الرابعة / 4ème Année</option>
-                                <option value="السنة الخامسة (أستاذ تعليم ثانوي)">السنة الخامسة (PES) / 5ème Année</option>
+                                <option value="السنة الخامسة">السنة الخامسة / 5ème Année</option>
+                                <option value="السنة السادسة">السنة السادسة / 6ème Année</option>
                             </select>
                         </div>
                     </div>
@@ -740,35 +741,35 @@
         let ownerAuthenticated = false;
         let selectedUploadFile = null;
 
-        /* شعار منصة ساج المتحرك بدون أي تداخل بين الرمز والنص */
+        /* شعار منصة ساج المتحرك بدون أي تداخل مع مسافة فاصلة واضحة بين النص والرمز */
         const sajBrandLogoSVG = `
-        <svg viewBox="0 0 460 130" class="w-full h-full logo-multiply" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شعار منصة ساج المتحرك SAJ — ENSL Laghouat">
-            <!-- النصوص على اليمين (في وضع RTL) -->
-            <g transform="translate(312, 0)" text-anchor="end">
-                <text x="0" y="62" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="38">
+        <svg viewBox="0 0 420 120" class="w-full h-full logo-multiply" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شعار منصة ساج المتحرك SAJ — ENSL Laghouat">
+            <!-- النصوص على اليمين مع هامش أمان كافٍ -->
+            <g transform="translate(262, 0)" text-anchor="end">
+                <text x="0" y="56" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="34">
                     <tspan fill="var(--burgundy)">ساج</tspan>
                     <tspan fill="#B8934A"> • SAJ</tspan>
                 </text>
-                <text x="0" y="96" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="15" letter-spacing="2" fill="var(--burgundy)">
+                <text x="0" y="88" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="14" letter-spacing="1.8" fill="var(--burgundy)">
                     ENSL LAGHOUAT
                 </text>
             </g>
 
-            <!-- الرمز المتحرك منفصل تماماً على اليسار -->
-            <g transform="translate(332, 8)">
-                <circle cx="56" cy="54" r="38" fill="#B8934A" class="saj-logo-aura"/>
-                <circle cx="56" cy="54" r="43" fill="none" stroke="#B8934A" stroke-width="1.4" stroke-dasharray="4 7" opacity="0.65" class="saj-logo-orbit"/>
+            <!-- الرمز المتحرك على اليسار بمسافة مستقلة -->
+            <g transform="translate(282, 4)">
+                <circle cx="56" cy="54" r="36" fill="#B8934A" class="saj-logo-aura"/>
+                <circle cx="56" cy="54" r="42" fill="none" stroke="#B8934A" stroke-width="1.4" stroke-dasharray="4 7" opacity="0.7" class="saj-logo-orbit"/>
 
-                <path d="M14 94 C30 86 46 88 56 96 C66 88 82 86 98 94" fill="none" stroke="var(--burgundy)" stroke-width="3.6" stroke-linecap="round" class="saj-logo-book"/>
-                <path d="M20 84 C32 78 46 80 56 87 C66 80 80 78 92 84" fill="none" stroke="#B8934A" stroke-width="2.4" stroke-linecap="round" class="saj-logo-book"/>
+                <path d="M16 92 C31 84 46 86 56 94 C66 86 81 84 96 92" fill="none" stroke="var(--burgundy)" stroke-width="3.5" stroke-linecap="round" class="saj-logo-book"/>
+                <path d="M22 82 C33 76 46 78 56 85 C66 78 79 76 90 82" fill="none" stroke="#B8934A" stroke-width="2.3" stroke-linecap="round" class="saj-logo-book"/>
 
-                <path d="M26 80 V49 C26 30 39 17 56 17 C73 17 86 30 86 49 V80" fill="none" stroke="#B8934A" stroke-width="3.8" stroke-linecap="round" class="saj-logo-arch"/>
-                <path d="M33 78 V50 C33 35 43 25 56 25 C69 25 79 35 79 50 V78" fill="none" stroke="#B8934A" stroke-width="1.5" stroke-dasharray="3 2.5" class="saj-logo-arch"/>
+                <path d="M28 78 V48 C28 30 40 17 56 17 C72 17 84 30 84 48 V78" fill="none" stroke="#B8934A" stroke-width="3.6" stroke-linecap="round" class="saj-logo-arch"/>
+                <path d="M35 76 V49 C35 35 44 25 56 25 C68 25 77 35 77 49 V76" fill="none" stroke="#B8934A" stroke-width="1.5" stroke-dasharray="3 2.5" class="saj-logo-arch"/>
 
                 <g class="saj-logo-nib">
-                    <path d="M56 33 L65 55 L56 67 L47 55 Z" fill="var(--burgundy)"/>
-                    <circle cx="56" cy="52" r="2.5" fill="#B8934A"/>
-                    <line x1="56" y1="67" x2="56" y2="81" stroke="var(--burgundy)" stroke-width="2.3" stroke-linecap="round"/>
+                    <path d="M56 33 L64.5 54 L56 66 L47.5 54 Z" fill="var(--burgundy)"/>
+                    <circle cx="56" cy="51" r="2.4" fill="#B8934A"/>
+                    <line x1="56" y1="66" x2="56" y2="79" stroke="var(--burgundy)" stroke-width="2.2" stroke-linecap="round"/>
                 </g>
             </g>
         </svg>
@@ -870,7 +871,7 @@
                 pub_sub: "ارفع ملفاً (PDF, Word, عرض تقديمي...) أو أضف نصاً بحثياً وملخصاً لزملائك",
                 lbl_title: "عنوان الملف أو الورقة أو الملخص *",
                 lbl_author: "اسم الطالب(ة) *",
-                lbl_year: "المستوى الجامعي *",
+                lbl_year: "المستوى الجامعي (6 سنوات) *",
                 lbl_dept: "القسم *",
                 lbl_type: "طبيعة المادة *",
                 lbl_file_upload: "إرفاق ملف من الجهاز (PDF, DOC, DOCX, PPT, PPTX, TXT, MD, ZIP — حتى 15MB)",
@@ -931,7 +932,7 @@
                 pub_sub: "Téléversez un fichier (PDF, Word, PPT...) ou ajoutez un texte académique",
                 lbl_title: "Titre du fichier, de l'article ou du résumé *",
                 lbl_author: "Nom de l'étudiant(e) *",
-                lbl_year: "Niveau d'études *",
+                lbl_year: "Niveau d'études (6 ans) *",
                 lbl_dept: "Département *",
                 lbl_type: "Nature du texte *",
                 lbl_file_upload: "Joindre un fichier (PDF, DOC, DOCX, PPT, PPTX, TXT, MD, ZIP — max 15 Mo)",
@@ -992,7 +993,7 @@
                 pub_sub: "Upload a file (PDF, Word, PPT...) or share study notes with peers",
                 lbl_title: "File, Paper, or Summary Title *",
                 lbl_author: "Student Name *",
-                lbl_year: "Academic Year / Level *",
+                lbl_year: "Academic Year / Level (6 Years) *",
                 lbl_dept: "Department *",
                 lbl_type: "Material Type *",
                 lbl_file_upload: "Attach File from Device (PDF, DOC, DOCX, PPT, PPTX, TXT, MD, ZIP — up to 15MB)",
