@@ -15,6 +15,9 @@
     
     <!-- أيقونات خطية دقيقة -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- مكتبة Supabase للاتصال السحابي -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
         tailwind.config = {
@@ -434,6 +437,18 @@
                         <p id="modal-abstract" class="text-sm text-editorial-ink leading-relaxed"></p>
                     </div>
 
+                    <!-- زر تحميل نسخة PDF إذا أرفقها الطالب -->
+                    <div id="modal-pdf-box" class="no-print hidden mb-7 p-3.5 bg-editorial-stone/60 border border-editorial-rule rounded-[3px] flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2.5 text-xs text-editorial-ink">
+                            <i data-lucide="file-text" class="w-4 h-4 text-editorial-burgundy shrink-0"></i>
+                            <span data-i18n="pdf_attached_label" class="font-semibold">تتوفر نسخة إلكترونية (PDF) مرفقة مع هذا الإسهام</span>
+                        </div>
+                        <a id="modal-pdf-link" href="#" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[3px] bg-editorial-burgundy hover:bg-editorial-ink text-white text-xs font-bold transition-colors shrink-0">
+                            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                            <span data-i18n="open_pdf_btn">فتح / تحميل PDF</span>
+                        </a>
+                    </div>
+
                     <!-- المتن -->
                     <article id="modal-content" class="text-editorial-ink leading-[1.95] space-y-5 text-base sm:text-lg"></article>
 
@@ -526,11 +541,16 @@
                         <input type="text" id="input-references" placeholder="اسم المؤلف، عنوان الكتاب؛ مرجع ثانٍ..." class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm focus:outline-none focus:border-editorial-ink">
                     </div>
 
+                    <div>
+                        <label data-i18n="lbl_pdf_url" class="block text-xs font-bold text-editorial-ink mb-1">رابط ملف PDF خارجي — Google Drive أو غيره (اختياري)</label>
+                        <input type="url" id="input-pdf-url" placeholder="https://drive.google.com/file/d/..." class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm focus:outline-none focus:border-editorial-ink">
+                    </div>
+
                     <div class="pt-3 flex items-center justify-end gap-3 border-t border-editorial-rule">
                         <button type="button" onclick="closeSubmitModal()" data-i18n="cancel_btn" class="px-4 py-2 text-xs font-semibold text-editorial-muted hover:text-editorial-ink cursor-pointer">
                             إلغاء
                         </button>
-                        <button type="submit" data-i18n="submit_now_btn" class="px-5 py-2 rounded-[3px] text-xs font-bold bg-editorial-burgundy hover:bg-editorial-ink text-white transition-colors cursor-pointer">
+                        <button type="submit" id="submit-btn-el" data-i18n="submit_now_btn" class="px-5 py-2 rounded-[3px] text-xs font-bold bg-editorial-burgundy hover:bg-editorial-ink text-white transition-colors cursor-pointer">
                             إدراج في الفهرس
                         </button>
                     </div>
@@ -605,9 +625,16 @@
     </footer>
 
     <!-- =========================================================
-         9. المنطق البرمجي
+         9. المنطق البرمجي (متصل بقاعدة بيانات Supabase)
     ========================================================== -->
     <script>
+        // إعدادات الربط السحابي مع Supabase
+        const SUPABASE_URL = 'https://pjptbzefvrpthxnvnfgz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqcHRiemVmdnJwdGh4bnZuZmd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUwNDA0NDIsImV4cCI6MjExMDYxNjQ0Mn0.Zr8sZFWAH_E8aoaX71J6Q2b5NH-QVTVdhoV2Q1Vz448';
+        const supabaseClient = (window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY)
+            ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+            : null;
+
         // الشعار الرسمي المتجهي عالي الدقة للمدرسة العليا للأساتذة بالأغواط
         const officialENSLLogoSVG = `
         <svg viewBox="0 0 420 380" class="w-full h-full logo-multiply" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شعار المدرسة العليا للأساتذة بالأغواط ENSL">
@@ -874,6 +901,9 @@
                 lbl_abstract: "ملخص تمهيدي *",
                 lbl_content: "المتن الكامل *",
                 lbl_refs: "المراجع المعتمدة (افصل بينها بفاصلة منقوطة ؛)",
+                lbl_pdf_url: "رابط ملف PDF خارجي — Google Drive أو غيره (اختياري)",
+                pdf_attached_label: "تتوفر نسخة إلكترونية (PDF) مرفقة مع هذا الإسهام",
+                open_pdf_btn: "فتح / تحميل PDF",
                 cancel_btn: "إلغاء",
                 submit_now_btn: "إدراج في الفهرس",
                 about_modal_title: "عن «ساج»",
@@ -935,6 +965,9 @@
                 lbl_abstract: "Résumé introductif *",
                 lbl_content: "Texte intégral *",
                 lbl_refs: "Références (séparées par un point-virgule ;)",
+                lbl_pdf_url: "Lien vers un fichier PDF — Google Drive ou autre (optionnel)",
+                pdf_attached_label: "Une version PDF est jointe à cette contribution",
+                open_pdf_btn: "Ouvrir / Télécharger le PDF",
                 cancel_btn: "Annuler",
                 submit_now_btn: "Inscrire à l'index",
                 about_modal_title: "À propos de « SAJ »",
@@ -971,12 +1004,12 @@
             try { localStorage.removeItem(key); } catch (e) {}
         }
 
-        function initApp() {
+        async function initApp() {
             loadCustomLogo();
             renderLogos();
-            loadPublications();
             populateDepartments();
             renderStudentNotes();
+            await loadPublications();
             renderAll();
             initScrollProgress();
             initShortcuts();
@@ -1130,19 +1163,41 @@
             if (!list) return;
             list.innerHTML = departmentsList.map(d => {
                 const count = publications.filter(p => p.department === d.id).length;
-                const isActive = currentDeptFilter === d.id;
+                const active = currentDeptFilter === d.id;
                 return `
                 <li>
-                    <button onclick="quickFilterDept('${d.id}')" class="w-full py-2 flex items-center justify-between text-start hover:text-editorial-burgundy transition-colors cursor-pointer ${isActive ? 'font-bold text-editorial-burgundy' : 'text-editorial-ink'}">
-                        <span class="truncate">${escapeHTML(currentLang === 'ar' ? d.ar : d.fr)}</span>
-                        <span class="text-xs font-mono text-editorial-muted shrink-0">(${count})</span>
+                    <button onclick="quickFilterDept('${d.id}')" class="w-full py-2 flex items-center justify-between text-start hover:text-editorial-burgundy transition-colors cursor-pointer ${active ? 'font-bold text-editorial-burgundy' : 'text-editorial-ink'}">
+                        <span class="text-xs">${escapeHTML(currentLang === 'ar' ? d.ar : d.fr)}</span>
+                        <span class="text-[11px] font-mono text-editorial-muted">${count}</span>
                     </button>
                 </li>
                 `;
             }).join('');
         }
 
-        function loadPublications() {
+        async function loadPublications() {
+            // 1. محاولة الجلب من قاعدة بيانات Supabase السحابية أولاً
+            if (supabaseClient) {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('contributions')
+                        .select('*')
+                        .order('id', { ascending: false });
+
+                    if (!error && Array.isArray(data)) {
+                        // دمج المنشورات السحابية مع النماذج التأسيسية في البداية
+                        const cloudIds = new Set(data.map(d => d.id));
+                        const fallbackItems = initialPublications.filter(p => !cloudIds.has(p.id));
+                        publications = [...data, ...fallbackItems];
+                        savePublicationsLocal();
+                        return;
+                    }
+                } catch (e) {
+                    console.warn('Supabase fetch fallback to local:', e);
+                }
+            }
+
+            // 2. الاحتياطي المحلي في حال انقطاع الشبكة
             const saved = safeStorageGet('saj_ensl_contributions_v1');
             if (saved) {
                 try {
@@ -1153,11 +1208,11 @@
                 }
             } else {
                 publications = [...initialPublications];
-                savePublications();
+                savePublicationsLocal();
             }
         }
 
-        function savePublications() {
+        function savePublicationsLocal() {
             safeStorageSet('saj_ensl_contributions_v1', JSON.stringify(publications));
         }
 
@@ -1256,6 +1311,7 @@
                                 </div>
 
                                 <div class="flex items-center gap-4">
+                                    ${pub.pdf_url ? `<span class="text-[11px] font-mono px-1.5 py-0.5 bg-editorial-stone border border-editorial-rule text-editorial-burgundy rounded-[2px]">PDF</span>` : ''}
                                     <span class="text-editorial-muted">${escapeHTML(pub.readTime || '6 دقائق')}</span>
                                     <button onclick="openReaderModal(${pub.id})" class="font-bold text-editorial-burgundy hover:underline underline-offset-4 cursor-pointer">
                                         ${escapeHTML(readLabel)} ←
@@ -1366,13 +1422,22 @@
         }
 
         // نافذة القارئ
-        function openReaderModal(id) {
+        async function openReaderModal(id) {
             const pub = publications.find(p => p.id === id);
             if (!pub) return;
 
-            pub.views += 1;
-            savePublications();
+            pub.views = (pub.views || 0) + 1;
+            savePublicationsLocal();
             renderPublicationsList();
+
+            // تحديث عداد المشاهدات في Supabase إن كان السجل سحابياً
+            if (supabaseClient && pub.created_at) {
+                supabaseClient
+                    .from('contributions')
+                    .update({ views: pub.views })
+                    .eq('id', pub.id)
+                    .then(() => {});
+            }
 
             document.getElementById('modal-type-badge').textContent = getTypeLabel(pub.type);
             document.getElementById('modal-dept-label').textContent = getDeptLabel(pub.department);
@@ -1382,6 +1447,17 @@
             document.getElementById('modal-date').textContent = pub.date;
             document.getElementById('modal-reading-time').textContent = pub.readTime || '6 دقائق';
             document.getElementById('modal-abstract').textContent = pub.abstract;
+
+            const pdfBox = document.getElementById('modal-pdf-box');
+            const pdfLink = document.getElementById('modal-pdf-link');
+            if (pdfBox && pdfLink) {
+                if (pub.pdf_url && pub.pdf_url.trim() !== '') {
+                    pdfLink.href = pub.pdf_url.trim();
+                    pdfBox.classList.remove('hidden');
+                } else {
+                    pdfBox.classList.add('hidden');
+                }
+            }
 
             const contentContainer = document.getElementById('modal-content');
             const paragraphs = pub.content.split('\n').filter(p => p.trim() !== '');
@@ -1426,22 +1502,19 @@
         }
 
         function copyCitation() {
-            const el = document.getElementById('citation-text');
-            if (!el) return;
+            const textEl = document.getElementById('citation-text');
+            if (!textEl) return;
             const temp = document.createElement('textarea');
-            temp.value = el.textContent;
-            temp.style.position = 'fixed';
-            temp.style.opacity = '0';
+            temp.value = textEl.textContent;
             document.body.appendChild(temp);
             temp.select();
             try {
                 document.execCommand('copy');
-                showToast(currentLang === 'ar' ? 'تم نسخ الإحالة المرجعية' : 'Citation copiée');
+                showToast(currentLang === 'ar' ? 'تم نسخ صيغة التوثيق' : 'Référence copiée');
             } catch (e) {}
             document.body.removeChild(temp);
         }
 
-        // نافذة النشر
         function openSubmitModal() {
             const modal = document.getElementById('publish-modal');
             if (modal) {
@@ -1458,8 +1531,9 @@
             }
         }
 
-        function handleFormSubmit(e) {
+        async function handleFormSubmit(e) {
             e.preventDefault();
+            const submitBtn = document.getElementById('submit-btn-el');
             const title = document.getElementById('input-title').value.trim();
             const author = document.getElementById('input-author').value.trim();
             const year = document.getElementById('input-year').value;
@@ -1468,8 +1542,14 @@
             const abstract = document.getElementById('input-abstract').value.trim();
             const content = document.getElementById('input-content').value.trim();
             const refsRaw = document.getElementById('input-references').value.trim();
+            const pdfUrl = document.getElementById('input-pdf-url').value.trim();
 
             if (!title || !author || !abstract || !content) return;
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = currentLang === 'ar' ? 'جاري النشر...' : 'Publication...';
+            }
 
             const references = refsRaw ? refsRaw.split(/[؛;]/).map(r => r.trim()).filter(Boolean) : [];
             const words = content.split(/\s+/).length;
@@ -1479,8 +1559,7 @@
             const monthsAr = ["جانفي", "فيفري", "مارس", "أفريل", "ماي", "جوان", "جويلية", "أوت", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
             const formattedDate = `${today.getDate()} ${monthsAr[today.getMonth()]} ${today.getFullYear()}`;
 
-            publications.unshift({
-                id: Date.now(),
+            const newRecord = {
                 title,
                 type,
                 department,
@@ -1491,15 +1570,45 @@
                 views: 1,
                 abstract,
                 content,
-                references
-            });
+                references,
+                pdf_url: pdfUrl || null
+            };
 
-            savePublications();
+            let insertedItem = { id: Date.now(), ...newRecord };
+
+            // الإرسال المباشر إلى قاعدة بيانات Supabase ليراه الجميع
+            if (supabaseClient) {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('contributions')
+                        .insert([newRecord])
+                        .select()
+                        .single();
+
+                    if (!error && data) {
+                        insertedItem = data;
+                    } else if (error) {
+                        console.error('Supabase insert error:', error);
+                        showToast(currentLang === 'ar' ? 'تعذر الحفظ السحابي، تم الحفظ محلياً' : 'Sauvegarde locale uniquement');
+                    }
+                } catch (err) {
+                    console.error('Supabase network error:', err);
+                }
+            }
+
+            publications.unshift(insertedItem);
+            savePublicationsLocal();
+
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = translations[currentLang].submit_now_btn;
+            }
+
             document.getElementById('contribution-form').reset();
             closeSubmitModal();
             resetAllFilters();
             renderAll();
-            showToast(currentLang === 'ar' ? 'تم إدراج إسهامك في الفهرس' : 'Texte inscrit à l’index');
+            showToast(currentLang === 'ar' ? 'تم نشر إسهامك للجميع في فهرس ساج' : 'Contribution publiée pour tous');
         }
 
         // نافذة عن المبادرة
