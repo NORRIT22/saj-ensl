@@ -1128,3 +1128,790 @@
             const container = document.getElementById('category-tabs');
             if (!line || !btn || !container) return;
             const btnRect = btn.getBoundingClientRect();
+            const contRect = container.getBoundingClientRect();
+            const leftOffset = btnRect.left - contRect.left + container.scrollLeft;
+            line.style.width = `${btnRect.width}px`;
+            line.style.transform = `translateX(${leftOffset}px)`;
+        }
+
+        function initScrollProgress() {
+            const bar = document.getElementById('reading-progress');
+            window.addEventListener('scroll', () => {
+                if (!bar) return;
+                const h = document.documentElement.scrollHeight - window.innerHeight;
+                const pct = h > 0 ? Math.min(100, Math.max(0, (window.scrollY / h) * 100)) : 0;
+                bar.style.width = `${pct}%`;
+            }, { passive: true });
+        }
+
+        function initShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                    e.preventDefault();
+                    openCommandPalette();
+                } else if (e.key === 'Escape') {
+                    closeCommandPalette();
+                    closeReaderModal();
+                    closeSubmitModal();
+                    closeAboutModal();
+                }
+            });
+        }
+
+        /* التحقق من هوية المالك (Taha Sleia) لمنع أي جهة خارجية من تعديل الشعار */
+        function verifyOwnerAccess() {
+            if (ownerAuthenticated) return true;
+            const entered = window.prompt(
+                currentLang === 'ar'
+                    ? 'إجراء خاص بصاحب المنصة فقط. أدخل رمز المالك للتحقق:'
+                    : 'Action réservée au propriétaire. Entrez le code propriétaire :'
+            );
+            if (entered && entered.trim() === OWNER_UNLOCK_CODE) {
+                ownerAuthenticated = true;
+                const lockIcon = document.getElementById('owner-lock-icon');
+                if (lockIcon) {
+                    lockIcon.setAttribute('data-lucide', 'unlock');
+                    if (window.lucide) lucide.createIcons();
+                }
+                showToast(currentLang === 'ar' ? 'تم التحقق من هوية المالك' : 'Propriétaire vérifié');
+                return true;
+            }
+            showToast(currentLang === 'ar' ? 'تم الرفض: تعديل الشعار متاح للمالك فقط' : 'Accès refusé : réservé au propriétaire');
+            return false;
+        }
+
+        function ownerLogoAction(action) {
+            if (!verifyOwnerAccess()) return;
+            if (action === 'upload') {
+                const input = document.getElementById('logo-file-input');
+                if (input) input.click();
+            } else if (action === 'reset') {
+                resetDefaultLogo();
+            }
+        }
+
+        function loadCustomLogo() {
+            const saved = safeStorageGet('saj_ensl_custom_logo');
+            if (saved) {
+                customLogoDataUrl = saved;
+                const btn = document.getElementById('reset-logo-btn');
+                if (btn) btn.classList.remove('hidden');
+            }
+        }
+
+        function renderLogos() {
+            const navSlot = document.getElementById('nav-badge-slot');
+            if (navSlot) navSlot.innerHTML = sajNavBadgeSVG;
+
+            ['masthead-logo-slot', 'modal-logo-slot'].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.innerHTML = customLogoDataUrl
+                    ? `<img src="${customLogoDataUrl}" alt="SAJ — ENSL Laghouat" class="w-full h-full object-contain logo-multiply">`
+                    : sajBrandLogoSVG;
+            });
+        }
+
+        function handleLogoUpload(event) {
+            if (!ownerAuthenticated) return;
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                customLogoDataUrl = e.target.result;
+                safeStorageSet('saj_ensl_custom_logo', customLogoDataUrl);
+                renderLogos();
+                const btn = document.getElementById('reset-logo-btn');
+                if (btn) btn.classList.remove('hidden');
+                showToast(currentLang === 'ar' ? 'تم تحديث شعار ساج' : 'Emblème mis à jour');
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+
+        function resetDefaultLogo() {
+            customLogoDataUrl = null;
+            safeStorageRemove('saj_ensl_custom_logo');
+            const btn = document.getElementById('reset-logo-btn');
+            if (btn) btn.classList.add('hidden');
+            renderLogos();
+            showToast(currentLang === 'ar' ? 'تمت استعادة شعار ساج الأصلي' : 'Emblème original rétabli');
+        }
+
+        function getDeptLabel(deptId) {
+            const found = departmentsList.find(d => d.id === deptId);
+            if (!found) return deptId;
+            return found[currentLang] || found.ar;
+        }
+
+        function getTypeLabel(typeId) {
+            if (currentLang === 'fr') {
+                if (typeId === 'بحث') return 'Recherche';
+                if (typeId === 'مقال') return 'Article';
+                if (typeId === 'ملخص درس') return 'Cours & Résumé';
+            }
+            if (currentLang === 'en') {
+                if (typeId === 'بحث') return 'Research';
+                if (typeId === 'مقال') return 'Article';
+                if (typeId === 'ملخص درس') return 'Lecture Summary';
+            }
+            return typeId;
+        }
+
+        function getPubYear(pub) {
+            const m = String(pub.date || '').match(/(20\d{2})/);
+            if (m) return m[1];
+            if (pub.created_at) return String(new Date(pub.created_at).getFullYear());
+            return String(new Date().getFullYear());
+        }
+
+        function populateDepartments() {
+            const filterSel = document.getElementById('dept-filter');
+            const formSel = document.getElementById('input-dept');
+            if (filterSel) {
+                const prev = filterSel.value || 'all';
+                filterSel.innerHTML = `<option value="all">${translations[currentLang].all_depts_opt}</option>` +
+                    departmentsList.map(d => `<option value="${d.id}">${escapeHTML(d[currentLang] || d.ar)}</option>`).join('');
+                filterSel.value = prev;
+            }
+            if (formSel) {
+                const prevForm = formSel.value || departmentsList[0].id;
+                formSel.innerHTML = departmentsList.map(d => `<option value="${d.id}">${escapeHTML(d[currentLang] || d.ar)}</option>`).join('');
+                formSel.value = prevForm;
+            }
+        }
+
+        function renderStudentNotes() {
+            const container = document.getElementById('student-notes-list');
+            if (!container) return;
+            container.innerHTML = studentNotesData.map((n, idx) => {
+                const d = currentLang === 'ar' ? n.dateAr : currentLang === 'fr' ? n.dateFr : n.dateEn;
+                const t = currentLang === 'ar' ? n.titleAr : currentLang === 'fr' ? n.titleFr : n.titleEn;
+                const b = currentLang === 'ar' ? n.bodyAr : currentLang === 'fr' ? n.bodyFr : n.bodyEn;
+                return `
+                <article class="${idx > 0 ? 'pt-3' : ''}">
+                    <span class="block text-[11px] font-mono text-editorial-muted mb-0.5">${escapeHTML(d)}</span>
+                    <h3 class="font-editorial text-base font-bold text-editorial-ink leading-snug mb-1">${escapeHTML(t)}</h3>
+                    <p class="text-xs text-editorial-muted leading-relaxed">${escapeHTML(b)}</p>
+                </article>
+                `;
+            }).join('');
+        }
+
+        function renderDepartmentsIndex() {
+            const list = document.getElementById('departments-index');
+            if (!list) return;
+            list.innerHTML = departmentsList.map(d => {
+                const count = publications.filter(p => p.department === d.id).length;
+                const active = currentDeptFilter === d.id;
+                return `
+                <li>
+                    <button onclick="quickFilterDept('${d.id}')" class="w-full py-2 flex items-center justify-between text-start hover:text-editorial-burgundy transition-colors cursor-pointer ${active ? 'font-bold text-editorial-burgundy' : 'text-editorial-ink'}">
+                        <span class="text-xs">${escapeHTML(d[currentLang] || d.ar)}</span>
+                        <span class="text-[11px] font-mono px-1.5 py-0.5 rounded-[2px] bg-editorial-paper border border-editorial-rule text-editorial-muted">${count}</span>
+                    </button>
+                </li>
+                `;
+            }).join('');
+        }
+
+        function loadLocalPublicationsSync() {
+            const saved = safeStorageGet('saj_ensl_contributions_v1');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed) && parsed.length) {
+                        publications = parsed.map(normalizePublication);
+                        return;
+                    }
+                } catch (e) {}
+            }
+            publications = initialPublications.map(normalizePublication);
+            savePublicationsLocal();
+        }
+
+        async function syncCloudPublications() {
+            const dot = document.getElementById('sync-status-dot');
+            if (!supabaseClient) return;
+            try {
+                const { data, error } = await supabaseClient
+                    .from('contributions')
+                    .select('*')
+                    .order('id', { ascending: false });
+
+                if (!error && Array.isArray(data)) {
+                    const normalizedCloud = data.map(normalizePublication);
+                    const cloudIds = new Set(normalizedCloud.map(d => d.id));
+                    const localOnly = publications.filter(p => p.localOnly && !cloudIds.has(p.id));
+                    const fallbackItems = initialPublications
+                        .filter(p => !cloudIds.has(p.id))
+                        .map(normalizePublication);
+                    publications = [...localOnly, ...normalizedCloud, ...fallbackItems];
+                    savePublicationsLocal();
+                    if (dot) {
+                        dot.classList.remove('bg-editorial-brass');
+                        dot.classList.add('bg-emerald-600');
+                        dot.title = 'متصل بالسحابة';
+                    }
+                }
+            } catch (e) {
+                console.warn('Supabase sync offline fallback:', e);
+            }
+        }
+
+        function savePublicationsLocal() {
+            safeStorageSet('saj_ensl_contributions_v1', JSON.stringify(publications));
+        }
+
+        function renderAll(animate = true) {
+            const summaryEl = document.getElementById('archive-summary-text');
+            if (summaryEl) {
+                summaryEl.textContent = currentLang === 'ar'
+                    ? `${publications.length} إسهامات مفهرسة`
+                    : currentLang === 'fr'
+                    ? `${publications.length} textes indexés`
+                    : `${publications.length} indexed papers`;
+            }
+            renderPublicationsList(animate);
+            renderDepartmentsIndex();
+        }
+
+        function renderPublicationsList(animate = true) {
+            const listEl = document.getElementById('contributions-list');
+            const emptyEl = document.getElementById('empty-state');
+            const statusEl = document.getElementById('filter-status-label');
+            const resetBtn = document.getElementById('reset-filters-btn');
+            if (!listEl) return;
+
+            let filtered = publications.filter(item => {
+                const matchType = currentTypeFilter === 'all' || item.type === currentTypeFilter;
+                const matchDept = currentDeptFilter === 'all' || item.department === currentDeptFilter;
+                const q = currentSearchQuery.trim().toLowerCase();
+                const matchQuery = !q ||
+                    (item.title || '').toLowerCase().includes(q) ||
+                    (item.author || '').toLowerCase().includes(q) ||
+                    (item.abstract || '').toLowerCase().includes(q) ||
+                    getDeptLabel(item.department).toLowerCase().includes(q);
+                return matchType && matchDept && matchQuery;
+            });
+
+            if (currentSortOrder === 'popular') {
+                filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
+            } else {
+                filtered.sort((a, b) =>
+                    (new Date(b.created_at || 0) - new Date(a.created_at || 0)) || ((b.id || 0) - (a.id || 0)));
+            }
+
+            if (statusEl) {
+                statusEl.textContent = currentLang === 'ar'
+                    ? `عرض ${filtered.length} من أصل ${publications.length} مادة`
+                    : currentLang === 'fr'
+                    ? `Affichage de ${filtered.length} sur ${publications.length} textes`
+                    : `Showing ${filtered.length} of ${publications.length} items`;
+            }
+
+            if (resetBtn) {
+                const dirty = currentTypeFilter !== 'all' || currentDeptFilter !== 'all' || currentSearchQuery !== '';
+                resetBtn.classList.toggle('hidden', !dirty);
+            }
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = '';
+                listEl.classList.add('hidden');
+                if (emptyEl) emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            listEl.classList.remove('hidden');
+            if (emptyEl) emptyEl.classList.add('hidden');
+
+            const arrow = currentLang === 'ar' ? '←' : '→';
+
+            listEl.innerHTML = filtered.map((pub, idx) => {
+                const indexNum = String(idx + 1).padStart(2, '0');
+                const typeLabel = getTypeLabel(pub.type);
+                const deptLabel = getDeptLabel(pub.department);
+                const readLabel = translations[currentLang].read_paper;
+                const pid = Number(pub.id);
+                const staggerIdx = Math.min(idx, 10);
+
+                return `
+                <article style="--i: ${staggerIdx}" class="${animate ? 'motion-entry' : 'bg-editorial-sheet/70 hover:bg-editorial-sheet transition-colors'} bg-editorial-sheet/80 border border-editorial-rule hover:border-editorial-burgundy/50 rounded-[4px] p-4 sm:p-5">
+                    <div class="flex items-start gap-3.5">
+                        <span class="font-mono text-xs font-bold text-editorial-brass bg-editorial-paper border border-editorial-rule px-2 py-0.5 rounded-[3px] select-none shrink-0 mt-1">${indexNum}</span>
+                        <div class="flex-grow min-w-0">
+                            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs mb-1.5">
+                                <span class="font-bold text-editorial-burgundy">${escapeHTML(typeLabel)}</span>
+                                <span class="text-editorial-rule">•</span>
+                                <span class="text-editorial-muted font-medium">${escapeHTML(deptLabel)}</span>
+                                <span class="text-editorial-rule">•</span>
+                                <span class="text-editorial-muted">${escapeHTML(pub.date)}</span>
+                            </div>
+
+                            <h3 onclick="openReaderModal(${pid})" class="entry-title font-editorial text-xl sm:text-2xl font-bold text-editorial-ink leading-snug mb-2 cursor-pointer transition-colors">
+                                ${escapeHTML(pub.title)}
+                            </h3>
+
+                            <p class="text-sm text-editorial-muted leading-relaxed mb-3.5 line-clamp-2">
+                                ${escapeHTML(pub.abstract)}
+                            </p>
+
+                            <div class="flex flex-wrap items-center justify-between gap-3 text-xs pt-2.5 border-t border-editorial-rule/60">
+                                <div class="text-editorial-ink">
+                                    <span class="font-semibold">${escapeHTML(pub.author)}</span>
+                                    <span class="text-editorial-muted mx-1.5">—</span>
+                                    <span class="text-editorial-muted">${escapeHTML(pub.year)}</span>
+                                </div>
+
+                                <div class="flex items-center gap-3.5">
+                                    ${pub.pdf_url ? `<span class="text-[11px] font-mono px-1.5 py-0.5 bg-editorial-paper border border-editorial-rule text-editorial-burgundy rounded-[2px]">PDF</span>` : ''}
+                                    <span class="text-editorial-muted">${escapeHTML(formatMinutes(pub.readMinutes))}</span>
+                                    <button onclick="openReaderModal(${pid})" class="font-bold text-editorial-burgundy hover:underline underline-offset-4 cursor-pointer inline-flex items-center gap-1">
+                                        <span>${escapeHTML(readLabel)}</span>
+                                        <span class="motion-arrow">${arrow}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+                `;
+            }).join('');
+        }
+
+        function setTypeFilter(type, btnEl) {
+            currentTypeFilter = type;
+            const target = btnEl || document.querySelector(`.type-btn[data-type="${type}"]`);
+            document.querySelectorAll('.type-btn').forEach(b => {
+                if (b.dataset.type === type) {
+                    b.classList.remove('text-editorial-muted', 'font-medium');
+                    b.classList.add('text-editorial-burgundy', 'font-bold');
+                } else {
+                    b.classList.remove('text-editorial-burgundy', 'font-bold');
+                    b.classList.add('text-editorial-muted', 'font-medium');
+                }
+            });
+            if (target) updateTabUnderline(target);
+            renderPublicationsList(true);
+        }
+
+        function setDepartmentFilter(dept) {
+            currentDeptFilter = dept;
+            renderPublicationsList(true);
+            renderDepartmentsIndex();
+        }
+
+        function quickFilterDept(deptId) {
+            currentDeptFilter = currentDeptFilter === deptId ? 'all' : deptId;
+            const sel = document.getElementById('dept-filter');
+            if (sel) sel.value = currentDeptFilter;
+            renderPublicationsList(true);
+            renderDepartmentsIndex();
+        }
+
+        function setSortOrder(order) {
+            currentSortOrder = order;
+            renderPublicationsList(true);
+        }
+
+        function handleSearch() {
+            const input = document.getElementById('search-input');
+            const clearBtn = document.getElementById('clear-search-btn');
+            if (!input) return;
+            currentSearchQuery = input.value;
+            if (clearBtn) clearBtn.classList.toggle('hidden', currentSearchQuery.length === 0);
+            renderPublicationsList(false);
+        }
+
+        function clearSearch() {
+            const input = document.getElementById('search-input');
+            const clearBtn = document.getElementById('clear-search-btn');
+            if (input) input.value = '';
+            currentSearchQuery = '';
+            if (clearBtn) clearBtn.classList.add('hidden');
+            renderPublicationsList(false);
+        }
+
+        function resetAllFilters() {
+            currentTypeFilter = 'all';
+            currentDeptFilter = 'all';
+            currentSearchQuery = '';
+            const input = document.getElementById('search-input');
+            const clearBtn = document.getElementById('clear-search-btn');
+            const deptSel = document.getElementById('dept-filter');
+            if (input) input.value = '';
+            if (clearBtn) clearBtn.classList.add('hidden');
+            if (deptSel) deptSel.value = 'all';
+            setTypeFilter('all');
+            renderDepartmentsIndex();
+        }
+
+        function cycleLanguage() {
+            const order = ['ar', 'fr', 'en'];
+            currentLang = order[(order.indexOf(currentLang) + 1) % order.length];
+            document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+            document.documentElement.lang = currentLang;
+            document.title = translations[currentLang].doc_title;
+
+            const langLabel = document.getElementById('lang-label');
+            if (langLabel) {
+                langLabel.textContent = currentLang === 'ar' ? 'Français' : currentLang === 'fr' ? 'English' : 'العربية';
+            }
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[currentLang][key]) el.textContent = translations[currentLang][key];
+            });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (translations[currentLang][key]) el.setAttribute('placeholder', translations[currentLang][key]);
+            });
+
+            populateDepartments();
+            renderStudentNotes();
+            renderAll(false);
+
+            if (activePublicationId) fillReaderModal(activePublicationId);
+
+            requestAnimationFrame(() => {
+                const activeBtn = document.querySelector(`.type-btn[data-type="${currentTypeFilter}"]`);
+                if (activeBtn) updateTabUnderline(activeBtn);
+            });
+        }
+
+        function fillReaderModal(id) {
+            const pub = publications.find(p => Number(p.id) === Number(id));
+            if (!pub) return;
+
+            document.getElementById('modal-type-badge').textContent = getTypeLabel(pub.type);
+            document.getElementById('modal-dept-label').textContent = getDeptLabel(pub.department);
+            document.getElementById('modal-title').textContent = pub.title;
+            document.getElementById('modal-author').textContent = pub.author;
+            document.getElementById('modal-year').textContent = `${getDeptLabel(pub.department)} (${pub.year})`;
+            document.getElementById('modal-date').textContent = pub.date;
+            document.getElementById('modal-reading-time').textContent = formatMinutes(pub.readMinutes);
+            document.getElementById('modal-abstract').textContent = pub.abstract;
+
+            const pdfBox = document.getElementById('modal-pdf-box');
+            const pdfLink = document.getElementById('modal-pdf-link');
+            if (pdfBox && pdfLink) {
+                if (isSafeUrl(pub.pdf_url)) {
+                    pdfLink.href = pub.pdf_url.trim();
+                    pdfBox.classList.remove('hidden');
+                } else {
+                    pdfLink.href = '#';
+                    pdfBox.classList.add('hidden');
+                }
+            }
+
+            const contentContainer = document.getElementById('modal-content');
+            const paragraphs = (pub.content || '').split('\n').filter(p => p.trim() !== '');
+            contentContainer.innerHTML = paragraphs.map(p => {
+                if (p.length < 80 && (p.endsWith(':') || p.startsWith('أولاً') || p.startsWith('ثانياً') || /^\d+\./.test(p))) {
+                    return `<h3 class="font-editorial text-xl font-bold text-editorial-burgundy pt-2">${escapeHTML(p)}</h3>`;
+                }
+                return `<p class="text-justify">${escapeHTML(p)}</p>`;
+            }).join('');
+
+            const refBox = document.getElementById('modal-references-box');
+            const refList = document.getElementById('modal-references');
+            if (pub.references && pub.references.length > 0) {
+                refBox.classList.remove('hidden');
+                refList.innerHTML = pub.references.map(r => `<li>${escapeHTML(r)}</li>`).join('');
+            } else {
+                refBox.classList.add('hidden');
+            }
+
+            const yr = getPubYear(pub);
+            const dept = getDeptLabel(pub.department);
+            document.getElementById('citation-text').textContent =
+                currentLang === 'ar'
+                    ? `${pub.author} (${yr}). «${pub.title}». منصة ساج الطلابية — ENSL (${dept})، الأغواط.`
+                    : currentLang === 'fr'
+                    ? `${pub.author} (${yr}). « ${pub.title} ». Plateforme étudiante SAJ — ENSL (${dept}), Laghouat.`
+                    : `${pub.author} (${yr}). "${pub.title}." SAJ Student Platform — ENSL (${dept}), Laghouat.`;
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function openReaderModal(id) {
+            const pub = publications.find(p => Number(p.id) === Number(id));
+            if (!pub) return;
+            activePublicationId = pub.id;
+
+            pub.views = (pub.views || 0) + 1;
+            savePublicationsLocal();
+            renderPublicationsList(false);
+
+            if (supabaseClient && pub.created_at && !pub.localOnly) {
+                supabaseClient.rpc('increment_views', { pub_id: pub.id }).then(() => {}, () => {});
+            }
+
+            fillReaderModal(pub.id);
+            document.getElementById('reader-modal').classList.remove('hidden');
+            syncScrollLock();
+        }
+
+        function closeReaderModal() {
+            const modal = document.getElementById('reader-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+                activePublicationId = null;
+                syncScrollLock();
+            }
+        }
+
+        function changeFontSize(delta) {
+            readerFontSize = Math.min(22, Math.max(14, readerFontSize + delta * 1.5));
+            const el = document.getElementById('modal-content');
+            if (el) el.style.fontSize = `${readerFontSize}px`;
+        }
+
+        async function copyTextSafe(text, successMsg) {
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    const temp = document.createElement('textarea');
+                    temp.value = text;
+                    document.body.appendChild(temp);
+                    temp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(temp);
+                }
+                showToast(successMsg);
+            } catch (e) {}
+        }
+
+        function copyCitation() {
+            const textEl = document.getElementById('citation-text');
+            if (!textEl) return;
+            const msg = currentLang === 'ar' ? 'تم نسخ صيغة التوثيق' : currentLang === 'fr' ? 'Référence copiée' : 'Citation copied';
+            copyTextSafe(textEl.textContent, msg);
+        }
+
+        function copyShareLink() {
+            if (!activePublicationId) return;
+            const url = new URL(window.location.href);
+            url.searchParams.set('id', activePublicationId);
+            const msg = currentLang === 'ar' ? 'تم نسخ رابط الورقة للمشاركة' : currentLang === 'fr' ? 'Lien de partage copié' : 'Share link copied';
+            copyTextSafe(url.toString(), msg);
+        }
+
+        function openSubmitModal() {
+            const modal = document.getElementById('publish-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                syncScrollLock();
+            }
+        }
+
+        function closeSubmitModal() {
+            const modal = document.getElementById('publish-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+                syncScrollLock();
+            }
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submit-btn-el');
+            const title = document.getElementById('input-title').value.trim();
+            const author = document.getElementById('input-author').value.trim();
+            const year = document.getElementById('input-year').value;
+            const department = document.getElementById('input-dept').value;
+            const type = document.getElementById('input-type').value;
+            const abstract = document.getElementById('input-abstract').value.trim();
+            const content = document.getElementById('input-content').value.trim();
+            const refsRaw = document.getElementById('input-references').value.trim();
+            const pdfUrl = document.getElementById('input-pdf-url').value.trim();
+
+            if (!title || !author || !abstract || !content) return;
+
+            if (pdfUrl && !isSafeUrl(pdfUrl)) {
+                showToast(currentLang === 'ar' ? 'يرجى إدخال رابط PDF صحيح يبدأ بـ https://' : currentLang === 'fr' ? 'Lien PDF invalide' : 'Invalid PDF URL');
+                return;
+            }
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = currentLang === 'ar' ? 'جاري النشر...' : currentLang === 'fr' ? 'Publication...' : 'Publishing...';
+            }
+
+            const references = refsRaw ? refsRaw.split(/[؛;]/).map(r => r.trim()).filter(Boolean) : [];
+            const words = content.split(/\s+/).length;
+            const mins = Math.max(2, Math.ceil(words / 160));
+
+            const today = new Date();
+            const monthsAr = ["جانفي", "فيفري", "مارس", "أفريل", "ماي", "جوان", "جويلية", "أوت", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+            const formattedDate = `${today.getDate()} ${monthsAr[today.getMonth()]} ${today.getFullYear()}`;
+
+            const newRecord = {
+                title,
+                type,
+                department,
+                author,
+                year,
+                date: formattedDate,
+                read_time: String(mins),
+                views: 1,
+                abstract,
+                content,
+                references,
+                pdf_url: isSafeUrl(pdfUrl) ? pdfUrl : null
+            };
+
+            let insertedItem = normalizePublication({
+                id: Date.now(),
+                created_at: new Date().toISOString(),
+                ...newRecord
+            });
+
+            if (supabaseClient) {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('contributions')
+                        .insert([newRecord])
+                        .select()
+                        .single();
+
+                    if (!error && data) {
+                        insertedItem = normalizePublication(data);
+                    } else {
+                        if (error) console.error('Supabase insert error:', error);
+                        insertedItem.localOnly = true;
+                        showToast(currentLang === 'ar' ? 'تعذر الحفظ السحابي، تم الحفظ محلياً' : currentLang === 'fr' ? 'Enregistré localement uniquement' : 'Saved locally only');
+                    }
+                } catch (err) {
+                    console.error('Supabase network error:', err);
+                    insertedItem.localOnly = true;
+                }
+            } else {
+                insertedItem.localOnly = true;
+            }
+
+            publications.unshift(insertedItem);
+            savePublicationsLocal();
+
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = translations[currentLang].submit_now_btn;
+            }
+
+            document.getElementById('contribution-form').reset();
+            closeSubmitModal();
+            resetAllFilters();
+            renderAll(true);
+            if (!insertedItem.localOnly) {
+                showToast(currentLang === 'ar' ? 'تم نشر إسهامك للجميع في فهرس ساج' : currentLang === 'fr' ? 'Contribution publiée pour tous' : 'Contribution published');
+            }
+        }
+
+        function openAboutModal() {
+            const modal = document.getElementById('about-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                syncScrollLock();
+            }
+        }
+
+        function closeAboutModal() {
+            const modal = document.getElementById('about-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+                syncScrollLock();
+            }
+        }
+
+        function openCommandPalette() {
+            const modal = document.getElementById('cmd-modal');
+            const input = document.getElementById('cmd-input');
+            if (!modal || !input) return;
+            modal.classList.remove('hidden');
+            syncScrollLock();
+            input.value = '';
+            cmdSelectedIndex = 0;
+            filterCommandPalette('');
+            setTimeout(() => input.focus(), 30);
+        }
+
+        function closeCommandPalette() {
+            const modal = document.getElementById('cmd-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+                syncScrollLock();
+            }
+        }
+
+        function handleCmdKeydown(e) {
+            const items = document.querySelectorAll('.cmd-item');
+            if (!items.length) return;
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                cmdSelectedIndex = (cmdSelectedIndex + 1) % items.length;
+                items.forEach((el, i) => el.classList.toggle('bg-editorial-paper', i === cmdSelectedIndex));
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                cmdSelectedIndex = (cmdSelectedIndex - 1 + items.length) % items.length;
+                items.forEach((el, i) => el.classList.toggle('bg-editorial-paper', i === cmdSelectedIndex));
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (items[cmdSelectedIndex]) items[cmdSelectedIndex].click();
+            }
+        }
+
+        function filterCommandPalette(query) {
+            const container = document.getElementById('cmd-results');
+            if (!container) return;
+            const q = query.trim().toLowerCase();
+            cmdSelectedIndex = 0;
+
+            const matchedPubs = publications.filter(p =>
+                !q || (p.title || '').toLowerCase().includes(q) || (p.author || '').toLowerCase().includes(q) || getDeptLabel(p.department).toLowerCase().includes(q)
+            ).slice(0, 5);
+
+            const matchedDepts = departmentsList.filter(d =>
+                !q || d.ar.toLowerCase().includes(q) || d.fr.toLowerCase().includes(q) || d.en.toLowerCase().includes(q)
+            ).slice(0, 3);
+
+            let html = matchedPubs.map((p, i) => `
+                <button onclick="closeCommandPalette(); openReaderModal(${Number(p.id)})" class="cmd-item w-full px-4 py-2.5 text-start hover:bg-editorial-paper flex items-center justify-between gap-3 cursor-pointer ${i === 0 ? 'bg-editorial-paper' : ''}">
+                    <div class="min-w-0">
+                        <div class="font-editorial text-base font-bold text-editorial-ink truncate">${escapeHTML(p.title)}</div>
+                        <div class="text-[11px] text-editorial-muted">${escapeHTML(p.author)} • ${escapeHTML(getDeptLabel(p.department))}</div>
+                    </div>
+                    <span class="text-[11px] font-bold text-editorial-burgundy shrink-0">${escapeHTML(getTypeLabel(p.type))}</span>
+                </button>
+            `).join('');
+
+            html += matchedDepts.map(d => `
+                <button onclick="closeCommandPalette(); quickFilterDept('${d.id}')" class="cmd-item w-full px-4 py-2 text-start hover:bg-editorial-paper flex items-center justify-between text-xs text-editorial-ink cursor-pointer">
+                    <span>${escapeHTML(d[currentLang] || d.ar)}</span>
+                    <span class="text-editorial-muted font-mono">DEPT</span>
+                </button>
+            `).join('');
+
+            container.innerHTML = html || `<div class="p-6 text-center text-xs text-editorial-muted">${currentLang === 'ar' ? 'لا توجد نتائج' : currentLang === 'fr' ? 'Aucun résultat' : 'No results'}</div>`;
+        }
+
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const el = document.createElement('div');
+            el.className = 'bg-editorial-ink text-editorial-sheet text-xs px-4 py-2.5 rounded-[4px] border border-editorial-brass shadow-md fade-in-view';
+            el.textContent = msg;
+            container.appendChild(el);
+            setTimeout(() => el.remove(), 2800);
+        }
+
+        function escapeHTML(str) {
+            if (str === null || str === undefined) return '';
+            const div = document.createElement('div');
+            div.textContent = String(str);
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
