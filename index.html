@@ -11,7 +11,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Aref+Ruqaa:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -40,6 +40,7 @@
                     },
                     fontFamily: {
                         serif: ['"Amiri"', 'serif'],
+                        display: ['"Aref Ruqaa"', '"Amiri"', 'serif'],
                         sans: ['"IBM Plex Sans Arabic"', 'sans-serif'],
                     }
                 }
@@ -81,9 +82,8 @@
             transition: background-color 0.25s ease, color 0.25s ease;
         }
 
-        .font-editorial { font-family: 'Amiri', serif; }
+        .font-editorial { font-family: 'Aref Ruqaa', 'Amiri', serif; }
 
-        /* موشن جرافيك: نبض هادئ للشارة الحية وانزلاق الأشرطة الهندسية */
         @keyframes pulsePingSlow {
             0%, 100% { transform: scale(1); opacity: 0.9; }
             50% { transform: scale(1.35); opacity: 0.45; }
@@ -216,7 +216,6 @@
 </head>
 <body class="antialiased selection:bg-editorial-burgundy selection:text-white flex flex-col min-h-screen relative">
 
-    <!-- شريط التقدم الحركي العلوي -->
     <div class="fixed top-0 left-0 right-0 h-[3px] z-50 bg-editorial-rule/40 pointer-events-none">
         <div id="reading-progress" class="h-full bg-editorial-burgundy w-0 transition-all duration-150"></div>
     </div>
@@ -224,11 +223,11 @@
     <input type="file" id="logo-file-input" accept="image/*" class="hidden" onchange="handleLogoUpload(event)">
     <div id="toast-container" class="fixed bottom-6 left-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-    <!-- 1. شريط تنقل جامعي مبسط وحيوي -->
+    <!-- 1. شريط التنقل -->
     <nav class="border-b border-editorial-rule bg-editorial-sheet/95 sticky top-0 z-40 backdrop-blur-sm">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 h-13 py-2 flex items-center justify-between gap-3 text-xs">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 h-14 py-2 flex items-center justify-between gap-3 text-xs">
             <a href="#" onclick="resetAllFilters(); return false;" class="flex items-center gap-2.5 text-editorial-ink font-bold shrink-0 group">
-                <span class="w-2.5 h-2.5 rounded-full bg-editorial-burgundy motion-live-dot"></span>
+                <span id="nav-badge-slot" class="w-8 h-8 shrink-0"></span>
                 <span data-i18n="masthead_title" class="font-editorial text-xl text-editorial-burgundy">ساج</span>
                 <span class="hidden sm:inline text-editorial-muted font-mono text-[11px]">ENSL LAGHOUAT</span>
             </a>
@@ -260,12 +259,12 @@
         </div>
     </nav>
 
-    <!-- 2. واجهة رأسية جامعية نظيفة مع شريط موشن جرافيك -->
+    <!-- 2. واجهة رأسية بشعار ساج المدمج -->
     <header class="max-w-5xl mx-auto w-full px-4 sm:px-6 pt-8 pb-6 motion-masthead">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6">
-            <div class="flex items-center gap-4 sm:gap-5">
-                <div class="w-20 h-20 sm:w-22 sm:h-22 shrink-0 flex items-center justify-center p-1.5 border border-editorial-rule bg-editorial-sheet rounded-[4px] shadow-2xs">
-                    <div id="masthead-logo-slot" class="w-full h-full"></div>
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+                <div class="px-3 py-2 shrink-0 flex items-center justify-center border border-editorial-rule bg-editorial-sheet rounded-[4px] shadow-2xs">
+                    <div id="masthead-logo-slot" class="h-16 sm:h-20 w-auto"></div>
                 </div>
                 <div>
                     <div class="flex flex-wrap items-center gap-2 text-[11px] font-mono text-editorial-brass mb-1">
@@ -282,32 +281,31 @@
                 </div>
             </div>
 
-            <!-- مؤشر حركي لعدد الإسهامات وحالة المزامنة -->
+            <!-- مؤشر الحالة وإدارة الشعار للمالك فقط -->
             <div class="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-editorial-rule">
                 <div class="flex items-center gap-2">
                     <span id="sync-status-dot" class="w-2 h-2 rounded-full bg-editorial-brass motion-live-dot" title="حالة المزامنة"></span>
                     <span id="archive-summary-text" class="text-xs font-bold text-editorial-burgundy">6 إسهامات مفهرسة</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button onclick="triggerLogoUpload()" class="text-[11px] text-editorial-muted hover:text-editorial-burgundy underline underline-offset-4 cursor-pointer">
+                    <button onclick="ownerLogoAction('upload')" class="inline-flex items-center gap-1 text-[11px] text-editorial-muted hover:text-editorial-burgundy underline underline-offset-4 cursor-pointer">
+                        <i id="owner-lock-icon" data-lucide="lock" class="w-3 h-3 text-editorial-brass"></i>
                         <span data-i18n="upload_logo_text">تحديث الشعار</span>
                     </button>
-                    <button id="reset-logo-btn" onclick="resetDefaultLogo()" class="hidden text-[11px] text-editorial-burgundy font-semibold hover:underline cursor-pointer">
+                    <button id="reset-logo-btn" onclick="ownerLogoAction('reset')" class="hidden text-[11px] text-editorial-burgundy font-semibold hover:underline cursor-pointer">
                         (<span data-i18n="reset_text">استعادة</span>)
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- شريط موشن جرافيك فاصل -->
         <div class="h-[3px] w-full bg-editorial-burgundy/85 motion-bar-sweep rounded-full"></div>
     </header>
 
-    <!-- 3. المحتوى الرئيسي المبسط: الفهرس + قائمة الأقسام والمذكرات -->
+    <!-- 3. المحتوى الرئيسي -->
     <main class="max-w-5xl mx-auto w-full px-4 sm:px-6 pb-16 flex-grow">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-            <!-- فهرس المواد -->
             <section class="lg:col-span-8">
                 <div class="bg-editorial-sheet border border-editorial-rule rounded-[4px] p-4 mb-6">
                     <div class="relative flex items-center bg-editorial-paper border border-editorial-rule focus-within:border-editorial-burgundy rounded-[4px] px-3 py-2 mb-4 transition-colors">
@@ -372,7 +370,6 @@
                 </div>
             </section>
 
-            <!-- العمود الجانبي المبسط: الأقسام والمذكرات -->
             <aside class="lg:col-span-4 space-y-6">
                 <section class="bg-editorial-sheet border border-editorial-rule rounded-[4px] p-4">
                     <div class="flex items-center justify-between border-b border-editorial-rule pb-2 mb-3">
@@ -440,7 +437,7 @@
                                 <p data-i18n="sheet_header_1" class="font-bold text-editorial-ink">ساج — كراسات ومطارحات طلبة المدرسة العليا للأساتذة بالأغواط</p>
                                 <p data-i18n="sheet_header_2">مبادرة طلابية مستقلة • منصة ساج الطلابية — ENSL</p>
                             </div>
-                            <div id="modal-logo-slot" class="w-14 h-14 shrink-0"></div>
+                            <div id="modal-logo-slot" class="h-12 w-auto shrink-0"></div>
                         </div>
 
                         <h2 id="modal-title" class="font-editorial text-2xl sm:text-4xl font-bold text-editorial-ink leading-snug mb-4"></h2>
@@ -612,7 +609,7 @@
         </div>
     </div>
 
-    <!-- 8. التذييل الجامعي البسيط -->
+    <!-- 8. التذييل -->
     <footer class="border-t border-editorial-rule bg-editorial-sheet mt-auto">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-editorial-muted">
             <div>
@@ -633,74 +630,47 @@
             ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
             : null;
 
-        const officialENSLLogoSVG = `
-        <svg viewBox="0 0 420 380" class="w-full h-full logo-multiply" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شعار المدرسة العليا للأساتذة بالأغواط ENSL">
-            <g fill="currentColor" style="color: var(--burgundy)">
-                <text x="210" y="42" text-anchor="middle" font-family="'Amiri', serif" font-weight="700" font-size="31" letter-spacing="0.5">
-                    المَدرَسَةُ العُليَا لِلأسَاتِذَةِ بِالأغوَاطِ
+        /* مفتاح المالك الخاص بـ Taha Sleia لتعديل هوية الشعار فقط */
+        const OWNER_UNLOCK_CODE = 'TAHA-SAJ-ENSL-0122';
+        let ownerAuthenticated = false;
+
+        /* شعار منصة ساج: قوس باب الجزائر + كتاب مفتوح + قلم + "ساج • SAJ — ENSL LAGHOUAT" */
+        const sajBrandLogoSVG = `
+        <svg viewBox="0 0 430 130" class="w-full h-full logo-multiply" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شعار منصة ساج SAJ — ENSL Laghouat">
+            <g transform="translate(310, 12)">
+                <!-- صفحات الكتاب المفتوح -->
+                <path d="M12 88 C28 80 46 82 56 90 C66 82 84 80 100 88" fill="none" stroke="var(--burgundy)" stroke-width="4" stroke-linecap="round"/>
+                <path d="M18 78 C31 72 46 74 56 81 C66 74 81 72 94 78" fill="none" stroke="#B8934A" stroke-width="2.6" stroke-linecap="round"/>
+                <!-- قوس باب الجزائر -->
+                <path d="M24 76 V46 C24 27 38 14 56 14 C74 14 88 27 88 46 V76" fill="none" stroke="#B8934A" stroke-width="4" stroke-linecap="round"/>
+                <path d="M31 74 V47 C31 32 42 22 56 22 C70 22 81 32 81 47 V74" fill="none" stroke="#B8934A" stroke-width="1.6" stroke-dasharray="3 2.5"/>
+                <!-- رأس القلم في مركز القوس -->
+                <path d="M56 31 L65 52 L56 64 L47 52 Z" fill="var(--burgundy)"/>
+                <circle cx="56" cy="49" r="2.5" fill="#B8934A"/>
+                <line x1="56" y1="64" x2="56" y2="78" stroke="var(--burgundy)" stroke-width="2.4" stroke-linecap="round"/>
+            </g>
+
+            <!-- النص: ساج • SAJ و ENSL LAGHOUAT -->
+            <g transform="translate(296, 0)" text-anchor="end">
+                <text x="0" y="64" font-family="'Aref Ruqaa', 'Amiri', serif" font-weight="700" font-size="44">
+                    <tspan fill="var(--burgundy)">ساج</tspan>
+                    <tspan fill="#B8934A"> • SAJ</tspan>
                 </text>
-                <path d="M98 16 Q110 10 122 16 M165 13 Q175 8 185 13 M235 13 Q245 8 255 13 M295 16 Q307 10 319 16" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-                <circle cx="145" cy="14" r="1.6"/>
-                <circle cx="210" cy="11" r="1.8"/>
-                <circle cx="275" cy="14" r="1.6"/>
+                <text x="0" y="96" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="16" letter-spacing="2.2" fill="var(--burgundy)">
+                    ENSL LAGHOUAT
+                </text>
             </g>
-            <g fill="#B8934A">
-                <path d="M92 128 C78 142 74 156 80 166 C90 156 96 142 92 128 Z"/>
-                <path d="M76 172 C58 182 52 198 58 208 C70 200 78 186 76 172 Z"/>
-                <path d="M84 188 C94 198 96 212 90 220 C82 212 80 198 84 188 Z"/>
-                <circle cx="72" cy="166" r="3.2"/>
-                <path d="M68 220 C48 228 40 244 46 256 C60 250 70 236 68 220 Z"/>
-                <path d="M78 238 C90 248 92 264 84 272 C74 264 72 248 78 238 Z"/>
-                <circle cx="64" cy="212" r="3.2"/>
-                <path d="M74 274 C52 276 42 290 48 302 C64 300 74 288 74 274 Z"/>
-                <path d="M86 288 C100 296 106 312 98 322 C86 316 82 300 86 288 Z"/>
-                <circle cx="70" cy="264" r="3.2"/>
-                <path d="M94 318 C72 316 60 328 66 340 C82 342 94 332 94 318 Z"/>
-                <path d="M110 326 C126 330 136 342 130 352 C116 350 108 338 110 326 Z"/>
-                <circle cx="92" cy="308" r="3.2"/>
-                <path d="M126 348 C108 344 96 352 100 362 C116 364 126 358 126 348 Z"/>
-                <path d="M142 350 C158 350 168 358 164 366 C150 366 142 358 142 350 Z"/>
-            </g>
-            <g fill="#B8934A" transform="translate(420, 0) scale(-1, 1)">
-                <path d="M92 128 C78 142 74 156 80 166 C90 156 96 142 92 128 Z"/>
-                <path d="M76 172 C58 182 52 198 58 208 C70 200 78 186 76 172 Z"/>
-                <path d="M84 188 C94 198 96 212 90 220 C82 212 80 198 84 188 Z"/>
-                <circle cx="72" cy="166" r="3.2"/>
-                <path d="M68 220 C48 228 40 244 46 256 C60 250 70 236 68 220 Z"/>
-                <path d="M78 238 C90 248 92 264 84 272 C74 264 72 248 78 238 Z"/>
-                <circle cx="64" cy="212" r="3.2"/>
-                <path d="M74 274 C52 276 42 290 48 302 C64 300 74 288 74 274 Z"/>
-                <path d="M86 288 C100 296 106 312 98 322 C86 316 82 300 86 288 Z"/>
-                <circle cx="70" cy="264" r="3.2"/>
-                <path d="M94 318 C72 316 60 328 66 340 C82 342 94 332 94 318 Z"/>
-                <path d="M110 326 C126 330 136 342 130 352 C116 350 108 338 110 326 Z"/>
-                <circle cx="92" cy="308" r="3.2"/>
-                <path d="M126 348 C108 344 96 352 100 362 C116 364 126 358 126 348 Z"/>
-                <path d="M142 350 C158 350 168 358 164 366 C150 366 142 358 142 350 Z"/>
-            </g>
-            <g fill="currentColor" style="color: var(--burgundy)">
-                <rect x="122" y="58" width="176" height="14" rx="1"/>
-                <polygon points="112,76 308,76 302,86 118,86"/>
-                <rect x="120" y="88" width="180" height="11"/>
-                <path d="M124 102 H296 V266 H254 V188 C254 156 234 134 210 134 C186 134 166 156 166 188 V266 H124 Z"/>
-                <rect x="124" y="172" width="42" height="3" fill="var(--sheet)"/>
-                <rect x="254" y="172" width="42" height="3" fill="var(--sheet)"/>
-                <rect x="124" y="256" width="42" height="3.5" fill="var(--sheet)"/>
-                <rect x="254" y="256" width="42" height="3.5" fill="var(--sheet)"/>
-                <rect x="124" y="262" width="42" height="28"/>
-                <rect x="254" y="262" width="42" height="28"/>
-                <path d="M174 202 C175 186 184 178 194 176 L194 167 L184 164 L198 158 L212 164 L202 167 L202 175 C211 173 219 165 224 156 L218 152 L222 146 L235 154 L231 160 L227 158 C224 174 215 186 205 191 L205 202 Z"/>
-                <path d="M168 242 C182 237 198 239 210 247 C222 239 238 237 252 242 L256 247 C239 242 222 244 210 252 C198 244 181 242 164 247 Z"/>
-                <path d="M172 240 L177 204 C189 201 201 204 210 212 C219 204 231 201 243 204 L248 240" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
-                <line x1="210" y1="212" x2="210" y2="248" stroke="currentColor" stroke-width="2"/>
-                <path d="M185 215 L199 212 L203 229 L188 234 Z"/>
-                <circle cx="192" cy="218" r="2.2" fill="var(--sheet)"/>
-                <path d="M212 234 C222 214 234 190 248 172 C246 188 238 208 224 224 L214 235 Z"/>
-                <path d="M214 228 C222 224 232 225 238 229" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                <text x="210" y="287" text-anchor="middle" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="29" letter-spacing="4">ENSL</text>
-            </g>
-            <text x="210" y="313" text-anchor="middle" fill="#B8934A" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="600" font-size="14.5" letter-spacing="1.6">ECOLE NORMALE SUPÉRIEURE</text>
-            <text x="210" y="333" text-anchor="middle" fill="#B8934A" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="600" font-size="14" letter-spacing="4.5">LAGHOUAT</text>
+        </svg>
+        `;
+
+        /* شارة مختصرة لشريط التنقل */
+        const sajNavBadgeSVG = `
+        <svg viewBox="0 0 80 80" class="w-full h-full logo-multiply" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شارة ساج">
+            <rect x="3" y="3" width="74" height="74" rx="14" fill="var(--burgundy)"/>
+            <path d="M18 56 V36 C18 23 28 14 40 14 C52 14 62 23 62 36 V56" fill="none" stroke="#C9A55C" stroke-width="2.8" stroke-linecap="round"/>
+            <path d="M22 58 C29 54 36 55 40 59 C44 55 51 54 58 58" fill="none" stroke="#FCFBF8" stroke-width="2.4" stroke-linecap="round"/>
+            <path d="M40 23 L46.5 37 L40 45 L33.5 37 Z" fill="#C9A55C"/>
+            <circle cx="40" cy="35" r="1.8" fill="var(--burgundy)"/>
         </svg>
         `;
 
@@ -1158,758 +1128,3 @@
             const container = document.getElementById('category-tabs');
             if (!line || !btn || !container) return;
             const btnRect = btn.getBoundingClientRect();
-            const contRect = container.getBoundingClientRect();
-            const leftOffset = btnRect.left - contRect.left + container.scrollLeft;
-            line.style.width = `${btnRect.width}px`;
-            line.style.transform = `translateX(${leftOffset}px)`;
-        }
-
-        function initScrollProgress() {
-            const bar = document.getElementById('reading-progress');
-            window.addEventListener('scroll', () => {
-                if (!bar) return;
-                const h = document.documentElement.scrollHeight - window.innerHeight;
-                const pct = h > 0 ? Math.min(100, Math.max(0, (window.scrollY / h) * 100)) : 0;
-                bar.style.width = `${pct}%`;
-            }, { passive: true });
-        }
-
-        function initShortcuts() {
-            document.addEventListener('keydown', (e) => {
-                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-                    e.preventDefault();
-                    openCommandPalette();
-                } else if (e.key === 'Escape') {
-                    closeCommandPalette();
-                    closeReaderModal();
-                    closeSubmitModal();
-                    closeAboutModal();
-                }
-            });
-        }
-
-        function loadCustomLogo() {
-            const saved = safeStorageGet('saj_ensl_custom_logo');
-            if (saved) {
-                customLogoDataUrl = saved;
-                const btn = document.getElementById('reset-logo-btn');
-                if (btn) btn.classList.remove('hidden');
-            }
-        }
-
-        function renderLogos() {
-            ['masthead-logo-slot', 'modal-logo-slot'].forEach(id => {
-                const el = document.getElementById(id);
-                if (!el) return;
-                el.innerHTML = customLogoDataUrl
-                    ? `<img src="${customLogoDataUrl}" alt="ENSL" class="w-full h-full object-contain logo-multiply">`
-                    : officialENSLLogoSVG;
-            });
-        }
-
-        function triggerLogoUpload() {
-            const input = document.getElementById('logo-file-input');
-            if (input) input.click();
-        }
-
-        function handleLogoUpload(event) {
-            const file = event.target.files && event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                customLogoDataUrl = e.target.result;
-                safeStorageSet('saj_ensl_custom_logo', customLogoDataUrl);
-                renderLogos();
-                const btn = document.getElementById('reset-logo-btn');
-                if (btn) btn.classList.remove('hidden');
-                showToast(currentLang === 'ar' ? 'تم تحديث الشعار' : currentLang === 'fr' ? 'Emblème mis à jour' : 'Emblem updated');
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function resetDefaultLogo() {
-            customLogoDataUrl = null;
-            safeStorageRemove('saj_ensl_custom_logo');
-            const btn = document.getElementById('reset-logo-btn');
-            if (btn) btn.classList.add('hidden');
-            renderLogos();
-            showToast(currentLang === 'ar' ? 'تمت استعادة الشعار الأصلي' : currentLang === 'fr' ? 'Emblème rétabli' : 'Emblem restored');
-        }
-
-        function getDeptLabel(deptId) {
-            const found = departmentsList.find(d => d.id === deptId);
-            if (!found) return deptId;
-            return found[currentLang] || found.ar;
-        }
-
-        function getTypeLabel(typeId) {
-            if (currentLang === 'fr') {
-                if (typeId === 'بحث') return 'Recherche';
-                if (typeId === 'مقال') return 'Article';
-                if (typeId === 'ملخص درس') return 'Cours & Résumé';
-            }
-            if (currentLang === 'en') {
-                if (typeId === 'بحث') return 'Research';
-                if (typeId === 'مقال') return 'Article';
-                if (typeId === 'ملخص درس') return 'Lecture Summary';
-            }
-            return typeId;
-        }
-
-        function getPubYear(pub) {
-            const m = String(pub.date || '').match(/(20\d{2})/);
-            if (m) return m[1];
-            if (pub.created_at) return String(new Date(pub.created_at).getFullYear());
-            return String(new Date().getFullYear());
-        }
-
-        function populateDepartments() {
-            const filterSel = document.getElementById('dept-filter');
-            const formSel = document.getElementById('input-dept');
-            if (filterSel) {
-                const prev = filterSel.value || 'all';
-                filterSel.innerHTML = `<option value="all">${translations[currentLang].all_depts_opt}</option>` +
-                    departmentsList.map(d => `<option value="${d.id}">${escapeHTML(d[currentLang] || d.ar)}</option>`).join('');
-                filterSel.value = prev;
-            }
-            if (formSel) {
-                const prevForm = formSel.value || departmentsList[0].id;
-                formSel.innerHTML = departmentsList.map(d => `<option value="${d.id}">${escapeHTML(d[currentLang] || d.ar)}</option>`).join('');
-                formSel.value = prevForm;
-            }
-        }
-
-        function renderStudentNotes() {
-            const container = document.getElementById('student-notes-list');
-            if (!container) return;
-            container.innerHTML = studentNotesData.map((n, idx) => {
-                const d = currentLang === 'ar' ? n.dateAr : currentLang === 'fr' ? n.dateFr : n.dateEn;
-                const t = currentLang === 'ar' ? n.titleAr : currentLang === 'fr' ? n.titleFr : n.titleEn;
-                const b = currentLang === 'ar' ? n.bodyAr : currentLang === 'fr' ? n.bodyFr : n.bodyEn;
-                return `
-                <article class="${idx > 0 ? 'pt-3' : ''}">
-                    <span class="block text-[11px] font-mono text-editorial-muted mb-0.5">${escapeHTML(d)}</span>
-                    <h3 class="font-editorial text-base font-bold text-editorial-ink leading-snug mb-1">${escapeHTML(t)}</h3>
-                    <p class="text-xs text-editorial-muted leading-relaxed">${escapeHTML(b)}</p>
-                </article>
-                `;
-            }).join('');
-        }
-
-        function renderDepartmentsIndex() {
-            const list = document.getElementById('departments-index');
-            if (!list) return;
-            list.innerHTML = departmentsList.map(d => {
-                const count = publications.filter(p => p.department === d.id).length;
-                const active = currentDeptFilter === d.id;
-                return `
-                <li>
-                    <button onclick="quickFilterDept('${d.id}')" class="w-full py-2 flex items-center justify-between text-start hover:text-editorial-burgundy transition-colors cursor-pointer ${active ? 'font-bold text-editorial-burgundy' : 'text-editorial-ink'}">
-                        <span class="text-xs">${escapeHTML(d[currentLang] || d.ar)}</span>
-                        <span class="text-[11px] font-mono px-1.5 py-0.5 rounded-[2px] bg-editorial-paper border border-editorial-rule text-editorial-muted">${count}</span>
-                    </button>
-                </li>
-                `;
-            }).join('');
-        }
-
-        function loadLocalPublicationsSync() {
-            const saved = safeStorageGet('saj_ensl_contributions_v1');
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    if (Array.isArray(parsed) && parsed.length) {
-                        publications = parsed.map(normalizePublication);
-                        return;
-                    }
-                } catch (e) {}
-            }
-            publications = initialPublications.map(normalizePublication);
-            savePublicationsLocal();
-        }
-
-        async function syncCloudPublications() {
-            const dot = document.getElementById('sync-status-dot');
-            if (!supabaseClient) return;
-            try {
-                const { data, error } = await supabaseClient
-                    .from('contributions')
-                    .select('*')
-                    .order('id', { ascending: false });
-
-                if (!error && Array.isArray(data)) {
-                    const normalizedCloud = data.map(normalizePublication);
-                    const cloudIds = new Set(normalizedCloud.map(d => d.id));
-                    const localOnly = publications.filter(p => p.localOnly && !cloudIds.has(p.id));
-                    const fallbackItems = initialPublications
-                        .filter(p => !cloudIds.has(p.id))
-                        .map(normalizePublication);
-                    publications = [...localOnly, ...normalizedCloud, ...fallbackItems];
-                    savePublicationsLocal();
-                    if (dot) {
-                        dot.classList.remove('bg-editorial-brass');
-                        dot.classList.add('bg-emerald-600');
-                        dot.title = 'متصل بالسحابة';
-                    }
-                }
-            } catch (e) {
-                console.warn('Supabase sync offline fallback:', e);
-            }
-        }
-
-        function savePublicationsLocal() {
-            safeStorageSet('saj_ensl_contributions_v1', JSON.stringify(publications));
-        }
-
-        function renderAll(animate = true) {
-            const summaryEl = document.getElementById('archive-summary-text');
-            if (summaryEl) {
-                summaryEl.textContent = currentLang === 'ar'
-                    ? `${publications.length} إسهامات مفهرسة`
-                    : currentLang === 'fr'
-                    ? `${publications.length} textes indexés`
-                    : `${publications.length} indexed papers`;
-            }
-            renderPublicationsList(animate);
-            renderDepartmentsIndex();
-        }
-
-        function renderPublicationsList(animate = true) {
-            const listEl = document.getElementById('contributions-list');
-            const emptyEl = document.getElementById('empty-state');
-            const statusEl = document.getElementById('filter-status-label');
-            const resetBtn = document.getElementById('reset-filters-btn');
-            if (!listEl) return;
-
-            let filtered = publications.filter(item => {
-                const matchType = currentTypeFilter === 'all' || item.type === currentTypeFilter;
-                const matchDept = currentDeptFilter === 'all' || item.department === currentDeptFilter;
-                const q = currentSearchQuery.trim().toLowerCase();
-                const matchQuery = !q ||
-                    (item.title || '').toLowerCase().includes(q) ||
-                    (item.author || '').toLowerCase().includes(q) ||
-                    (item.abstract || '').toLowerCase().includes(q) ||
-                    getDeptLabel(item.department).toLowerCase().includes(q);
-                return matchType && matchDept && matchQuery;
-            });
-
-            if (currentSortOrder === 'popular') {
-                filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
-            } else {
-                filtered.sort((a, b) =>
-                    (new Date(b.created_at || 0) - new Date(a.created_at || 0)) || ((b.id || 0) - (a.id || 0)));
-            }
-
-            if (statusEl) {
-                statusEl.textContent = currentLang === 'ar'
-                    ? `عرض ${filtered.length} من أصل ${publications.length} مادة`
-                    : currentLang === 'fr'
-                    ? `Affichage de ${filtered.length} sur ${publications.length} textes`
-                    : `Showing ${filtered.length} of ${publications.length} items`;
-            }
-
-            if (resetBtn) {
-                const dirty = currentTypeFilter !== 'all' || currentDeptFilter !== 'all' || currentSearchQuery !== '';
-                resetBtn.classList.toggle('hidden', !dirty);
-            }
-
-            if (filtered.length === 0) {
-                listEl.innerHTML = '';
-                listEl.classList.add('hidden');
-                if (emptyEl) emptyEl.classList.remove('hidden');
-                return;
-            }
-
-            listEl.classList.remove('hidden');
-            if (emptyEl) emptyEl.classList.add('hidden');
-
-            const arrow = currentLang === 'ar' ? '←' : '→';
-
-            listEl.innerHTML = filtered.map((pub, idx) => {
-                const indexNum = String(idx + 1).padStart(2, '0');
-                const typeLabel = getTypeLabel(pub.type);
-                const deptLabel = getDeptLabel(pub.department);
-                const readLabel = translations[currentLang].read_paper;
-                const pid = Number(pub.id);
-                const staggerIdx = Math.min(idx, 10);
-
-                return `
-                <article style="--i: ${staggerIdx}" class="${animate ? 'motion-entry' : 'bg-editorial-sheet/70 hover:bg-editorial-sheet transition-colors'} bg-editorial-sheet/80 border border-editorial-rule hover:border-editorial-burgundy/50 rounded-[4px] p-4 sm:p-5">
-                    <div class="flex items-start gap-3.5">
-                        <span class="font-mono text-xs font-bold text-editorial-brass bg-editorial-paper border border-editorial-rule px-2 py-0.5 rounded-[3px] select-none shrink-0 mt-1">${indexNum}</span>
-                        <div class="flex-grow min-w-0">
-                            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs mb-1.5">
-                                <span class="font-bold text-editorial-burgundy">${escapeHTML(typeLabel)}</span>
-                                <span class="text-editorial-rule">•</span>
-                                <span class="text-editorial-muted font-medium">${escapeHTML(deptLabel)}</span>
-                                <span class="text-editorial-rule">•</span>
-                                <span class="text-editorial-muted">${escapeHTML(pub.date)}</span>
-                            </div>
-
-                            <h3 onclick="openReaderModal(${pid})" class="entry-title font-editorial text-xl sm:text-2xl font-bold text-editorial-ink leading-snug mb-2 cursor-pointer transition-colors">
-                                ${escapeHTML(pub.title)}
-                            </h3>
-
-                            <p class="text-sm text-editorial-muted leading-relaxed mb-3.5 line-clamp-2">
-                                ${escapeHTML(pub.abstract)}
-                            </p>
-
-                            <div class="flex flex-wrap items-center justify-between gap-3 text-xs pt-2.5 border-t border-editorial-rule/60">
-                                <div class="text-editorial-ink">
-                                    <span class="font-semibold">${escapeHTML(pub.author)}</span>
-                                    <span class="text-editorial-muted mx-1.5">—</span>
-                                    <span class="text-editorial-muted">${escapeHTML(pub.year)}</span>
-                                </div>
-
-                                <div class="flex items-center gap-3.5">
-                                    ${pub.pdf_url ? `<span class="text-[11px] font-mono px-1.5 py-0.5 bg-editorial-paper border border-editorial-rule text-editorial-burgundy rounded-[2px]">PDF</span>` : ''}
-                                    <span class="text-editorial-muted">${escapeHTML(formatMinutes(pub.readMinutes))}</span>
-                                    <button onclick="openReaderModal(${pid})" class="font-bold text-editorial-burgundy hover:underline underline-offset-4 cursor-pointer inline-flex items-center gap-1">
-                                        <span>${escapeHTML(readLabel)}</span>
-                                        <span class="motion-arrow">${arrow}</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </article>
-                `;
-            }).join('');
-        }
-
-        function setTypeFilter(type, btnEl) {
-            currentTypeFilter = type;
-            const target = btnEl || document.querySelector(`.type-btn[data-type="${type}"]`);
-            document.querySelectorAll('.type-btn').forEach(b => {
-                if (b.dataset.type === type) {
-                    b.classList.remove('text-editorial-muted', 'font-medium');
-                    b.classList.add('text-editorial-burgundy', 'font-bold');
-                } else {
-                    b.classList.remove('text-editorial-burgundy', 'font-bold');
-                    b.classList.add('text-editorial-muted', 'font-medium');
-                }
-            });
-            if (target) updateTabUnderline(target);
-            renderPublicationsList(true);
-        }
-
-        function setDepartmentFilter(dept) {
-            currentDeptFilter = dept;
-            renderPublicationsList(true);
-            renderDepartmentsIndex();
-        }
-
-        function quickFilterDept(deptId) {
-            currentDeptFilter = currentDeptFilter === deptId ? 'all' : deptId;
-            const sel = document.getElementById('dept-filter');
-            if (sel) sel.value = currentDeptFilter;
-            renderPublicationsList(true);
-            renderDepartmentsIndex();
-        }
-
-        function setSortOrder(order) {
-            currentSortOrder = order;
-            renderPublicationsList(true);
-        }
-
-        function handleSearch() {
-            const input = document.getElementById('search-input');
-            const clearBtn = document.getElementById('clear-search-btn');
-            if (!input) return;
-            currentSearchQuery = input.value;
-            if (clearBtn) clearBtn.classList.toggle('hidden', currentSearchQuery.length === 0);
-            renderPublicationsList(false);
-        }
-
-        function clearSearch() {
-            const input = document.getElementById('search-input');
-            const clearBtn = document.getElementById('clear-search-btn');
-            if (input) input.value = '';
-            currentSearchQuery = '';
-            if (clearBtn) clearBtn.classList.add('hidden');
-            renderPublicationsList(false);
-        }
-
-        function resetAllFilters() {
-            currentTypeFilter = 'all';
-            currentDeptFilter = 'all';
-            currentSearchQuery = '';
-            const input = document.getElementById('search-input');
-            const clearBtn = document.getElementById('clear-search-btn');
-            const deptSel = document.getElementById('dept-filter');
-            if (input) input.value = '';
-            if (clearBtn) clearBtn.classList.add('hidden');
-            if (deptSel) deptSel.value = 'all';
-            setTypeFilter('all');
-            renderDepartmentsIndex();
-        }
-
-        function cycleLanguage() {
-            const order = ['ar', 'fr', 'en'];
-            currentLang = order[(order.indexOf(currentLang) + 1) % order.length];
-            document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
-            document.documentElement.lang = currentLang;
-            document.title = translations[currentLang].doc_title;
-
-            const langLabel = document.getElementById('lang-label');
-            if (langLabel) {
-                langLabel.textContent = currentLang === 'ar' ? 'Français' : currentLang === 'fr' ? 'English' : 'العربية';
-            }
-
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (translations[currentLang][key]) el.textContent = translations[currentLang][key];
-            });
-
-            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-                const key = el.getAttribute('data-i18n-placeholder');
-                if (translations[currentLang][key]) el.setAttribute('placeholder', translations[currentLang][key]);
-            });
-
-            populateDepartments();
-            renderStudentNotes();
-            renderAll(false);
-
-            if (activePublicationId) fillReaderModal(activePublicationId);
-
-            requestAnimationFrame(() => {
-                const activeBtn = document.querySelector(`.type-btn[data-type="${currentTypeFilter}"]`);
-                if (activeBtn) updateTabUnderline(activeBtn);
-            });
-        }
-
-        function fillReaderModal(id) {
-            const pub = publications.find(p => Number(p.id) === Number(id));
-            if (!pub) return;
-
-            document.getElementById('modal-type-badge').textContent = getTypeLabel(pub.type);
-            document.getElementById('modal-dept-label').textContent = getDeptLabel(pub.department);
-            document.getElementById('modal-title').textContent = pub.title;
-            document.getElementById('modal-author').textContent = pub.author;
-            document.getElementById('modal-year').textContent = `${getDeptLabel(pub.department)} (${pub.year})`;
-            document.getElementById('modal-date').textContent = pub.date;
-            document.getElementById('modal-reading-time').textContent = formatMinutes(pub.readMinutes);
-            document.getElementById('modal-abstract').textContent = pub.abstract;
-
-            const pdfBox = document.getElementById('modal-pdf-box');
-            const pdfLink = document.getElementById('modal-pdf-link');
-            if (pdfBox && pdfLink) {
-                if (isSafeUrl(pub.pdf_url)) {
-                    pdfLink.href = pub.pdf_url.trim();
-                    pdfBox.classList.remove('hidden');
-                } else {
-                    pdfLink.href = '#';
-                    pdfBox.classList.add('hidden');
-                }
-            }
-
-            const contentContainer = document.getElementById('modal-content');
-            const paragraphs = (pub.content || '').split('\n').filter(p => p.trim() !== '');
-            contentContainer.innerHTML = paragraphs.map(p => {
-                if (p.length < 80 && (p.endsWith(':') || p.startsWith('أولاً') || p.startsWith('ثانياً') || /^\d+\./.test(p))) {
-                    return `<h3 class="font-editorial text-xl font-bold text-editorial-burgundy pt-2">${escapeHTML(p)}</h3>`;
-                }
-                return `<p class="text-justify">${escapeHTML(p)}</p>`;
-            }).join('');
-
-            const refBox = document.getElementById('modal-references-box');
-            const refList = document.getElementById('modal-references');
-            if (pub.references && pub.references.length > 0) {
-                refBox.classList.remove('hidden');
-                refList.innerHTML = pub.references.map(r => `<li>${escapeHTML(r)}</li>`).join('');
-            } else {
-                refBox.classList.add('hidden');
-            }
-
-            const yr = getPubYear(pub);
-            const dept = getDeptLabel(pub.department);
-            document.getElementById('citation-text').textContent =
-                currentLang === 'ar'
-                    ? `${pub.author} (${yr}). «${pub.title}». منصة ساج الطلابية — ENSL (${dept})، الأغواط.`
-                    : currentLang === 'fr'
-                    ? `${pub.author} (${yr}). « ${pub.title} ». Plateforme étudiante SAJ — ENSL (${dept}), Laghouat.`
-                    : `${pub.author} (${yr}). "${pub.title}." SAJ Student Platform — ENSL (${dept}), Laghouat.`;
-
-            if (window.lucide) lucide.createIcons();
-        }
-
-        function openReaderModal(id) {
-            const pub = publications.find(p => Number(p.id) === Number(id));
-            if (!pub) return;
-            activePublicationId = pub.id;
-
-            pub.views = (pub.views || 0) + 1;
-            savePublicationsLocal();
-            renderPublicationsList(false);
-
-            if (supabaseClient && pub.created_at && !pub.localOnly) {
-                supabaseClient.rpc('increment_views', { pub_id: pub.id }).then(() => {}, () => {});
-            }
-
-            fillReaderModal(pub.id);
-            document.getElementById('reader-modal').classList.remove('hidden');
-            syncScrollLock();
-        }
-
-        function closeReaderModal() {
-            const modal = document.getElementById('reader-modal');
-            if (modal && !modal.classList.contains('hidden')) {
-                modal.classList.add('hidden');
-                activePublicationId = null;
-                syncScrollLock();
-            }
-        }
-
-        function changeFontSize(delta) {
-            readerFontSize = Math.min(22, Math.max(14, readerFontSize + delta * 1.5));
-            const el = document.getElementById('modal-content');
-            if (el) el.style.fontSize = `${readerFontSize}px`;
-        }
-
-        async function copyTextSafe(text, successMsg) {
-            try {
-                if (navigator.clipboard && window.isSecureContext) {
-                    await navigator.clipboard.writeText(text);
-                } else {
-                    const temp = document.createElement('textarea');
-                    temp.value = text;
-                    document.body.appendChild(temp);
-                    temp.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(temp);
-                }
-                showToast(successMsg);
-            } catch (e) {}
-        }
-
-        function copyCitation() {
-            const textEl = document.getElementById('citation-text');
-            if (!textEl) return;
-            const msg = currentLang === 'ar' ? 'تم نسخ صيغة التوثيق' : currentLang === 'fr' ? 'Référence copiée' : 'Citation copied';
-            copyTextSafe(textEl.textContent, msg);
-        }
-
-        function copyShareLink() {
-            if (!activePublicationId) return;
-            const url = new URL(window.location.href);
-            url.searchParams.set('id', activePublicationId);
-            const msg = currentLang === 'ar' ? 'تم نسخ رابط الورقة للمشاركة' : currentLang === 'fr' ? 'Lien de partage copié' : 'Share link copied';
-            copyTextSafe(url.toString(), msg);
-        }
-
-        function openSubmitModal() {
-            const modal = document.getElementById('publish-modal');
-            if (modal) {
-                modal.classList.remove('hidden');
-                syncScrollLock();
-            }
-        }
-
-        function closeSubmitModal() {
-            const modal = document.getElementById('publish-modal');
-            if (modal && !modal.classList.contains('hidden')) {
-                modal.classList.add('hidden');
-                syncScrollLock();
-            }
-        }
-
-        async function handleFormSubmit(e) {
-            e.preventDefault();
-            const submitBtn = document.getElementById('submit-btn-el');
-            const title = document.getElementById('input-title').value.trim();
-            const author = document.getElementById('input-author').value.trim();
-            const year = document.getElementById('input-year').value;
-            const department = document.getElementById('input-dept').value;
-            const type = document.getElementById('input-type').value;
-            const abstract = document.getElementById('input-abstract').value.trim();
-            const content = document.getElementById('input-content').value.trim();
-            const refsRaw = document.getElementById('input-references').value.trim();
-            const pdfUrl = document.getElementById('input-pdf-url').value.trim();
-
-            if (!title || !author || !abstract || !content) return;
-
-            if (pdfUrl && !isSafeUrl(pdfUrl)) {
-                showToast(currentLang === 'ar' ? 'يرجى إدخال رابط PDF صحيح يبدأ بـ https://' : currentLang === 'fr' ? 'Lien PDF invalide' : 'Invalid PDF URL');
-                return;
-            }
-
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.textContent = currentLang === 'ar' ? 'جاري النشر...' : currentLang === 'fr' ? 'Publication...' : 'Publishing...';
-            }
-
-            const references = refsRaw ? refsRaw.split(/[؛;]/).map(r => r.trim()).filter(Boolean) : [];
-            const words = content.split(/\s+/).length;
-            const mins = Math.max(2, Math.ceil(words / 160));
-
-            const today = new Date();
-            const monthsAr = ["جانفي", "فيفري", "مارس", "أفريل", "ماي", "جوان", "جويلية", "أوت", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
-            const formattedDate = `${today.getDate()} ${monthsAr[today.getMonth()]} ${today.getFullYear()}`;
-
-            const newRecord = {
-                title,
-                type,
-                department,
-                author,
-                year,
-                date: formattedDate,
-                read_time: String(mins),
-                views: 1,
-                abstract,
-                content,
-                references,
-                pdf_url: isSafeUrl(pdfUrl) ? pdfUrl : null
-            };
-
-            let insertedItem = normalizePublication({
-                id: Date.now(),
-                created_at: new Date().toISOString(),
-                ...newRecord
-            });
-
-            if (supabaseClient) {
-                try {
-                    const { data, error } = await supabaseClient
-                        .from('contributions')
-                        .insert([newRecord])
-                        .select()
-                        .single();
-
-                    if (!error && data) {
-                        insertedItem = normalizePublication(data);
-                    } else {
-                        if (error) console.error('Supabase insert error:', error);
-                        insertedItem.localOnly = true;
-                        showToast(currentLang === 'ar' ? 'تعذر الحفظ السحابي، تم الحفظ محلياً' : currentLang === 'fr' ? 'Enregistré localement uniquement' : 'Saved locally only');
-                    }
-                } catch (err) {
-                    console.error('Supabase network error:', err);
-                    insertedItem.localOnly = true;
-                }
-            } else {
-                insertedItem.localOnly = true;
-            }
-
-            publications.unshift(insertedItem);
-            savePublicationsLocal();
-
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = translations[currentLang].submit_now_btn;
-            }
-
-            document.getElementById('contribution-form').reset();
-            closeSubmitModal();
-            resetAllFilters();
-            renderAll(true);
-            if (!insertedItem.localOnly) {
-                showToast(currentLang === 'ar' ? 'تم نشر إسهامك للجميع في فهرس ساج' : currentLang === 'fr' ? 'Contribution publiée pour tous' : 'Contribution published');
-            }
-        }
-
-        function openAboutModal() {
-            const modal = document.getElementById('about-modal');
-            if (modal) {
-                modal.classList.remove('hidden');
-                syncScrollLock();
-            }
-        }
-
-        function closeAboutModal() {
-            const modal = document.getElementById('about-modal');
-            if (modal && !modal.classList.contains('hidden')) {
-                modal.classList.add('hidden');
-                syncScrollLock();
-            }
-        }
-
-        function openCommandPalette() {
-            const modal = document.getElementById('cmd-modal');
-            const input = document.getElementById('cmd-input');
-            if (!modal || !input) return;
-            modal.classList.remove('hidden');
-            syncScrollLock();
-            input.value = '';
-            cmdSelectedIndex = 0;
-            filterCommandPalette('');
-            setTimeout(() => input.focus(), 30);
-        }
-
-        function closeCommandPalette() {
-            const modal = document.getElementById('cmd-modal');
-            if (modal && !modal.classList.contains('hidden')) {
-                modal.classList.add('hidden');
-                syncScrollLock();
-            }
-        }
-
-        function handleCmdKeydown(e) {
-            const items = document.querySelectorAll('.cmd-item');
-            if (!items.length) return;
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                cmdSelectedIndex = (cmdSelectedIndex + 1) % items.length;
-                items.forEach((el, i) => el.classList.toggle('bg-editorial-paper', i === cmdSelectedIndex));
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                cmdSelectedIndex = (cmdSelectedIndex - 1 + items.length) % items.length;
-                items.forEach((el, i) => el.classList.toggle('bg-editorial-paper', i === cmdSelectedIndex));
-            } else if (e.key === 'Enter') {
-                e.preventDefault();
-                if (items[cmdSelectedIndex]) items[cmdSelectedIndex].click();
-            }
-        }
-
-        function filterCommandPalette(query) {
-            const container = document.getElementById('cmd-results');
-            if (!container) return;
-            const q = query.trim().toLowerCase();
-            cmdSelectedIndex = 0;
-
-            const matchedPubs = publications.filter(p =>
-                !q || (p.title || '').toLowerCase().includes(q) || (p.author || '').toLowerCase().includes(q) || getDeptLabel(p.department).toLowerCase().includes(q)
-            ).slice(0, 5);
-
-            const matchedDepts = departmentsList.filter(d =>
-                !q || d.ar.toLowerCase().includes(q) || d.fr.toLowerCase().includes(q) || d.en.toLowerCase().includes(q)
-            ).slice(0, 3);
-
-            let html = matchedPubs.map((p, i) => `
-                <button onclick="closeCommandPalette(); openReaderModal(${Number(p.id)})" class="cmd-item w-full px-4 py-2.5 text-start hover:bg-editorial-paper flex items-center justify-between gap-3 cursor-pointer ${i === 0 ? 'bg-editorial-paper' : ''}">
-                    <div class="min-w-0">
-                        <div class="font-editorial text-base font-bold text-editorial-ink truncate">${escapeHTML(p.title)}</div>
-                        <div class="text-[11px] text-editorial-muted">${escapeHTML(p.author)} • ${escapeHTML(getDeptLabel(p.department))}</div>
-                    </div>
-                    <span class="text-[11px] font-bold text-editorial-burgundy shrink-0">${escapeHTML(getTypeLabel(p.type))}</span>
-                </button>
-            `).join('');
-
-            html += matchedDepts.map(d => `
-                <button onclick="closeCommandPalette(); quickFilterDept('${d.id}')" class="cmd-item w-full px-4 py-2 text-start hover:bg-editorial-paper flex items-center justify-between text-xs text-editorial-ink cursor-pointer">
-                    <span>${escapeHTML(d[currentLang] || d.ar)}</span>
-                    <span class="text-editorial-muted font-mono">DEPT</span>
-                </button>
-            `).join('');
-
-            container.innerHTML = html || `<div class="p-6 text-center text-xs text-editorial-muted">${currentLang === 'ar' ? 'لا توجد نتائج' : currentLang === 'fr' ? 'Aucun résultat' : 'No results'}</div>`;
-        }
-
-        function showToast(msg) {
-            const container = document.getElementById('toast-container');
-            if (!container) return;
-            const el = document.createElement('div');
-            el.className = 'bg-editorial-ink text-editorial-sheet text-xs px-4 py-2.5 rounded-[4px] border border-editorial-brass shadow-md fade-in-view';
-            el.textContent = msg;
-            container.appendChild(el);
-            setTimeout(() => el.remove(), 2800);
-        }
-
-        function escapeHTML(str) {
-            if (str === null || str === undefined) return '';
-            const div = document.createElement('div');
-            div.textContent = String(str);
-            return div.innerHTML;
-        }
-    </script>
-</body>
-</html>
