@@ -84,6 +84,7 @@
 
         .font-editorial { font-family: 'Aref Ruqaa', 'Amiri', serif; }
 
+        /* حركات الموشن جرافيك العامة */
         @keyframes pulsePingSlow {
             0%, 100% { transform: scale(1); opacity: 0.9; }
             50% { transform: scale(1.35); opacity: 0.45; }
@@ -114,6 +115,71 @@
                 opacity: 1;
                 transform: translateY(0);
             }
+        }
+
+        /* تحريك عناصر شعار ساج (القوس، الكتاب، رأس القلم) */
+        @keyframes archStrokeDraw {
+            from {
+                stroke-dashoffset: 240;
+                opacity: 0.35;
+            }
+            to {
+                stroke-dashoffset: 0;
+                opacity: 1;
+            }
+        }
+
+        @keyframes nibFloat {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-3px);
+            }
+        }
+
+        @keyframes logoAuraPulse {
+            0%, 100% {
+                opacity: 0.14;
+                transform: scale(0.96);
+            }
+            50% {
+                opacity: 0.34;
+                transform: scale(1.04);
+            }
+        }
+
+        .saj-logo-arch {
+            stroke-dasharray: 240;
+            stroke-dashoffset: 0;
+            animation: archStrokeDraw 1.25s var(--ease-motion) both;
+        }
+
+        .saj-logo-book {
+            stroke-dasharray: 180;
+            stroke-dashoffset: 0;
+            animation: archStrokeDraw 1.05s var(--ease-motion) 0.18s both;
+        }
+
+        .saj-logo-nib {
+            transform-box: fill-box;
+            transform-origin: center;
+            animation: nibFloat 2.8s ease-in-out infinite;
+            transition: transform 0.35s var(--ease-snap);
+        }
+
+        .saj-logo-aura {
+            transform-box: fill-box;
+            transform-origin: center;
+            animation: logoAuraPulse 3.4s ease-in-out infinite;
+        }
+
+        .saj-logo-box:hover .saj-logo-nib {
+            transform: translateY(-4px) scale(1.08);
+        }
+
+        .saj-logo-box:hover .saj-logo-arch {
+            filter: drop-shadow(0 0 6px color-mix(in srgb, var(--brass) 55%, transparent));
         }
 
         .motion-live-dot {
@@ -226,7 +292,7 @@
     <!-- 1. شريط التنقل -->
     <nav class="border-b border-editorial-rule bg-editorial-sheet/95 sticky top-0 z-40 backdrop-blur-sm">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 h-14 py-2 flex items-center justify-between gap-3 text-xs">
-            <a href="#" onclick="resetAllFilters(); return false;" class="flex items-center gap-2.5 text-editorial-ink font-bold shrink-0 group">
+            <a href="#" onclick="resetAllFilters(); return false;" class="flex items-center gap-2.5 text-editorial-ink font-bold shrink-0 group saj-logo-box">
                 <span id="nav-badge-slot" class="w-8 h-8 shrink-0"></span>
                 <span data-i18n="masthead_title" class="font-editorial text-xl text-editorial-burgundy">ساج</span>
                 <span class="hidden sm:inline text-editorial-muted font-mono text-[11px]">ENSL LAGHOUAT</span>
@@ -259,11 +325,11 @@
         </div>
     </nav>
 
-    <!-- 2. واجهة رأسية بشعار ساج المدمج -->
+    <!-- 2. واجهة رأسية بشعار ساج المتحرك -->
     <header class="max-w-5xl mx-auto w-full px-4 sm:px-6 pt-8 pb-6 motion-masthead">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6">
             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-                <div class="px-3 py-2 shrink-0 flex items-center justify-center border border-editorial-rule bg-editorial-sheet rounded-[4px] shadow-2xs">
+                <div class="saj-logo-box px-3 py-2 shrink-0 flex items-center justify-center border border-editorial-rule bg-editorial-sheet rounded-[4px] shadow-2xs transition-colors hover:border-editorial-brass">
                     <div id="masthead-logo-slot" class="h-16 sm:h-20 w-auto"></div>
                 </div>
                 <div>
@@ -281,7 +347,6 @@
                 </div>
             </div>
 
-            <!-- مؤشر الحالة وإدارة الشعار للمالك فقط -->
             <div class="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-editorial-rule">
                 <div class="flex items-center gap-2">
                     <span id="sync-status-dot" class="w-2 h-2 rounded-full bg-editorial-brass motion-live-dot" title="حالة المزامنة"></span>
@@ -634,20 +699,27 @@
         const OWNER_UNLOCK_CODE = 'TAHA-SAJ-ENSL-0122';
         let ownerAuthenticated = false;
 
-        /* شعار منصة ساج: قوس باب الجزائر + كتاب مفتوح + قلم + "ساج • SAJ — ENSL LAGHOUAT" */
+        /* شعار منصة ساج المتحرك: قوس باب الجزائر + كتاب مفتوح + قلم متحرك + "ساج • SAJ — ENSL LAGHOUAT" */
         const sajBrandLogoSVG = `
-        <svg viewBox="0 0 430 130" class="w-full h-full logo-multiply" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شعار منصة ساج SAJ — ENSL Laghouat">
+        <svg viewBox="0 0 430 130" class="w-full h-full logo-multiply" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شعار منصة ساج المتحرك SAJ — ENSL Laghouat">
             <g transform="translate(310, 12)">
-                <!-- صفحات الكتاب المفتوح -->
-                <path d="M12 88 C28 80 46 82 56 90 C66 82 84 80 100 88" fill="none" stroke="var(--burgundy)" stroke-width="4" stroke-linecap="round"/>
-                <path d="M18 78 C31 72 46 74 56 81 C66 74 81 72 94 78" fill="none" stroke="#B8934A" stroke-width="2.6" stroke-linecap="round"/>
-                <!-- قوس باب الجزائر -->
-                <path d="M24 76 V46 C24 27 38 14 56 14 C74 14 88 27 88 46 V76" fill="none" stroke="#B8934A" stroke-width="4" stroke-linecap="round"/>
-                <path d="M31 74 V47 C31 32 42 22 56 22 C70 22 81 32 81 47 V74" fill="none" stroke="#B8934A" stroke-width="1.6" stroke-dasharray="3 2.5"/>
-                <!-- رأس القلم في مركز القوس -->
-                <path d="M56 31 L65 52 L56 64 L47 52 Z" fill="var(--burgundy)"/>
-                <circle cx="56" cy="49" r="2.5" fill="#B8934A"/>
-                <line x1="56" y1="64" x2="56" y2="78" stroke="var(--burgundy)" stroke-width="2.4" stroke-linecap="round"/>
+                <!-- هالة ذهبية نابضة خلف القوس -->
+                <circle cx="56" cy="48" r="34" fill="#B8934A" class="saj-logo-aura"/>
+
+                <!-- صفحات الكتاب المفتوح المتحركة -->
+                <path d="M12 88 C28 80 46 82 56 90 C66 82 84 80 100 88" fill="none" stroke="var(--burgundy)" stroke-width="4" stroke-linecap="round" class="saj-logo-book"/>
+                <path d="M18 78 C31 72 46 74 56 81 C66 74 81 72 94 78" fill="none" stroke="#B8934A" stroke-width="2.6" stroke-linecap="round" class="saj-logo-book"/>
+
+                <!-- قوس باب الجزائر المرسوم حركياً -->
+                <path d="M24 76 V46 C24 27 38 14 56 14 C74 14 88 27 88 46 V76" fill="none" stroke="#B8934A" stroke-width="4" stroke-linecap="round" class="saj-logo-arch"/>
+                <path d="M31 74 V47 C31 32 42 22 56 22 C70 22 81 32 81 47 V74" fill="none" stroke="#B8934A" stroke-width="1.6" stroke-dasharray="3 2.5" class="saj-logo-arch"/>
+
+                <!-- رأس القلم المتحرك في مركز القوس -->
+                <g class="saj-logo-nib">
+                    <path d="M56 31 L65 52 L56 64 L47 52 Z" fill="var(--burgundy)"/>
+                    <circle cx="56" cy="49" r="2.5" fill="#B8934A"/>
+                    <line x1="56" y1="64" x2="56" y2="78" stroke="var(--burgundy)" stroke-width="2.4" stroke-linecap="round"/>
+                </g>
             </g>
 
             <!-- النص: ساج • SAJ و ENSL LAGHOUAT -->
@@ -663,14 +735,16 @@
         </svg>
         `;
 
-        /* شارة مختصرة لشريط التنقل */
+        /* شارة مختصرة متحركة لشريط التنقل */
         const sajNavBadgeSVG = `
-        <svg viewBox="0 0 80 80" class="w-full h-full logo-multiply" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شارة ساج">
+        <svg viewBox="0 0 80 80" class="w-full h-full logo-multiply" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شارة ساج المتحركة">
             <rect x="3" y="3" width="74" height="74" rx="14" fill="var(--burgundy)"/>
-            <path d="M18 56 V36 C18 23 28 14 40 14 C52 14 62 23 62 36 V56" fill="none" stroke="#C9A55C" stroke-width="2.8" stroke-linecap="round"/>
-            <path d="M22 58 C29 54 36 55 40 59 C44 55 51 54 58 58" fill="none" stroke="#FCFBF8" stroke-width="2.4" stroke-linecap="round"/>
-            <path d="M40 23 L46.5 37 L40 45 L33.5 37 Z" fill="#C9A55C"/>
-            <circle cx="40" cy="35" r="1.8" fill="var(--burgundy)"/>
+            <path d="M18 56 V36 C18 23 28 14 40 14 C52 14 62 23 62 36 V56" fill="none" stroke="#C9A55C" stroke-width="2.8" stroke-linecap="round" class="saj-logo-arch"/>
+            <path d="M22 58 C29 54 36 55 40 59 C44 55 51 54 58 58" fill="none" stroke="#FCFBF8" stroke-width="2.4" stroke-linecap="round" class="saj-logo-book"/>
+            <g class="saj-logo-nib">
+                <path d="M40 23 L46.5 37 L40 45 L33.5 37 Z" fill="#C9A55C"/>
+                <circle cx="40" cy="35" r="1.8" fill="var(--burgundy)"/>
+            </g>
         </svg>
         `;
 
@@ -1158,7 +1232,6 @@
             });
         }
 
-        /* التحقق من هوية المالك (Taha Sleia) لمنع أي جهة خارجية من تعديل الشعار */
         function verifyOwnerAccess() {
             if (ownerAuthenticated) return true;
             const entered = window.prompt(
