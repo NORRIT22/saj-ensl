@@ -4,35 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ساج — كراسات ومطارحات طلبة المدرسة العليا للأساتذة بالأغواط</title>
-    
-    <!-- تحميل Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- خطوط التحرير الأكاديمي: Amiri للعناوين والطباعة، و IBM Plex Sans Arabic للنصوص والبيانات -->
+
+    <!-- تطبيق الثيم قبل أي رسم لتفادي الوميض -->
+    <script>try{if(localStorage.getItem('saj_ensl_theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}</script>
+
+    <!-- Tailwind CSS (إصدار مثبّت) -->
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- أيقونات خطية دقيقة -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <!-- مكتبة Supabase للاتصال السحابي -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- أيقونات (إصدار مثبّت) -->
+    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+
+    <!-- Supabase (إصدار مثبّت) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 
     <script>
+        // دعم الشفافية (/70 وغيرها) مع ألوان المتغيرات CSS
+        const themeColor = (name) => ({ opacityValue }) => {
+            const n = parseFloat(opacityValue);
+            return (isNaN(n) || n >= 1)
+                ? `var(--${name})`
+                : `color-mix(in srgb, var(--${name}) ${n * 100}%, transparent)`;
+        };
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
                         editorial: {
-                            paper: 'var(--paper)',
-                            sheet: 'var(--sheet)',
-                            stone: 'var(--stone)',
-                            rule: 'var(--rule)',
-                            ink: 'var(--ink)',
-                            muted: 'var(--muted)',
-                            burgundy: 'var(--burgundy)',
-                            brass: 'var(--brass)',
+                            paper: themeColor('paper'),
+                            sheet: themeColor('sheet'),
+                            stone: themeColor('stone'),
+                            rule: themeColor('rule'),
+                            ink: themeColor('ink'),
+                            muted: themeColor('muted'),
+                            burgundy: themeColor('burgundy'),
+                            brass: themeColor('brass'),
                         }
                     },
                     fontFamily: {
@@ -77,9 +86,7 @@
             transition: background-color 0.25s ease, color 0.25s ease;
         }
 
-        .font-editorial {
-            font-family: 'Amiri', serif;
-        }
+        .font-editorial { font-family: 'Amiri', serif; }
 
         #archival-paper-texture {
             position: fixed;
@@ -100,52 +107,42 @@
             transition: transform 0.32s var(--ease-editorial), width 0.32s var(--ease-editorial);
         }
 
-        .journal-entry {
-            transition: background-color 0.25s ease, border-color 0.25s ease;
-        }
+        .journal-entry { transition: background-color 0.25s ease, border-color 0.25s ease; }
+        .journal-entry:hover { background-color: var(--sheet); }
+        .journal-entry:hover .entry-title { color: var(--burgundy); }
 
-        .journal-entry:hover {
-            background-color: var(--sheet);
-        }
-
-        .journal-entry:hover .entry-title {
-            color: var(--burgundy);
-        }
-
-        .fade-in-view {
-            animation: editorialReveal 0.3s var(--ease-editorial) forwards;
-        }
+        .fade-in-view { animation: editorialReveal 0.3s var(--ease-editorial) forwards; }
 
         @keyframes editorialReveal {
-            from {
-                opacity: 0;
-                transform: translateY(6px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .logo-multiply {
-            mix-blend-mode: multiply;
-        }
-
-        html.dark .logo-multiply {
-            mix-blend-mode: normal;
-            filter: brightness(1.12);
-        }
+        .logo-multiply { mix-blend-mode: multiply; }
+        html.dark .logo-multiply { mix-blend-mode: normal; filter: brightness(1.12); }
 
         @media print {
-            body * {
-                visibility: hidden;
+            html, body { overflow: visible !important; height: auto !important; }
+            body * { visibility: hidden; }
+            #printable-sheet, #printable-sheet * { visibility: visible; }
+
+            /* إلغاء وضع النافذة العائمة ليمتد المحتوى على عدة صفحات */
+            #reader-modal {
+                position: static !important;
+                overflow: visible !important;
+                background: none !important;
+                padding: 0 !important;
             }
-            #printable-sheet, #printable-sheet * {
-                visibility: visible;
+            #reader-modal > div { min-height: 0 !important; display: block !important; }
+            #reader-modal .fade-in-view { animation: none !important; box-shadow: none !important; border: none !important; margin: 0 !important; max-width: none !important; }
+
+            /* ألوان الطباعة دائماً فاتحة حتى في الوضع الليلي */
+            :root, html.dark {
+                --paper: #fff; --sheet: #fff; --stone: #f3f3f3; --rule: #ccc;
+                --ink: #000; --muted: #333; --burgundy: #5A1424; --brass: #8a6a2a;
             }
             #printable-sheet {
-                position: absolute;
-                inset: 0;
+                position: static !important;
                 width: 100%;
                 padding: 1.8cm 2cm;
                 background: #FFFFFF !important;
@@ -153,32 +150,25 @@
                 box-shadow: none !important;
                 border: none !important;
             }
-            .no-print {
-                display: none !important;
-            }
+            .logo-multiply { filter: none !important; mix-blend-mode: multiply; }
+            .no-print { display: none !important; }
         }
     </style>
 </head>
 <body class="antialiased selection:bg-editorial-burgundy selection:text-white flex flex-col min-h-screen relative">
 
-    <!-- خامة الورق الخفيفة -->
     <div id="archival-paper-texture" aria-hidden="true"></div>
 
-    <!-- خط تقدم القراءة العلوي الدقيق -->
     <div class="fixed top-0 left-0 right-0 h-[2px] z-50 bg-transparent pointer-events-none">
         <div id="reading-progress" class="h-full bg-editorial-burgundy w-0 transition-all duration-150"></div>
     </div>
 
-    <!-- حقل مخفي لمعاينة ملف الشعار -->
     <input type="file" id="logo-file-input" accept="image/*" class="hidden" onchange="handleLogoUpload(event)">
 
-    <!-- حاوية الإشعارات النصية -->
     <div id="toast-container" class="fixed bottom-6 left-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-    <!-- =========================================================
-    1. الشريط العلوي التحريري (Editorial Top Bar)
-    ========================================================== -->
-    <div class="border-b border-editorial-rule bg-editorial-sheet/95 sticky top-0 z-40 backdrop-blur-xs">
+    <!-- 1. الشريط العلوي -->
+    <div class="border-b border-editorial-rule bg-editorial-sheet/95 sticky top-0 z-40 backdrop-blur-sm">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 h-12 flex items-center justify-between text-xs text-editorial-muted">
             <div class="flex items-center gap-3 sm:gap-4 truncate">
                 <span data-i18n="academic_year" class="font-semibold text-editorial-ink">السنة الجامعية 2026–2027</span>
@@ -213,12 +203,10 @@
         </div>
     </div>
 
-    <!-- =========================================================
-    2. ترويسة الدورية (Editorial Masthead)
-    ========================================================== -->
+    <!-- 2. الترويسة -->
     <header class="max-w-6xl mx-auto w-full px-4 sm:px-6 pt-8 pb-6 relative z-10">
         <div class="flex flex-col md:flex-row items-center justify-between gap-6 pb-6">
-            
+
             <div class="flex items-center gap-4 sm:gap-5">
                 <div class="w-20 h-20 sm:w-24 sm:h-24 shrink-0 flex items-center justify-center p-1 border border-editorial-rule bg-editorial-sheet rounded-[3px]">
                     <div id="masthead-logo-slot" class="w-full h-full"></div>
@@ -263,25 +251,21 @@
         <div class="double-editorial-rule w-full"></div>
     </header>
 
-    <!-- =========================================================
-    3. الجسم التحريري: الفهرس الرئيسي + الحاشية الجانبية
-    ========================================================== -->
+    <!-- 3. الجسم -->
     <main class="max-w-6xl mx-auto w-full px-4 sm:px-6 pb-16 flex-grow relative z-10">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-            
-            <!-- العمود الرئيسي -->
+
             <div class="lg:col-span-8">
-                
-                <!-- شريط البحث والتصفية -->
+
                 <div class="pb-5 mb-6 border-b border-editorial-rule">
                     <div class="relative flex items-center bg-editorial-sheet border border-editorial-rule focus-within:border-editorial-ink rounded-[3px] px-3 py-2 mb-4">
                         <i data-lucide="search" class="w-4 h-4 text-editorial-muted shrink-0"></i>
-                        <input 
-                            type="text" 
-                            id="search-input" 
+                        <input
+                            type="text"
+                            id="search-input"
                             oninput="handleSearch()"
                             data-i18n-placeholder="search_placeholder"
-                            placeholder="ابحث في الفهرس بالعنوان، اسم الطالب، القسم، أو الموضوع..." 
+                            placeholder="ابحث في الفهرس بالعنوان، اسم الطالب، القسم، أو الموضوع..."
                             class="w-full bg-transparent px-3 text-sm text-editorial-ink placeholder-editorial-muted focus:outline-none"
                         >
                         <button id="clear-search-btn" onclick="clearSearch()" data-i18n="clear_btn" class="hidden text-xs text-editorial-burgundy font-semibold hover:underline px-2 cursor-pointer">
@@ -318,7 +302,6 @@
                     </div>
                 </div>
 
-                <!-- شريط حالة التصفية -->
                 <div class="flex items-center justify-between text-xs text-editorial-muted mb-4">
                     <span id="filter-status-label">عرض كافة المواد المفهرسة</span>
                     <button id="reset-filters-btn" onclick="resetAllFilters()" data-i18n="reset_filters" class="hidden text-editorial-burgundy font-semibold hover:underline cursor-pointer">
@@ -326,10 +309,8 @@
                     </button>
                 </div>
 
-                <!-- قائمة الفهرس التحريري -->
                 <div id="contributions-list" class="divide-y divide-editorial-rule border-t border-b border-editorial-rule"></div>
 
-                <!-- حالة عدم وجود نتائج -->
                 <div id="empty-state" class="hidden py-14 text-center border-b border-editorial-rule">
                     <p data-i18n="empty_title" class="font-editorial text-2xl text-editorial-ink mb-2">لا توجد مواد تطابق عبارة البحث</p>
                     <p data-i18n="empty_desc" class="text-xs text-editorial-muted mb-4">يمكنك توسيع نطاق البحث أو العودة إلى الفهرس الكامل.</p>
@@ -339,9 +320,8 @@
                 </div>
             </div>
 
-            <!-- العمود الجانبي -->
             <aside class="lg:col-span-4 lg:border-s lg:border-editorial-rule lg:ps-8 space-y-8">
-                
+
                 <section>
                     <div class="flex items-center justify-between border-b border-editorial-ink pb-2 mb-4">
                         <h2 data-i18n="sidebar_notes_title" class="font-editorial text-xl font-bold text-editorial-ink">
@@ -378,13 +358,11 @@
         </div>
     </main>
 
-    <!-- =========================================================
-    4. نافذة القراءة والطباعة
-    ========================================================== -->
+    <!-- 4. نافذة القراءة والطباعة -->
     <div id="reader-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-stone-950/75 p-2 sm:p-6" onclick="if(event.target === this) closeReaderModal()">
         <div class="min-h-screen flex items-center justify-center" onclick="if(event.target === this) closeReaderModal()">
             <div class="bg-editorial-sheet w-full max-w-3xl border border-editorial-ink shadow-xl my-4 fade-in-view">
-                
+
                 <div class="no-print bg-editorial-paper border-b border-editorial-rule px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-10">
                     <div class="flex items-center gap-2 text-xs">
                         <span id="modal-type-badge" class="font-bold text-editorial-burgundy"></span>
@@ -429,9 +407,9 @@
                             </div>
                             <div id="modal-logo-slot" class="w-14 h-14 shrink-0"></div>
                         </div>
-                        
+
                         <h2 id="modal-title" class="font-editorial text-2xl sm:text-4xl font-bold text-editorial-ink leading-snug mb-4"></h2>
-                        
+
                         <div class="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-editorial-muted">
                             <span class="font-bold text-editorial-burgundy" id="modal-author"></span>
                             <span>•</span>
@@ -478,13 +456,11 @@
         </div>
     </div>
 
-    <!-- =========================================================
-    5. نافذة نشر إسهام طلابي جديد
-    ========================================================== -->
+    <!-- 5. نافذة النشر -->
     <div id="publish-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-stone-950/75 p-3 sm:p-6" onclick="if(event.target === this) closeSubmitModal()">
         <div class="min-h-screen flex items-center justify-center" onclick="if(event.target === this) closeSubmitModal()">
             <div class="bg-editorial-sheet w-full max-w-2xl border border-editorial-ink shadow-xl my-4 fade-in-view">
-                
+
                 <div class="border-b border-editorial-rule px-6 py-4 flex items-center justify-between bg-editorial-paper">
                     <div>
                         <h3 data-i18n="pub_title" class="font-editorial text-2xl font-bold text-editorial-ink">إيداع إسهام في كراسات ساج</h3>
@@ -566,9 +542,7 @@
         </div>
     </div>
 
-    <!-- =========================================================
-    6. نافذة عن المبادرة وإخلاء المسؤولية
-    ========================================================== -->
+    <!-- 6. نافذة عن المبادرة -->
     <div id="about-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-stone-950/75 p-3 sm:p-6" onclick="if(event.target === this) closeAboutModal()">
         <div class="min-h-screen flex items-center justify-center" onclick="if(event.target === this) closeAboutModal()">
             <div class="bg-editorial-sheet w-full max-w-xl border border-editorial-ink shadow-xl p-6 sm:p-8 fade-in-view">
@@ -580,7 +554,7 @@
                 </div>
                 <div class="space-y-3 text-sm text-editorial-ink leading-relaxed">
                     <p data-i18n="about_p1">
-                        <strong>«ساج»</strong> (نسبةً إلى خشب الساج المتين الذي تُصنع منه ألواح الكتابة ومكاتب الدرس والرفوف العريقة) هي مبادرة طلابية تطوعية مستقلة أطلقها طلبة من المدرسة العليا للأساتذة طالب عبد الرحمن - الأغواط، بهدف حفظ وتداول الملخصات الجيدة، القراءات الأدبية، ومقدمات بحوث التخرج بين الدفعات.
+                        «ساج» (نسبةً إلى خشب الساج المتين الذي تُصنع منه ألواح الكتابة ومكاتب الدرس والرفوف العريقة) هي مبادرة طلابية تطوعية مستقلة أطلقها طلبة من المدرسة العليا للأساتذة طالب عبد الرحمن - الأغواط، بهدف حفظ وتداول الملخصات الجيدة، القراءات الأدبية، ومقدمات بحوث التخرج بين الدفعات.
                     </p>
                     <div class="bg-editorial-paper border-s-2 border-editorial-brass p-3.5 text-xs text-editorial-muted">
                         <strong data-i18n="disclaimer_heading" class="block text-editorial-ink mb-1">تنويه وإخلاء مسؤولية:</strong>
@@ -591,9 +565,7 @@
         </div>
     </div>
 
-    <!-- =========================================================
-    7. لوحة البحث السريع (Command Palette Ctrl+K)
-    ========================================================== -->
+    <!-- 7. لوحة البحث السريع -->
     <div id="cmd-modal" class="fixed inset-0 z-50 hidden bg-stone-950/65 p-4 sm:pt-20" onclick="if(event.target === this) closeCommandPalette()">
         <div class="max-w-lg mx-auto bg-editorial-sheet border border-editorial-ink shadow-xl overflow-hidden fade-in-view">
             <div class="flex items-center border-b border-editorial-rule px-3.5 py-2.5">
@@ -605,9 +577,7 @@
         </div>
     </div>
 
-    <!-- =========================================================
-    8. التذييل التحريري
-    ========================================================== -->
+    <!-- 8. التذييل -->
     <footer class="border-t-2 border-editorial-ink bg-editorial-stone/60 mt-auto relative z-10">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
             <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-editorial-rule">
@@ -631,9 +601,6 @@
         </div>
     </footer>
 
-    <!-- =========================================================
-    9. المنطق البرمجي
-    ========================================================== -->
     <script>
         const SUPABASE_URL = 'https://pjptbzefvrpthxnvnfgz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqcHRiemVmdnJwdGh4bnZuZmd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUwNDA0NDIsImV4cCI6MjExMDYxNjQ0Mn0.Zr8sZFWAH_E8aoaX71J6Q2b5NH-QVTVdhoV2Q1Vz448';
@@ -754,6 +721,7 @@
             }
         ];
 
+        // readTime مخزّن الآن كرقم (دقائق) ويُركَّب نصّه حسب اللغة
         const initialPublications = [
             {
                 id: 201,
@@ -763,7 +731,7 @@
                 author: "مريم بن عيسى",
                 year: "السنة الرابعة",
                 date: "16 نوفمبر 2026",
-                readTime: "7 دقائق",
+                readTime: 7,
                 views: 184,
                 abstract: "قراءة تحليلية في تعدد الأصوات السردية والمنولوج الداخلي لدى شخصية راسكولنيكوف، وكيفية توظيف الفضاء المغلق في بناء التوتر النفسي داخل النص الروائي.",
                 content: `تطرح رواية «الجريمة والعقاب» إشكالية العلاقة بين الفكرة المجردة والواقع الإنساني الملموس عبر بناء سردي يقوم على تداخل الضمائر والمنولوج الداخلي المتقطع.\n\nأولاً: شعرية المكان المغلق\nتتحول غرفة البطل الضيقة في سانت بطرسبرغ إلى معادل موضوعي لحالة الانغلاق الفكري، حيث تتكرر الأوصاف الهندسية الحادة التي تعكس أزمة الوعي.\n\nثانياً: تعدد الأصوات (البوليفونية)\nكما أشار ميخائيل باختين، لا يفرض السارد سلطة معرفية مطلقة على الشخصيات، بل يترك لكل شخصية منطقها الداخلي وحججها الفلسفية في مواجهة الآخر.`,
@@ -780,7 +748,7 @@
                 author: "أحمد الطاهر بلقاسم",
                 year: "السنة الخامسة (أستاذ تعليم ثانوي)",
                 date: "12 نوفمبر 2026",
-                readTime: "11 دقيقة",
+                readTime: 11,
                 views: 246,
                 abstract: "فصل مستلّ من مذكرة تخرج يتناول التحول من بيداغوجيا الأهداف إلى المقاربة بالكفاءات في تدريس اللغات الأجنبية بالطور الثانوي، مع رصد الصعوبات الميدانية أثناء التربص المغلق.",
                 content: `يهدف هذا البحث إلى تقييم مدى قابلية تطبيق مبادئ المقاربة بالكفاءات داخل الأقسام الثانوية ذات الكثافة التلاميذية المرتفعة، انطلاقاً من الملاحظة الميدانية خلال فترة التربص التطبيقي.\n\n1. الإطار النظري للمقاربة بالكفاءات\nتقوم هذه المقاربة على تعبئة الموارد المعرفية والمهارية لحل وضعيات-مشكلة دالة، مما ينقل المتعلم من التلقي السلبي إلى بناء المعرفة.\n\n2. معوقات التطبيق الميداني\nأظهرت المقابلات مع الأساتذة المكونين أن ضيق الحجم الساعي وكثافة البرامج يدفعان أحياناً إلى العودة إلى التلقين المباشر لتدارك التأخر.`,
@@ -797,7 +765,7 @@
                 author: "حمزة بن سالم",
                 year: "السنة الرابعة",
                 date: "08 نوفمبر 2026",
-                readTime: "9 دقائق",
+                readTime: 9,
                 views: 312,
                 abstract: "كراسة مراجعة منظمة لمقياس المعادلات التفاضلية الجزئية، تشرح تصنيف المعادلات من الرتبة الثانية (الناقصية، المكافئة، والزائدية) وطريقة فصل المتغيرات لحل معادلة الحرارة.",
                 content: `تُعد المعادلات التفاضلية الجزئية (EDP) أداة أساسية لوصف الظواهر الفيزيائية المتغيرة في الزمان والمكان معاً.\n\nأولاً: معادلة انتشار الحرارة أحادية البعد\nتُكتب المعادلة على الشكل: ∂u/∂t = α (∂²u/∂x²)، حيث يمثل α معامل الانتشار الحراري للمادة.\n\nثانياً: منهجية فصل المتغيرات\nنفترض أن الحل يأخذ الصيغة u(x,t) = X(x)T(t)، وبالتعويض في المعادلة الأصلية نحصل على معادلتين تفاضليتين عاديتين تُحلان باستخدام الشروط الحدية والابتدائية ومتسلسلات فورييه.`,
@@ -814,7 +782,7 @@
                 author: "خديجة قويدري",
                 year: "السنة الخامسة (أستاذ تعليم ثانوي)",
                 date: "03 نوفمبر 2026",
-                readTime: "10 دقائق",
+                readTime: 10,
                 views: 219,
                 abstract: "دراسة في التاريخ المحلي والعمران التقليدي لواحة الأغواط، تركز على الوظيفة الدفاعية والاجتماعية للأسوار والأبواب التاريخية وفي مقدمتها باب الجزائر.",
                 content: `ارتبط التخطيط العمراني لمدينة الأغواط القديمة بطبيعة الواحة ونظام توزيع المياه (السواقي)، حيث انقسم النسيج الحضري إلى أحياء متكاملة تحيط بها الأسوار التحصينية.\n\nرمزية باب الجزائر:\nشكل «باب الجزائر» المدخل الشمالي الرئيسي للمدينة ونقطة التقاء القوافل القادمة من التل نحو الصحراء، وقد اتُخذ قوسه المعماري رمزاً للهوية التاريخية والثقافية للمدينة.`,
@@ -831,7 +799,7 @@
                 author: "إلياس بوزيد",
                 year: "السنة الثالثة (أستاذ تعليم متوسط)",
                 date: "27 أكتوبر 2026",
-                readTime: "8 دقائق",
+                readTime: 8,
                 views: 275,
                 abstract: "شروحات مبسطة للمؤشرات (Pointers)، التخصيص الديناميكي للذاكرة، والقوائم المترابطة (Listes chaînées) بلغة C لتسهيل التحضير للامتحانات التطبيقية.",
                 content: `يمثل فهم المؤشرات وإدارة الذاكرة الحاجز الأول أمام طلبة السنة الثانية في مقياس الخوارزميات وهياكل البيانات.\n\n1. الفرق بين التمرير بالقيمة والتمرير بالمرجع\nعند تمرير عنوان المتغير باستخدام العامل (&)، تتمكن الدالة من تعديل القيمة الأصلية في الذاكرة مباشرة دون إنشاء نسخة إضافية.\n\n2. القوائم المترابطة البسيطة\nتتكون كل عقدة (Noeud) من حقل البيانات ومؤشر يشير إلى العقدة الموالية، مما يسمح بالإدراج والحذف دون الحاجة إلى حجز مساحة متجاورة مسبقاً.`,
@@ -848,7 +816,7 @@
                 author: "فاطمة الزهراء بن يحيى",
                 year: "السنة الثالثة (أستاذ تعليم متوسط)",
                 date: "21 أكتوبر 2026",
-                readTime: "6 دقائق",
+                readTime: 6,
                 views: 198,
                 abstract: "تأملات تربوية مستمدة من دروس علم النفس المراهق حول أسباب العزوف الدراسي وضعف الدافعية في الطور المتوسط، ودور الأستاذ في احتواء السلوكات الانفعالية.",
                 content: `تتسم مرحلة التعليم المتوسط بتحولات نمائية وانفعالية متسارعة تجعل التلميذ شديد الحساسية تجاه التقييم العلني أو التوبيخ أمام أقرانه.\n\nإن نجاح الأستاذ المتربص لا يُقاس بصرامة الضبط الشكلي بقدر ما يُقاس بقدرته على بناء مناخ صفي آمن يعزز الثقة بالنفس ويحوّل طاقة المراهق نحو المشاركة الفاعلة في بناء الدرس.`,
@@ -1071,24 +1039,33 @@
         let cmdSelectedIndex = 0;
         let activePublicationId = null;
 
-        function safeStorageGet(key) {
-            try { return localStorage.getItem(key); } catch (e) { return null; }
-        }
-        function safeStorageSet(key, val) {
-            try { localStorage.setItem(key, val); } catch (e) {}
-        }
-        function safeStorageRemove(key) {
-            try { localStorage.removeItem(key); } catch (e) {}
-        }
+        /* ---------- تخزين محلي آمن ---------- */
+        function safeStorageGet(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+        function safeStorageSet(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
+        function safeStorageRemove(key) { try { localStorage.removeItem(key); } catch (e) {} }
 
         function isSafeUrl(url) {
             if (!url) return false;
             try {
-                const parsed = new URL(url.trim());
+                const parsed = new URL(String(url).trim());
                 return parsed.protocol === 'https:' || parsed.protocol === 'http:';
-            } catch (e) {
-                return false;
-            }
+            } catch (e) { return false; }
+        }
+
+        /* ---------- زمن القراءة: رقم يُركَّب نصّه حسب اللغة ---------- */
+        function parseMinutes(v) {
+            if (typeof v === 'number' && v > 0) return Math.round(v);
+            const m = String(v || '').match(/\d+/);
+            return m ? Number(m[0]) : 6;
+        }
+
+        function formatMinutes(n) {
+            if (currentLang === 'fr') return n === 1 ? '1 minute' : `${n} minutes`;
+            if (currentLang === 'en') return n === 1 ? '1 min read' : `${n} min read`;
+            if (n === 1) return 'دقيقة واحدة';
+            if (n === 2) return 'دقيقتان';
+            if (n <= 10) return `${n} دقائق`;
+            return `${n} دقيقة`;
         }
 
         function normalizePublication(raw) {
@@ -1100,20 +1077,23 @@
             }
             return {
                 ...raw,
-                readTime: raw.readTime || raw.read_time || '6 دقائق',
+                readMinutes: parseMinutes(raw.read_time ?? raw.readTime),
                 views: Number(raw.views) || 1,
                 references: refs,
                 pdf_url: isSafeUrl(raw.pdf_url) ? raw.pdf_url.trim() : null
             };
         }
 
-        function initTheme() {
-            const savedTheme = safeStorageGet('saj_ensl_theme');
-            if (savedTheme === 'dark') {
-                document.documentElement.classList.add('dark');
-            }
-            updateThemeIcon();
+        /* ---------- قفل التمرير الموحّد ---------- */
+        function syncScrollLock() {
+            const anyOpen = document.querySelector(
+                '#reader-modal:not(.hidden), #publish-modal:not(.hidden), #about-modal:not(.hidden), #cmd-modal:not(.hidden)'
+            );
+            document.body.style.overflow = anyOpen ? 'hidden' : 'auto';
         }
+
+        /* ---------- الثيم ---------- */
+        function initTheme() { updateThemeIcon(); }
 
         function toggleTheme() {
             const isDark = document.documentElement.classList.toggle('dark');
@@ -1129,6 +1109,7 @@
             if (window.lucide) lucide.createIcons();
         }
 
+        /* ---------- التهيئة ---------- */
         async function initApp() {
             initTheme();
             loadCustomLogo();
@@ -1136,9 +1117,8 @@
             populateDepartments();
             renderStudentNotes();
 
-            // عرض فوري للبيانات المحلية/الافتراضية دون انتظار الشبكة
             loadLocalPublicationsSync();
-            renderAll();
+            renderAll(true);
 
             if (typeof ResizeObserver !== 'undefined') {
                 const tabsEl = document.getElementById('category-tabs');
@@ -1156,14 +1136,12 @@
             initShortcuts();
             if (window.lucide) lucide.createIcons();
 
-            // مزامنة سحابية في الخلفية من Supabase
             await syncCloudPublications();
-            renderAll();
+            renderAll(false);
 
-            // فتح الورقة مباشرة إذا وُجد معرف في الرابط (?id=...)
             const params = new URLSearchParams(window.location.search);
             const sharedId = Number(params.get('id'));
-            if (sharedId && publications.some(p => p.id === sharedId)) {
+            if (sharedId && publications.some(p => Number(p.id) === sharedId)) {
                 openReaderModal(sharedId);
             }
         }
@@ -1209,6 +1187,7 @@
             });
         }
 
+        /* ---------- الشعار ---------- */
         function loadCustomLogo() {
             const saved = safeStorageGet('saj_ensl_custom_logo');
             if (saved) {
@@ -1257,6 +1236,7 @@
             showToast(currentLang === 'ar' ? 'تمت استعادة الشعار الأصلي' : currentLang === 'fr' ? 'Emblème rétabli' : 'Emblem restored');
         }
 
+        /* ---------- تسميات ---------- */
         function getDeptLabel(deptId) {
             const found = departmentsList.find(d => d.id === deptId);
             if (!found) return deptId;
@@ -1264,7 +1244,6 @@
         }
 
         function getTypeLabel(typeId) {
-            if (currentLang === 'ar') return typeId;
             if (currentLang === 'fr') {
                 if (typeId === 'بحث') return 'Recherche';
                 if (typeId === 'مقال') return 'Article';
@@ -1276,6 +1255,13 @@
                 if (typeId === 'ملخص درس') return 'Lecture Summary';
             }
             return typeId;
+        }
+
+        function getPubYear(pub) {
+            const m = String(pub.date || '').match(/(20\d{2})/);
+            if (m) return m[1];
+            if (pub.created_at) return String(new Date(pub.created_at).getFullYear());
+            return String(new Date().getFullYear());
         }
 
         function populateDepartments() {
@@ -1328,6 +1314,7 @@
             }).join('');
         }
 
+        /* ---------- البيانات ---------- */
         function loadLocalPublicationsSync() {
             const saved = safeStorageGet('saj_ensl_contributions_v1');
             if (saved) {
@@ -1355,10 +1342,12 @@
                 if (!error && Array.isArray(data)) {
                     const normalizedCloud = data.map(normalizePublication);
                     const cloudIds = new Set(normalizedCloud.map(d => d.id));
+                    // المنشورات التي حُفظت محلياً فقط لا تُحذف عند المزامنة
+                    const localOnly = publications.filter(p => p.localOnly && !cloudIds.has(p.id));
                     const fallbackItems = initialPublications
                         .filter(p => !cloudIds.has(p.id))
                         .map(normalizePublication);
-                    publications = [...normalizedCloud, ...fallbackItems];
+                    publications = [...localOnly, ...normalizedCloud, ...fallbackItems];
                     savePublicationsLocal();
                     if (dot) {
                         dot.classList.remove('bg-editorial-brass');
@@ -1375,7 +1364,8 @@
             safeStorageSet('saj_ensl_contributions_v1', JSON.stringify(publications));
         }
 
-        function renderAll() {
+        /* ---------- العرض ---------- */
+        function renderAll(animate = true) {
             const summaryEl = document.getElementById('archive-summary-text');
             if (summaryEl) {
                 summaryEl.textContent = currentLang === 'ar'
@@ -1384,11 +1374,11 @@
                     ? `${publications.length} textes indexés`
                     : `${publications.length} indexed papers`;
             }
-            renderPublicationsList();
+            renderPublicationsList(animate);
             renderDepartmentsIndex();
         }
 
-        function renderPublicationsList() {
+        function renderPublicationsList(animate = true) {
             const listEl = document.getElementById('contributions-list');
             const emptyEl = document.getElementById('empty-state');
             const statusEl = document.getElementById('filter-status-label');
@@ -1410,7 +1400,8 @@
             if (currentSortOrder === 'popular') {
                 filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
             } else {
-                filtered.sort((a, b) => (b.id || 0) - (a.id || 0));
+                filtered.sort((a, b) =>
+                    (new Date(b.created_at || 0) - new Date(a.created_at || 0)) || ((b.id || 0) - (a.id || 0)));
             }
 
             if (statusEl) {
@@ -1422,11 +1413,8 @@
             }
 
             if (resetBtn) {
-                if (currentTypeFilter !== 'all' || currentDeptFilter !== 'all' || currentSearchQuery !== '') {
-                    resetBtn.classList.remove('hidden');
-                } else {
-                    resetBtn.classList.add('hidden');
-                }
+                const dirty = currentTypeFilter !== 'all' || currentDeptFilter !== 'all' || currentSearchQuery !== '';
+                resetBtn.classList.toggle('hidden', !dirty);
             }
 
             if (filtered.length === 0) {
@@ -1440,15 +1428,17 @@
             if (emptyEl) emptyEl.classList.add('hidden');
 
             const arrow = currentLang === 'ar' ? '←' : '→';
+            const animClass = animate ? 'fade-in-view' : '';
 
             listEl.innerHTML = filtered.map((pub, idx) => {
                 const indexNum = String(idx + 1).padStart(2, '0');
                 const typeLabel = getTypeLabel(pub.type);
                 const deptLabel = getDeptLabel(pub.department);
                 const readLabel = translations[currentLang].read_paper;
+                const pid = Number(pub.id);
 
                 return `
-                <article class="journal-entry py-6 px-2 sm:px-3 fade-in-view">
+                <article class="journal-entry py-6 px-2 sm:px-3 ${animClass}">
                     <div class="flex items-start gap-4">
                         <span class="font-mono text-xs text-editorial-brass pt-1.5 select-none shrink-0">${indexNum}</span>
                         <div class="flex-grow min-w-0">
@@ -1460,7 +1450,7 @@
                                 <span class="text-editorial-muted">${escapeHTML(pub.date)}</span>
                             </div>
 
-                            <h3 onclick="openReaderModal(${pub.id})" class="entry-title font-editorial text-xl sm:text-2xl font-bold text-editorial-ink leading-snug mb-2 cursor-pointer transition-colors">
+                            <h3 onclick="openReaderModal(${pid})" class="entry-title font-editorial text-xl sm:text-2xl font-bold text-editorial-ink leading-snug mb-2 cursor-pointer transition-colors">
                                 ${escapeHTML(pub.title)}
                             </h3>
 
@@ -1477,8 +1467,8 @@
 
                                 <div class="flex items-center gap-4">
                                     ${pub.pdf_url ? `<span class="text-[11px] font-mono px-1.5 py-0.5 bg-editorial-stone border border-editorial-rule text-editorial-burgundy rounded-[2px]">PDF</span>` : ''}
-                                    <span class="text-editorial-muted">${escapeHTML(pub.readTime || '6 دقائق')}</span>
-                                    <button onclick="openReaderModal(${pub.id})" class="font-bold text-editorial-burgundy hover:underline underline-offset-4 cursor-pointer">
+                                    <span class="text-editorial-muted">${escapeHTML(formatMinutes(pub.readMinutes))}</span>
+                                    <button onclick="openReaderModal(${pid})" class="font-bold text-editorial-burgundy hover:underline underline-offset-4 cursor-pointer">
                                         ${escapeHTML(readLabel)} ${arrow}
                                     </button>
                                 </div>
@@ -1490,6 +1480,7 @@
             }).join('');
         }
 
+        /* ---------- التصفية والترتيب ---------- */
         function setTypeFilter(type, btnEl) {
             currentTypeFilter = type;
             const target = btnEl || document.querySelector(`.type-btn[data-type="${type}"]`);
@@ -1503,12 +1494,12 @@
                 }
             });
             if (target) updateTabUnderline(target);
-            renderPublicationsList();
+            renderPublicationsList(true);
         }
 
         function setDepartmentFilter(dept) {
             currentDeptFilter = dept;
-            renderPublicationsList();
+            renderPublicationsList(true);
             renderDepartmentsIndex();
         }
 
@@ -1516,13 +1507,13 @@
             currentDeptFilter = currentDeptFilter === deptId ? 'all' : deptId;
             const sel = document.getElementById('dept-filter');
             if (sel) sel.value = currentDeptFilter;
-            renderPublicationsList();
+            renderPublicationsList(true);
             renderDepartmentsIndex();
         }
 
         function setSortOrder(order) {
             currentSortOrder = order;
-            renderPublicationsList();
+            renderPublicationsList(true);
         }
 
         function handleSearch() {
@@ -1531,7 +1522,7 @@
             if (!input) return;
             currentSearchQuery = input.value;
             if (clearBtn) clearBtn.classList.toggle('hidden', currentSearchQuery.length === 0);
-            renderPublicationsList();
+            renderPublicationsList(false); // بدون أنيميشن أثناء الكتابة
         }
 
         function clearSearch() {
@@ -1540,7 +1531,7 @@
             if (input) input.value = '';
             currentSearchQuery = '';
             if (clearBtn) clearBtn.classList.add('hidden');
-            renderPublicationsList();
+            renderPublicationsList(false);
         }
 
         function resetAllFilters() {
@@ -1557,6 +1548,7 @@
             renderDepartmentsIndex();
         }
 
+        /* ---------- اللغة ---------- */
         function cycleLanguage() {
             const order = ['ar', 'fr', 'en'];
             currentLang = order[(order.indexOf(currentLang) + 1) % order.length];
@@ -1581,7 +1573,10 @@
 
             populateDepartments();
             renderStudentNotes();
-            renderAll();
+            renderAll(false);
+
+            // تحديث نافذة القراءة إن كانت مفتوحة
+            if (activePublicationId) fillReaderModal(activePublicationId);
 
             requestAnimationFrame(() => {
                 const activeBtn = document.querySelector(`.type-btn[data-type="${currentTypeFilter}"]`);
@@ -1589,22 +1584,10 @@
             });
         }
 
-        async function openReaderModal(id) {
-            const pub = publications.find(p => p.id === id);
+        /* ---------- نافذة القراءة ---------- */
+        function fillReaderModal(id) {
+            const pub = publications.find(p => Number(p.id) === Number(id));
             if (!pub) return;
-            activePublicationId = id;
-
-            pub.views = (pub.views || 0) + 1;
-            savePublicationsLocal();
-            renderPublicationsList();
-
-            if (supabaseClient && pub.created_at) {
-                supabaseClient
-                    .from('contributions')
-                    .update({ views: pub.views })
-                    .eq('id', pub.id)
-                    .then(() => {});
-            }
 
             document.getElementById('modal-type-badge').textContent = getTypeLabel(pub.type);
             document.getElementById('modal-dept-label').textContent = getDeptLabel(pub.department);
@@ -1612,7 +1595,7 @@
             document.getElementById('modal-author').textContent = pub.author;
             document.getElementById('modal-year').textContent = `${getDeptLabel(pub.department)} (${pub.year})`;
             document.getElementById('modal-date').textContent = pub.date;
-            document.getElementById('modal-reading-time').textContent = pub.readTime || '6 دقائق';
+            document.getElementById('modal-reading-time').textContent = formatMinutes(pub.readMinutes);
             document.getElementById('modal-abstract').textContent = pub.abstract;
 
             const pdfBox = document.getElementById('modal-pdf-box');
@@ -1645,24 +1628,43 @@
                 refBox.classList.add('hidden');
             }
 
+            const yr = getPubYear(pub);
+            const dept = getDeptLabel(pub.department);
             document.getElementById('citation-text').textContent =
                 currentLang === 'ar'
-                    ? `${pub.author} (2026). «${pub.title}». منصة ساج الطلابية — ENSL (${pub.department})، الأغواط.`
+                    ? `${pub.author} (${yr}). «${pub.title}». منصة ساج الطلابية — ENSL (${dept})، الأغواط.`
                     : currentLang === 'fr'
-                    ? `${pub.author} (2026). « ${pub.title} ». Plateforme étudiante SAJ — ENSL (${getDeptLabel(pub.department)}), Laghouat.`
-                    : `${pub.author} (2026). "${pub.title}." SAJ Student Platform — ENSL (${getDeptLabel(pub.department)}), Laghouat.`;
+                    ? `${pub.author} (${yr}). « ${pub.title} ». Plateforme étudiante SAJ — ENSL (${dept}), Laghouat.`
+                    : `${pub.author} (${yr}). "${pub.title}." SAJ Student Platform — ENSL (${dept}), Laghouat.`;
 
-            document.getElementById('reader-modal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
             if (window.lucide) lucide.createIcons();
+        }
+
+        function openReaderModal(id) {
+            const pub = publications.find(p => Number(p.id) === Number(id));
+            if (!pub) return;
+            activePublicationId = pub.id;
+
+            pub.views = (pub.views || 0) + 1;
+            savePublicationsLocal();
+            renderPublicationsList(false);
+
+            // زيادة العدّاد على الخادم عبر دالة RPC (انظر ملاحظة SQL)؛ الفشل صامت
+            if (supabaseClient && pub.created_at && !pub.localOnly) {
+                supabaseClient.rpc('increment_views', { pub_id: pub.id }).then(() => {}, () => {});
+            }
+
+            fillReaderModal(pub.id);
+            document.getElementById('reader-modal').classList.remove('hidden');
+            syncScrollLock();
         }
 
         function closeReaderModal() {
             const modal = document.getElementById('reader-modal');
             if (modal && !modal.classList.contains('hidden')) {
                 modal.classList.add('hidden');
-                document.body.style.overflow = 'auto';
                 activePublicationId = null;
+                syncScrollLock();
             }
         }
 
@@ -1703,11 +1705,12 @@
             copyTextSafe(url.toString(), msg);
         }
 
+        /* ---------- نافذة النشر ---------- */
         function openSubmitModal() {
             const modal = document.getElementById('publish-modal');
             if (modal) {
                 modal.classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
+                syncScrollLock();
             }
         }
 
@@ -1715,7 +1718,7 @@
             const modal = document.getElementById('publish-modal');
             if (modal && !modal.classList.contains('hidden')) {
                 modal.classList.add('hidden');
-                document.body.style.overflow = 'auto';
+                syncScrollLock();
             }
         }
 
@@ -1735,7 +1738,7 @@
             if (!title || !author || !abstract || !content) return;
 
             if (pdfUrl && !isSafeUrl(pdfUrl)) {
-                showToast(currentLang === 'ar' ? 'يرجى إدخال رابط PDF صحيح يبدأ بـ https://' : 'Invalid PDF URL');
+                showToast(currentLang === 'ar' ? 'يرجى إدخال رابط PDF صحيح يبدأ بـ https://' : currentLang === 'fr' ? 'Lien PDF invalide' : 'Invalid PDF URL');
                 return;
             }
 
@@ -1752,6 +1755,7 @@
             const monthsAr = ["جانفي", "فيفري", "مارس", "أفريل", "ماي", "جوان", "جويلية", "أوت", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
             const formattedDate = `${today.getDate()} ${monthsAr[today.getMonth()]} ${today.getFullYear()}`;
 
+            // الحقول المرسلة للسحابة: read_time (snake_case) يوافق ما يقرأه الكود
             const newRecord = {
                 title,
                 type,
@@ -1759,7 +1763,7 @@
                 author,
                 year,
                 date: formattedDate,
-                readTime: `${mins} دقائق`,
+                read_time: String(mins),
                 views: 1,
                 abstract,
                 content,
@@ -1767,7 +1771,11 @@
                 pdf_url: isSafeUrl(pdfUrl) ? pdfUrl : null
             };
 
-            let insertedItem = normalizePublication({ id: Date.now(), ...newRecord });
+            let insertedItem = normalizePublication({
+                id: Date.now(),
+                created_at: new Date().toISOString(),
+                ...newRecord
+            });
 
             if (supabaseClient) {
                 try {
@@ -1779,13 +1787,17 @@
 
                     if (!error && data) {
                         insertedItem = normalizePublication(data);
-                    } else if (error) {
-                        console.error('Supabase insert error:', error);
-                        showToast(currentLang === 'ar' ? 'تعذر الحفظ السحابي، تم الحفظ محلياً' : 'Saved locally only');
+                    } else {
+                        if (error) console.error('Supabase insert error:', error);
+                        insertedItem.localOnly = true;
+                        showToast(currentLang === 'ar' ? 'تعذر الحفظ السحابي، تم الحفظ محلياً' : currentLang === 'fr' ? 'Enregistré localement uniquement' : 'Saved locally only');
                     }
                 } catch (err) {
                     console.error('Supabase network error:', err);
+                    insertedItem.localOnly = true;
                 }
+            } else {
+                insertedItem.localOnly = true;
             }
 
             publications.unshift(insertedItem);
@@ -1799,15 +1811,18 @@
             document.getElementById('contribution-form').reset();
             closeSubmitModal();
             resetAllFilters();
-            renderAll();
-            showToast(currentLang === 'ar' ? 'تم نشر إسهامك للجميع في فهرس ساج' : currentLang === 'fr' ? 'Contribution publiée pour tous' : 'Contribution published');
+            renderAll(true);
+            if (!insertedItem.localOnly) {
+                showToast(currentLang === 'ar' ? 'تم نشر إسهامك للجميع في فهرس ساج' : currentLang === 'fr' ? 'Contribution publiée pour tous' : 'Contribution published');
+            }
         }
 
+        /* ---------- نافذة عن المبادرة ---------- */
         function openAboutModal() {
             const modal = document.getElementById('about-modal');
             if (modal) {
                 modal.classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
+                syncScrollLock();
             }
         }
 
@@ -1815,16 +1830,17 @@
             const modal = document.getElementById('about-modal');
             if (modal && !modal.classList.contains('hidden')) {
                 modal.classList.add('hidden');
-                document.body.style.overflow = 'auto';
+                syncScrollLock();
             }
         }
 
+        /* ---------- لوحة البحث السريع ---------- */
         function openCommandPalette() {
             const modal = document.getElementById('cmd-modal');
             const input = document.getElementById('cmd-input');
             if (!modal || !input) return;
             modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+            syncScrollLock();
             input.value = '';
             cmdSelectedIndex = 0;
             filterCommandPalette('');
@@ -1835,7 +1851,7 @@
             const modal = document.getElementById('cmd-modal');
             if (modal && !modal.classList.contains('hidden')) {
                 modal.classList.add('hidden');
-                document.body.style.overflow = 'auto';
+                syncScrollLock();
             }
         }
 
@@ -1863,7 +1879,7 @@
             cmdSelectedIndex = 0;
 
             const matchedPubs = publications.filter(p =>
-                !q || p.title.toLowerCase().includes(q) || p.author.toLowerCase().includes(q) || getDeptLabel(p.department).toLowerCase().includes(q)
+                !q || (p.title || '').toLowerCase().includes(q) || (p.author || '').toLowerCase().includes(q) || getDeptLabel(p.department).toLowerCase().includes(q)
             ).slice(0, 5);
 
             const matchedDepts = departmentsList.filter(d =>
@@ -1871,7 +1887,7 @@
             ).slice(0, 3);
 
             let html = matchedPubs.map((p, i) => `
-                <button onclick="closeCommandPalette(); openReaderModal(${p.id})" class="cmd-item w-full px-4 py-2.5 text-start hover:bg-editorial-paper flex items-center justify-between gap-3 cursor-pointer ${i === 0 ? 'bg-editorial-paper' : ''}">
+                <button onclick="closeCommandPalette(); openReaderModal(${Number(p.id)})" class="cmd-item w-full px-4 py-2.5 text-start hover:bg-editorial-paper flex items-center justify-between gap-3 cursor-pointer ${i === 0 ? 'bg-editorial-paper' : ''}">
                     <div class="min-w-0">
                         <div class="font-editorial text-base font-bold text-editorial-ink truncate">${escapeHTML(p.title)}</div>
                         <div class="text-[11px] text-editorial-muted">${escapeHTML(p.author)} • ${escapeHTML(getDeptLabel(p.department))}</div>
@@ -1890,6 +1906,7 @@
             container.innerHTML = html || `<div class="p-6 text-center text-xs text-editorial-muted">${currentLang === 'ar' ? 'لا توجد نتائج' : currentLang === 'fr' ? 'Aucun résultat' : 'No results'}</div>`;
         }
 
+        /* ---------- أدوات ---------- */
         function showToast(msg) {
             const container = document.getElementById('toast-container');
             if (!container) return;
