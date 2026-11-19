@@ -50,8 +50,7 @@
 
     <style>
         :root {
-            --ease-motion: cubic-bezier(0.22, 1, 0.36, 1);
-            --ease-snap: cubic-bezier(0.34, 1.36, 0.64, 1);
+            --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
             --paper: #F7F5F0;
             --sheet: #FCFBF8;
             --stone: #ECE8DF;
@@ -79,110 +78,10 @@
             font-family: 'IBM Plex Sans Arabic', sans-serif;
             overflow-x: hidden;
             line-height: 1.75;
-            transition: background-color 0.25s ease, color 0.25s ease;
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
 
-        .font-editorial {
-            font-family: 'IBM Plex Sans Arabic', sans-serif;
-            letter-spacing: -0.01em;
-        }
-
-        /* طبقة رموز التخصصات المتحركة بدون فقاعات */
-        #specialty-symbols-layer {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            overflow: hidden;
-        }
-
-        nav, header, main, footer {
-            position: relative;
-            z-index: 1;
-        }
-
-        @keyframes symbolWalkPop {
-            0% {
-                opacity: 0;
-                transform: translate3d(0, 14px, 0) scale(0.45) rotate(-4deg);
-            }
-            18% {
-                opacity: 0.68;
-                transform: translate3d(calc(var(--walk-x, 28px) * 0.25), calc(var(--walk-y, -20px) * 0.25), 0) scale(1.14) rotate(2deg);
-            }
-            45% {
-                opacity: 0.58;
-                transform: translate3d(calc(var(--walk-x, 28px) * 0.6), calc(var(--walk-y, -20px) * 0.65), 0) scale(0.86) rotate(-2deg);
-            }
-            72% {
-                opacity: 0.72;
-                transform: translate3d(calc(var(--walk-x, 28px) * 0.85), calc(var(--walk-y, -20px) * 0.9), 0) scale(1.18) rotate(3deg);
-            }
-            90% {
-                opacity: 0.28;
-                transform: translate3d(var(--walk-x, 28px), calc(var(--walk-y, -20px) * 1.15), 0) scale(0.62) rotate(0deg);
-            }
-            100% {
-                opacity: 0;
-                transform: translate3d(calc(var(--walk-x, 28px) * 1.1), calc(var(--walk-y, -20px) * 1.3), 0) scale(0.35) rotate(-3deg);
-            }
-        }
-
-        .specialty-symbol {
-            position: absolute;
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            background: transparent;
-            border: none;
-            box-shadow: none;
-            animation-name: symbolWalkPop;
-            animation-timing-function: var(--ease-motion);
-            animation-iteration-count: infinite;
-            will-change: transform, opacity;
-            user-select: none;
-        }
-
-        .specialty-symbol .symbol-mark {
-            font-weight: 700;
-            line-height: 1.05;
-            color: color-mix(in srgb, var(--symbol-accent, var(--burgundy)) 76%, var(--ink) 24%);
-            text-shadow: 0 2px 10px color-mix(in srgb, var(--symbol-accent, var(--brass)) 22%, transparent);
-        }
-
-        .specialty-symbol .symbol-label {
-            font-size: 10px;
-            font-weight: 600;
-            line-height: 1.15;
-            margin-top: 2px;
-            color: var(--muted);
-            opacity: 0.78;
-        }
-
-        @keyframes pulsePingSlow {
-            0%, 100% { transform: scale(1); opacity: 0.9; }
-            50% { transform: scale(1.35); opacity: 0.45; }
-        }
-
-        @keyframes barSweep {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        @keyframes motionCardEnter {
-            from {
-                opacity: 0;
-                transform: translateY(12px) scale(0.992);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        @keyframes mastheadDraw {
+        @keyframes subtleFadeUp {
             from {
                 opacity: 0;
                 transform: translateY(8px);
@@ -193,146 +92,35 @@
             }
         }
 
-        @keyframes archStrokeDraw {
-            from {
-                stroke-dashoffset: 260;
-                opacity: 0.35;
-            }
-            to {
-                stroke-dashoffset: 0;
-                opacity: 1;
-            }
-        }
-
-        @keyframes nibMotion {
-            0%, 100% {
-                transform: translateY(0px) rotate(0deg);
-            }
-            25% {
-                transform: translateY(-3px) rotate(-3deg);
-            }
-            75% {
-                transform: translateY(1px) rotate(3deg);
-            }
-        }
-
-        @keyframes logoAuraPulse {
-            0%, 100% {
-                opacity: 0.14;
-                transform: scale(0.94);
-            }
-            50% {
-                opacity: 0.34;
-                transform: scale(1.06);
-            }
-        }
-
-        @keyframes orbitSpin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .saj-logo-arch {
-            stroke-dasharray: 260;
-            stroke-dashoffset: 0;
-            animation: archStrokeDraw 1.2s var(--ease-motion) both;
-        }
-
-        .saj-logo-book {
-            stroke-dasharray: 200;
-            stroke-dashoffset: 0;
-            animation: archStrokeDraw 1s var(--ease-motion) 0.16s both;
-        }
-
-        .saj-logo-nib {
-            transform-box: fill-box;
-            transform-origin: center;
-            animation: nibMotion 2.6s ease-in-out infinite;
-            transition: transform 0.35s var(--ease-snap);
-        }
-
-        .saj-logo-aura {
-            transform-box: fill-box;
-            transform-origin: center;
-            animation: logoAuraPulse 3.2s ease-in-out infinite;
-        }
-
-        .saj-logo-orbit {
-            transform-box: fill-box;
-            transform-origin: center;
-            animation: orbitSpin 14s linear infinite;
-        }
-
-        .saj-logo-box:hover .saj-logo-nib {
-            transform: translateY(-5px) scale(1.1);
-        }
-
-        .saj-logo-box:hover .saj-logo-orbit {
-            animation-duration: 5s;
-        }
-
-        .saj-logo-box:hover .saj-logo-arch {
-            filter: drop-shadow(0 0 6px color-mix(in srgb, var(--brass) 55%, transparent));
-        }
-
-        .motion-live-dot {
-            animation: pulsePingSlow 2.4s ease-in-out infinite;
-        }
-
-        .motion-bar-sweep {
-            position: relative;
-            overflow: hidden;
-        }
-        .motion-bar-sweep::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            width: 45%;
-            background: linear-gradient(90deg, transparent, rgba(184, 147, 74, 0.35), transparent);
-            animation: barSweep 3.8s var(--ease-motion) infinite;
-        }
-
-        .motion-entry {
+        .editorial-entry {
             opacity: 0;
-            animation: motionCardEnter 0.45s var(--ease-motion) forwards;
-            animation-delay: calc(var(--i, 0) * 45ms);
-            transition: transform 0.28s var(--ease-motion), background-color 0.25s ease, border-color 0.25s ease;
+            animation: subtleFadeUp 0.35s var(--ease-editorial) forwards;
+            animation-delay: calc(var(--i, 0) * 35ms);
+            transition: background-color 0.2s ease, border-color 0.2s ease;
         }
 
-        .motion-entry:hover {
+        .editorial-entry:hover {
             background-color: var(--sheet);
-            transform: translateY(-2px);
         }
 
-        .motion-entry:hover .entry-title {
+        .editorial-entry:hover .entry-title {
             color: var(--burgundy);
         }
 
-        .motion-arrow {
-            display: inline-block;
-            transition: transform 0.25s var(--ease-snap);
-        }
-        .motion-entry:hover .motion-arrow {
-            transform: translateX(-4px);
-        }
-        html[dir="ltr"] .motion-entry:hover .motion-arrow {
-            transform: translateX(4px);
-        }
-
-        .motion-masthead {
-            animation: mastheadDraw 0.55s var(--ease-motion) both;
-        }
-
         .tab-underline {
-            transition: transform 0.36s var(--ease-snap), width 0.36s var(--ease-snap);
+            transition: transform 0.28s var(--ease-editorial), width 0.28s var(--ease-editorial);
         }
 
-        .fade-in-view {
-            animation: motionCardEnter 0.32s var(--ease-motion) forwards;
+        .modal-panel {
+            animation: subtleFadeUp 0.22s var(--ease-editorial) forwards;
         }
 
-        .logo-multiply { mix-blend-mode: multiply; }
-        html.dark .logo-multiply { mix-blend-mode: normal; filter: brightness(1.12); }
+        .logo-surface {
+            mix-blend-mode: multiply;
+        }
+        html.dark .logo-surface {
+            mix-blend-mode: normal;
+        }
 
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
@@ -340,12 +128,10 @@
                 animation-iteration-count: 1 !important;
                 transition-duration: 0.01ms !important;
             }
-            .motion-entry { opacity: 1 !important; }
-            #specialty-symbols-layer { display: none; }
+            .editorial-entry { opacity: 1 !important; }
         }
 
         @media print {
-            #specialty-symbols-layer { display: none !important; }
             html, body { overflow: visible !important; height: auto !important; }
             body * { visibility: hidden; }
             #printable-sheet, #printable-sheet * { visibility: visible; }
@@ -356,7 +142,7 @@
                 padding: 0 !important;
             }
             #reader-modal > div { min-height: 0 !important; display: block !important; }
-            #reader-modal .fade-in-view { animation: none !important; box-shadow: none !important; border: none !important; margin: 0 !important; max-width: none !important; }
+            #reader-modal .modal-panel { animation: none !important; box-shadow: none !important; border: none !important; margin: 0 !important; max-width: none !important; }
             :root, html.dark {
                 --paper: #fff; --sheet: #fff; --stone: #f3f3f3; --rule: #ccc;
                 --ink: #000; --muted: #333; --burgundy: #5A1424; --brass: #8a6a2a;
@@ -370,30 +156,28 @@
                 box-shadow: none !important;
                 border: none !important;
             }
-            .logo-multiply { filter: none !important; mix-blend-mode: multiply; }
+            .logo-surface { mix-blend-mode: multiply; }
             .no-print { display: none !important; }
         }
     </style>
 </head>
-<body class="antialiased selection:bg-editorial-burgundy selection:text-white flex flex-col min-h-screen relative">
+<body class="antialiased selection:bg-editorial-burgundy selection:text-white flex flex-col min-h-screen">
 
-    <!-- طبقة رموز التخصصات المتحركة بدون فقاعات -->
-    <div id="specialty-symbols-layer" aria-hidden="true"></div>
-
-    <div class="fixed top-0 left-0 right-0 h-[3px] z-50 bg-editorial-rule/40 pointer-events-none">
+    <!-- مؤشر التقدم في القراءة -->
+    <div class="fixed top-0 left-0 right-0 h-[2px] z-50 bg-editorial-rule/40 pointer-events-none">
         <div id="reading-progress" class="h-full bg-editorial-burgundy w-0 transition-all duration-150"></div>
     </div>
 
-    <input type="file" id="logo-file-input" accept="image/*" class="hidden" onchange="handleLogoUpload(event)">
+    <!-- إشعارات النظام -->
     <div id="toast-container" class="fixed bottom-6 left-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
     <!-- 1. شريط التنقل -->
     <nav class="border-b border-editorial-rule bg-editorial-sheet/95 sticky top-0 z-40 backdrop-blur-sm">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 h-14 py-2 flex items-center justify-between gap-3 text-xs">
-            <a href="#" onclick="resetAllFilters(); return false;" class="flex items-center gap-2.5 text-editorial-ink font-bold shrink-0 group saj-logo-box">
+            <a href="#" onclick="resetAllFilters(); return false;" class="flex items-center gap-2.5 text-editorial-ink font-bold shrink-0">
                 <span id="nav-badge-slot" class="w-8 h-8 shrink-0"></span>
                 <span data-i18n="masthead_title" class="text-lg font-bold text-editorial-burgundy">ساج</span>
-                <span class="hidden sm:inline text-editorial-muted font-mono text-[11px]">ENSL LAGHOUAT</span>
+                <span class="hidden sm:inline text-editorial-muted font-mono text-[11px] tracking-wider">ENSL LAGHOUAT</span>
             </a>
 
             <div class="flex items-center gap-2 shrink-0">
@@ -403,7 +187,7 @@
                     <kbd class="hidden md:inline text-[10px] font-mono text-editorial-muted">Ctrl+K</kbd>
                 </button>
 
-                <button onclick="toggleTheme()" id="theme-toggle-btn" class="p-1.5 rounded-[4px] border border-editorial-rule bg-editorial-paper hover:border-editorial-burgundy text-editorial-ink transition-colors cursor-pointer" title="تبديل الوضع الليلي">
+                <button onclick="toggleTheme()" id="theme-toggle-btn" class="p-1.5 rounded-[4px] border border-editorial-rule bg-editorial-paper hover:border-editorial-burgundy text-editorial-ink transition-colors cursor-pointer" aria-label="تبديل المظهر">
                     <i data-lucide="moon" id="theme-icon" class="w-3.5 h-3.5"></i>
                 </button>
 
@@ -415,7 +199,10 @@
                     عن ساج
                 </button>
 
-                <button onclick="openSubmitModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] bg-editorial-burgundy hover:opacity-90 text-white font-semibold transition-all active:scale-95 cursor-pointer">
+                <!-- حالة حساب الطالب -->
+                <div id="auth-nav-slot" class="flex items-center"></div>
+
+                <button onclick="openSubmitModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] bg-editorial-burgundy hover:opacity-90 text-white font-semibold transition-opacity cursor-pointer">
                     <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                     <span data-i18n="btn_publish">نشر إسهام</span>
                 </button>
@@ -423,12 +210,12 @@
         </div>
     </nav>
 
-    <!-- 2. واجهة رأسية بشعار ساج المتحرك غير المتداخل -->
-    <header class="max-w-5xl mx-auto w-full px-4 sm:px-6 pt-8 pb-6 motion-masthead">
+    <!-- 2. الترويسة الرئيسية -->
+    <header class="max-w-5xl mx-auto w-full px-4 sm:px-6 pt-8 pb-6">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-                <div class="saj-logo-box px-4 py-2 shrink-0 flex items-center justify-center border border-editorial-rule bg-editorial-sheet rounded-[4px] transition-colors hover:border-editorial-brass">
-                    <div id="masthead-logo-slot" class="h-16 sm:h-20 min-w-[260px] sm:min-w-[310px] w-auto"></div>
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-6">
+                <div class="px-4 py-2.5 shrink-0 flex items-center justify-center border border-editorial-rule bg-editorial-sheet rounded-[4px]">
+                    <div id="masthead-logo-slot" class="h-16 sm:h-20 w-[265px] sm:w-[300px]"></div>
                 </div>
                 <div>
                     <div class="flex flex-wrap items-center gap-2 text-[11px] font-mono text-editorial-brass mb-1">
@@ -445,24 +232,16 @@
                 </div>
             </div>
 
-            <div class="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-editorial-rule">
+            <div class="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-editorial-rule shrink-0">
                 <div class="flex items-center gap-2">
-                    <span id="sync-status-dot" class="w-2 h-2 rounded-full bg-editorial-brass motion-live-dot" title="حالة المزامنة"></span>
+                    <span id="sync-status-dot" class="w-2 h-2 rounded-full bg-editorial-brass" title="حالة المزامنة"></span>
                     <span id="archive-summary-text" class="text-xs font-bold text-editorial-burgundy">0 إسهام مفهرس</span>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="ownerLogoAction('upload')" class="inline-flex items-center gap-1 text-[11px] text-editorial-muted hover:text-editorial-burgundy underline underline-offset-4 cursor-pointer">
-                        <i id="owner-lock-icon" data-lucide="lock" class="w-3 h-3 text-editorial-brass"></i>
-                        <span data-i18n="upload_logo_text">تحديث الشعار</span>
-                    </button>
-                    <button id="reset-logo-btn" onclick="ownerLogoAction('reset')" class="hidden text-[11px] text-editorial-burgundy font-semibold hover:underline cursor-pointer">
-                        (<span data-i18n="reset_text">استعادة</span>)
-                    </button>
-                </div>
+                <span class="text-[11px] font-mono text-editorial-muted">ARCHIVE • ENSL</span>
             </div>
         </div>
 
-        <div class="h-[3px] w-full bg-editorial-burgundy/85 motion-bar-sweep rounded-full"></div>
+        <div class="h-[2px] w-full bg-editorial-burgundy/80"></div>
     </header>
 
     <!-- 3. المحتوى الرئيسي -->
@@ -470,7 +249,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
             <section class="lg:col-span-8">
-                <div class="bg-editorial-sheet/95 border border-editorial-rule rounded-[4px] p-4 mb-6">
+                <div class="bg-editorial-sheet border border-editorial-rule rounded-[4px] p-4 mb-6">
                     <div class="relative flex items-center bg-editorial-paper border border-editorial-rule focus-within:border-editorial-burgundy rounded-[4px] px-3 py-2 mb-4 transition-colors">
                         <i data-lucide="search" class="w-4 h-4 text-editorial-burgundy shrink-0"></i>
                         <input
@@ -488,7 +267,7 @@
 
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div class="relative flex items-center gap-5 border-b border-editorial-rule/60 overflow-x-auto" id="category-tabs">
-                            <div id="tab-underline" class="tab-underline absolute bottom-0 left-0 h-[2.5px] bg-editorial-burgundy pointer-events-none"></div>
+                            <div id="tab-underline" class="tab-underline absolute bottom-0 left-0 h-[2px] bg-editorial-burgundy pointer-events-none"></div>
                             <button onclick="setTypeFilter('all', this)" data-type="all" data-i18n="tab_all" class="type-btn pb-2 text-xs sm:text-sm font-bold text-editorial-burgundy whitespace-nowrap cursor-pointer">
                                 الكل
                             </button>
@@ -524,7 +303,7 @@
 
                 <div id="contributions-list" class="space-y-3"></div>
 
-                <div id="empty-state" class="hidden py-14 px-4 text-center bg-editorial-sheet/95 border border-editorial-rule rounded-[4px]">
+                <div id="empty-state" class="hidden py-14 px-4 text-center bg-editorial-sheet border border-editorial-rule rounded-[4px]">
                     <p data-i18n="empty_title" class="text-xl font-bold text-editorial-ink mb-2">الفهرس فارغ حالياً أو لا توجد نتائج مطابقة</p>
                     <p data-i18n="empty_desc" class="text-xs text-editorial-muted mb-4">يمكنك أن تكون أول من ينشر ملفاً أو بحثاً أو ملخصاً في منصة ساج.</p>
                     <button onclick="openSubmitModal()" data-i18n="btn_publish" class="px-4 py-2 text-xs font-bold bg-editorial-burgundy text-white hover:opacity-90 rounded-[4px] transition-opacity cursor-pointer">
@@ -534,7 +313,7 @@
             </section>
 
             <aside class="lg:col-span-4 space-y-6">
-                <section class="bg-editorial-sheet/95 border border-editorial-rule rounded-[4px] p-4">
+                <section class="bg-editorial-sheet border border-editorial-rule rounded-[4px] p-4">
                     <div class="flex items-center justify-between border-b border-editorial-rule pb-2 mb-3">
                         <h2 data-i18n="sidebar_depts_title" class="text-base font-bold text-editorial-ink">الأقسام والتخصصات</h2>
                         <span class="text-[11px] font-mono text-editorial-brass">9</span>
@@ -542,7 +321,7 @@
                     <ul id="departments-index" class="divide-y divide-editorial-rule/60 text-sm"></ul>
                 </section>
 
-                <section class="bg-editorial-sheet/95 border border-editorial-rule rounded-[4px] p-4">
+                <section class="bg-editorial-sheet border border-editorial-rule rounded-[4px] p-4">
                     <div class="flex items-center justify-between border-b border-editorial-rule pb-2 mb-3">
                         <h2 data-i18n="sidebar_notes_title" class="text-base font-bold text-editorial-ink">تنبيهات الطلبة</h2>
                         <span class="text-[11px] font-mono text-editorial-muted">NOTES</span>
@@ -553,10 +332,86 @@
         </div>
     </main>
 
-    <!-- 4. نافذة القراءة والطباعة -->
+    <!-- 4. نافذة تسجيل الدخول وإنشاء الحساب -->
+    <div id="auth-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-stone-950/75 p-3 sm:p-6" onclick="if(event.target === this) closeAuthModal()">
+        <div class="min-h-screen flex items-center justify-center" onclick="if(event.target === this) closeAuthModal()">
+            <div class="bg-editorial-sheet w-full max-w-md border border-editorial-rule shadow-2xl my-4 rounded-[4px] modal-panel">
+                <div class="border-b border-editorial-rule px-6 py-4 flex items-center justify-between bg-editorial-paper rounded-t-[4px]">
+                    <div class="flex items-center gap-2.5">
+                        <span id="auth-badge-slot" class="w-7 h-7 shrink-0"></span>
+                        <div>
+                            <h3 id="auth-modal-heading" data-i18n="auth_login_title" class="text-lg font-bold text-editorial-ink">تسجيل الدخول إلى ساج</h3>
+                            <p data-i18n="auth_subtitle" class="text-[11px] text-editorial-muted">بوابة طلبة المدرسة العليا للأساتذة بالأغواط</p>
+                        </div>
+                    </div>
+                    <button onclick="closeAuthModal()" class="p-1 text-editorial-muted hover:text-editorial-ink cursor-pointer" aria-label="إغلاق">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- التبديل بين تسجيل الدخول وإنشاء حساب -->
+                <div class="grid grid-cols-2 border-b border-editorial-rule bg-editorial-paper/50 text-xs font-bold">
+                    <button type="button" id="auth-tab-login" onclick="switchAuthMode('login')" data-i18n="auth_tab_login" class="py-2.5 border-b-2 border-editorial-burgundy text-editorial-burgundy cursor-pointer">
+                        تسجيل الدخول
+                    </button>
+                    <button type="button" id="auth-tab-register" onclick="switchAuthMode('register')" data-i18n="auth_tab_register" class="py-2.5 border-b-2 border-transparent text-editorial-muted hover:text-editorial-ink cursor-pointer">
+                        إنشاء حساب جديد
+                    </button>
+                </div>
+
+                <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="p-6 space-y-4">
+                    <div id="auth-register-fields" class="hidden space-y-4">
+                        <div>
+                            <label data-i18n="auth_lbl_name" class="block text-xs font-bold text-editorial-ink mb-1">الاسم واللقب الكامل *</label>
+                            <input type="text" id="auth-name" placeholder="مثال: طه صليعة" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label data-i18n="lbl_dept" class="block text-xs font-bold text-editorial-ink mb-1">القسم *</label>
+                                <select id="auth-dept" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3 py-2 text-xs text-editorial-ink focus:outline-none focus:border-editorial-burgundy"></select>
+                            </div>
+                            <div>
+                                <label data-i18n="lbl_year" class="block text-xs font-bold text-editorial-ink mb-1">المستوى الجامعي *</label>
+                                <select id="auth-year" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3 py-2 text-xs text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
+                                    <option value="السنة الأولى">السنة الأولى / 1ère Année</option>
+                                    <option value="السنة الثانية">السنة الثانية / 2ème Année</option>
+                                    <option value="السنة الثالثة">السنة الثالثة / 3ème Année</option>
+                                    <option value="السنة الرابعة">السنة الرابعة / 4ème Année</option>
+                                    <option value="السنة الخامسة">السنة الخامسة / 5ème Année</option>
+                                    <option value="السنة السادسة">السنة السادسة / 6ème Année</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label data-i18n="auth_lbl_email" class="block text-xs font-bold text-editorial-ink mb-1">البريد الإلكتروني *</label>
+                        <input type="email" id="auth-email" required placeholder="student@ens-lagh.dz" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy" dir="ltr">
+                    </div>
+
+                    <div>
+                        <label data-i18n="auth_lbl_password" class="block text-xs font-bold text-editorial-ink mb-1">كلمة المرور *</label>
+                        <input type="password" id="auth-password" required minlength="6" placeholder="••••••••" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy" dir="ltr">
+                    </div>
+
+                    <div class="pt-2 flex items-center justify-end gap-3 border-t border-editorial-rule">
+                        <button type="button" onclick="closeAuthModal()" data-i18n="cancel_btn" class="px-4 py-2 text-xs font-semibold text-editorial-muted hover:text-editorial-ink cursor-pointer">
+                            إلغاء
+                        </button>
+                        <button type="submit" id="auth-submit-btn" data-i18n="auth_btn_login" class="px-5 py-2 rounded-[3px] text-xs font-bold bg-editorial-burgundy hover:opacity-90 text-white transition-opacity cursor-pointer">
+                            دخول
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. نافذة القراءة والطباعة -->
     <div id="reader-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-stone-950/75 p-2 sm:p-6" onclick="if(event.target === this) closeReaderModal()">
         <div class="min-h-screen flex items-center justify-center" onclick="if(event.target === this) closeReaderModal()">
-            <div class="bg-editorial-sheet w-full max-w-3xl border border-editorial-rule shadow-2xl my-4 rounded-[4px] fade-in-view">
+            <div class="bg-editorial-sheet w-full max-w-3xl border border-editorial-rule shadow-2xl my-4 rounded-[4px] modal-panel">
 
                 <div class="no-print bg-editorial-paper border-b border-editorial-rule px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-10 rounded-t-[4px]">
                     <div class="flex items-center gap-2 text-xs">
@@ -600,7 +455,7 @@
                                 <p data-i18n="sheet_header_1" class="font-bold text-editorial-ink">ساج — كراسات ومطارحات طلبة المدرسة العليا للأساتذة بالأغواط</p>
                                 <p data-i18n="sheet_header_2">مبادرة طلابية مستقلة • منصة ساج الطلابية — ENSL</p>
                             </div>
-                            <div id="modal-logo-slot" class="h-12 w-auto shrink-0"></div>
+                            <div id="modal-logo-slot" class="h-12 w-[170px] shrink-0"></div>
                         </div>
 
                         <h2 id="modal-title" class="text-2xl sm:text-3xl font-bold text-editorial-ink leading-snug mb-4"></h2>
@@ -654,10 +509,10 @@
         </div>
     </div>
 
-    <!-- 5. نافذة النشر (ملفات + نصوص) -->
+    <!-- 6. نافذة النشر (ملفات + نصوص) -->
     <div id="publish-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-stone-950/75 p-3 sm:p-6" onclick="if(event.target === this) closeSubmitModal()">
         <div class="min-h-screen flex items-center justify-center" onclick="if(event.target === this) closeSubmitModal()">
-            <div class="bg-editorial-sheet w-full max-w-2xl border border-editorial-rule shadow-2xl my-4 rounded-[4px] fade-in-view">
+            <div class="bg-editorial-sheet w-full max-w-2xl border border-editorial-rule shadow-2xl my-4 rounded-[4px] modal-panel">
 
                 <div class="border-b border-editorial-rule px-6 py-4 flex items-center justify-between bg-editorial-paper rounded-t-[4px]">
                     <div>
@@ -755,10 +610,10 @@
         </div>
     </div>
 
-    <!-- 6. نافذة عن المبادرة -->
+    <!-- 7. نافذة عن المبادرة -->
     <div id="about-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-stone-950/75 p-3 sm:p-6" onclick="if(event.target === this) closeAboutModal()">
         <div class="min-h-screen flex items-center justify-center" onclick="if(event.target === this) closeAboutModal()">
-            <div class="bg-editorial-sheet w-full max-w-xl border border-editorial-rule shadow-2xl p-6 sm:p-8 rounded-[4px] fade-in-view">
+            <div class="bg-editorial-sheet w-full max-w-xl border border-editorial-rule shadow-2xl p-6 sm:p-8 rounded-[4px] modal-panel">
                 <div class="flex items-center justify-between border-b border-editorial-rule pb-3 mb-4">
                     <h3 data-i18n="about_modal_title" class="text-xl font-bold text-editorial-burgundy">عن «ساج»</h3>
                     <button onclick="closeAboutModal()" class="text-editorial-muted hover:text-editorial-ink cursor-pointer">
@@ -778,9 +633,9 @@
         </div>
     </div>
 
-    <!-- 7. لوحة البحث السريع -->
+    <!-- 8. لوحة البحث السريع -->
     <div id="cmd-modal" class="fixed inset-0 z-50 hidden bg-stone-950/65 p-4 sm:pt-20" onclick="if(event.target === this) closeCommandPalette()">
-        <div class="max-w-lg mx-auto bg-editorial-sheet border border-editorial-rule shadow-2xl rounded-[4px] overflow-hidden fade-in-view">
+        <div class="max-w-lg mx-auto bg-editorial-sheet border border-editorial-rule shadow-2xl rounded-[4px] overflow-hidden modal-panel">
             <div class="flex items-center border-b border-editorial-rule px-3.5 py-2.5">
                 <i data-lucide="search" class="w-4 h-4 text-editorial-burgundy mx-1.5"></i>
                 <input type="text" id="cmd-input" oninput="filterCommandPalette(this.value)" onkeydown="handleCmdKeydown(event)" data-i18n-placeholder="cmd_placeholder" placeholder="ابحث في الفهرس أو انتقل إلى قسم..." class="w-full bg-transparent text-sm text-editorial-ink placeholder-editorial-muted focus:outline-none">
@@ -790,8 +645,8 @@
         </div>
     </div>
 
-    <!-- 8. التذييل -->
-    <footer class="border-t border-editorial-rule bg-editorial-sheet/95 mt-auto">
+    <!-- 9. التذييل -->
+    <footer class="border-t border-editorial-rule bg-editorial-sheet mt-auto">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-editorial-muted">
             <div>
                 <span data-i18n="colophon_title" class="text-base font-bold text-editorial-ink block">ساج — المدرسة العليا للأساتذة بالأغواط</span>
@@ -799,6 +654,7 @@
             </div>
             <div class="flex items-center gap-4">
                 <button onclick="openAboutModal()" data-i18n="about_link" class="hover:text-editorial-burgundy underline underline-offset-4 cursor-pointer">عن ساج</button>
+                <button onclick="openAuthModal('login')" data-i18n="auth_tab_login" class="hover:text-editorial-burgundy underline underline-offset-4 cursor-pointer">تسجيل الدخول</button>
                 <button onclick="openSubmitModal()" data-i18n="btn_publish" class="hover:text-editorial-burgundy underline underline-offset-4 cursor-pointer">نشر إسهام</button>
             </div>
         </div>
@@ -812,86 +668,67 @@
             ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
             : null;
 
-        const OWNER_UNLOCK_CODE = 'TAHA-SAJ-ENSL-0122';
-        let ownerAuthenticated = false;
         let selectedUploadFile = null;
+        let currentUser = null;
+        let authMode = 'login';
 
-        /* رموز التخصصات التسعة المتحركة دون فقاعات */
-        const specialtySymbolsConfig = [
-            { mark: "ض", label: "العربية", accent: "#B8934A", size: 28, left: "5%",  top: "18%", dur: "11s",  delay: "0s",    dx: "32px",  dy: "-24px" },
-            { mark: "FR", label: "Français", accent: "#5A1424", size: 22, left: "84%", top: "16%", dur: "12.5s",delay: "-2.2s", dx: "-28px", dy: "22px" },
-            { mark: "EN", label: "English", accent: "#B8934A", size: 22, left: "12%", top: "46%", dur: "10.5s",delay: "-4s",   dx: "26px",  dy: "24px" },
-            { mark: "∑π", label: "الرياضيات", accent: "#5A1424", size: 26, left: "78%", top: "44%", dur: "13s",  delay: "-1.4s", dx: "-34px", dy: "-26px" },
-            { mark: "λΩ", label: "الفيزياء", accent: "#B8934A", size: 25, left: "48%", top: "13%", dur: "14s",  delay: "-5.2s", dx: "24px",  dy: "20px" },
-            { mark: "🌿", label: "علوم الطبيعة", accent: "#5A1424", size: 26, left: "89%", top: "73%", dur: "11.5s",delay: "-3s",   dx: "-26px", dy: "-22px" },
-            { mark: "</>", label: "الإعلام الآلي", accent: "#B8934A", size: 23, left: "8%",  top: "77%", dur: "13.2s",delay: "-6s",   dx: "30px",  dy: "-25px" },
-            { mark: "🗺️", label: "التاريخ والجغرافيا", accent: "#5A1424", size: 25, left: "56%", top: "82%", dur: "12s",  delay: "-2.5s", dx: "-24px", dy: "-20px" },
-            { mark: "🏃", label: "التربية البدنية", accent: "#B8934A", size: 25, left: "30%", top: "68%", dur: "11.2s",delay: "-4.5s", dx: "28px",  dy: "18px" }
-        ];
-
-        function renderSpecialtySymbols() {
-            const layer = document.getElementById('specialty-symbols-layer');
-            if (!layer) return;
-            layer.innerHTML = specialtySymbolsConfig.map(s => `
-                <div class="specialty-symbol" style="
-                    left: ${s.left};
-                    top: ${s.top};
-                    --symbol-accent: ${s.accent};
-                    --walk-x: ${s.dx};
-                    --walk-y: ${s.dy};
-                    animation-duration: ${s.dur};
-                    animation-delay: ${s.delay};
-                ">
-                    <span class="symbol-mark" style="font-size: ${s.size}px;">${escapeHTML(s.mark)}</span>
-                    <span class="symbol-label">${escapeHTML(s.label)}</span>
-                </div>
-            `).join('');
-        }
-
-        /* شعار ساج الموزون بدقة دون أي تداخل بين النص والرمز */
+        /* شعار ساج المطابق للمرجع المرفق:
+           يساراً: SAJ بالذهبي و "ساج" بالعنابي وتحتهما ENSL LAGHOUAT
+           يميناً: قوس باب الجزائر المزدوج، دائرة منقطة، قرص ذهبي، ريشة قلم عنابية، وكتاب مفتوح */
         const sajBrandLogoSVG = `
-        <svg viewBox="0 0 490 120" class="w-full h-full logo-multiply" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شعار منصة ساج المتحرك SAJ — ENSL Laghouat">
-            <g transform="translate(216, 0)" text-anchor="end">
-                <text x="0" y="54" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="31">
-                    <tspan fill="var(--burgundy)">ساج</tspan>
-                    <tspan fill="#B8934A"> • SAJ</tspan>
-                </text>
-                <text x="0" y="88" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="13" letter-spacing="1.6" fill="var(--burgundy)">
-                    ENSL LAGHOUAT
-                </text>
+        <svg viewBox="0 0 470 150" class="w-full h-full logo-surface" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شعار منصة ساج SAJ — ENSL Laghouat">
+            <defs>
+                <linearGradient id="sajBrassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#D4AF6A"/>
+                    <stop offset="50%" stop-color="#B8934A"/>
+                    <stop offset="100%" stop-color="#9A7632"/>
+                </linearGradient>
+            </defs>
+
+            <!-- الكتلة النصية (يسار) -->
+            <g transform="translate(148, 0)">
+                <text x="-12" y="76" text-anchor="end" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="48" letter-spacing="1" fill="url(#sajBrassGrad)">SAJ</text>
+                <text x="6" y="76" text-anchor="start" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="52" fill="var(--burgundy)">ساج</text>
+                <text x="2" y="106" text-anchor="middle" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="14.5" letter-spacing="3.2" fill="var(--burgundy)">ENSL LAGHOUAT</text>
             </g>
 
-            <line x1="234" y1="24" x2="234" y2="96" stroke="#DCD6C8" stroke-width="1.2" opacity="0.7"/>
+            <!-- الشارة الهندسية (يمين) -->
+            <g transform="translate(362, 74)">
+                <!-- الهالة الدائرية المنقطة -->
+                <circle cx="0" cy="0" r="61" fill="none" stroke="url(#sajBrassGrad)" stroke-width="2" stroke-dasharray="5 7.5" stroke-linecap="round" opacity="0.85"/>
 
-            <g transform="translate(248, 4)">
-                <circle cx="54" cy="54" r="35" fill="#B8934A" class="saj-logo-aura"/>
-                <circle cx="54" cy="54" r="41" fill="none" stroke="#B8934A" stroke-width="1.4" stroke-dasharray="4 7" opacity="0.7" class="saj-logo-orbit"/>
+                <!-- الخلفية الدائرية الرملية الدافئة -->
+                <circle cx="0" cy="0" r="51" fill="#EBDDC3" opacity="0.72"/>
 
-                <path d="M16 92 C30 84 44 86 54 94 C64 86 78 84 92 92" fill="none" stroke="var(--burgundy)" stroke-width="3.5" stroke-linecap="round" class="saj-logo-book"/>
-                <path d="M22 82 C32 76 44 78 54 85 C64 78 76 76 86 82" fill="none" stroke="#B8934A" stroke-width="2.3" stroke-linecap="round" class="saj-logo-book"/>
+                <!-- القوس المعماري المزدوج -->
+                <path d="M -32 34 V -14 A 32 32 0 0 1 32 -14 V 34" fill="none" stroke="url(#sajBrassGrad)" stroke-width="5.2" stroke-linecap="round"/>
+                <path d="M -22 33 V -14 A 22 22 0 0 1 22 -14 V 33" fill="none" stroke="url(#sajBrassGrad)" stroke-width="2.4" stroke-linecap="round" opacity="0.85"/>
 
-                <path d="M27 78 V48 C27 30 39 17 54 17 C69 17 81 30 81 48 V78" fill="none" stroke="#B8934A" stroke-width="3.6" stroke-linecap="round" class="saj-logo-arch"/>
-                <path d="M34 76 V49 C34 35 43 25 54 25 C65 25 74 35 74 49 V76" fill="none" stroke="#B8934A" stroke-width="1.5" stroke-dasharray="3 2.5" class="saj-logo-arch"/>
+                <!-- القرص الذهبي الداخلي يسار الريشة -->
+                <circle cx="-13" cy="-16" r="6.5" fill="url(#sajBrassGrad)"/>
 
-                <g class="saj-logo-nib">
-                    <path d="M54 33 L62.5 54 L54 66 L45.5 54 Z" fill="var(--burgundy)"/>
-                    <circle cx="54" cy="51" r="2.4" fill="#B8934A"/>
-                    <line x1="54" y1="66" x2="54" y2="79" stroke="var(--burgundy)" stroke-width="2.2" stroke-linecap="round"/>
-                </g>
+                <!-- ريشة القلم العنابية في المحور -->
+                <path d="M 0 -30 L 12 -4 L 5 11 L -5 11 L -12 -4 Z" fill="var(--burgundy)"/>
+                <circle cx="0" cy="-4" r="3" fill="#EBDDC3"/>
+                <rect x="-2" y="11" width="4" height="23" fill="var(--burgundy)"/>
+
+                <!-- الكتاب المفتوح الذهبي والعنابي -->
+                <path d="M -42 36 Q -21 26 0 38 Q 21 26 42 36" fill="none" stroke="url(#sajBrassGrad)" stroke-width="4.5" stroke-linecap="round"/>
+                <path d="M -46 42 Q -23 31 0 44 Q 23 31 46 42" fill="none" stroke="var(--burgundy)" stroke-width="4.8" stroke-linecap="round"/>
             </g>
         </svg>
         `;
 
+        /* أيقونة شريط التنقل المصغرة */
         const sajNavBadgeSVG = `
-        <svg viewBox="0 0 80 80" class="w-full h-full logo-multiply" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شارة ساج المتحركة">
-            <rect x="3" y="3" width="74" height="74" rx="14" fill="var(--burgundy)"/>
-            <circle cx="40" cy="39" r="27" fill="none" stroke="#C9A55C" stroke-width="1.3" stroke-dasharray="3 5" opacity="0.7" class="saj-logo-orbit"/>
-            <path d="M19 56 V36 C19 23 28 15 40 15 C52 15 61 23 61 36 V56" fill="none" stroke="#C9A55C" stroke-width="2.7" stroke-linecap="round" class="saj-logo-arch"/>
-            <path d="M22 59 C29 55 36 56 40 60 C44 56 51 55 58 59" fill="none" stroke="#FCFBF8" stroke-width="2.3" stroke-linecap="round" class="saj-logo-book"/>
-            <g class="saj-logo-nib">
-                <path d="M40 24 L46.5 38 L40 46 L33.5 38 Z" fill="#C9A55C"/>
-                <circle cx="40" cy="36" r="1.8" fill="var(--burgundy)"/>
-            </g>
+        <svg viewBox="0 0 120 120" class="w-full h-full" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شارة ساج">
+            <circle cx="60" cy="60" r="54" fill="#EFE4CE" stroke="#B8934A" stroke-width="2.5" stroke-dasharray="5 6"/>
+            <path d="M 32 86 V 46 A 28 28 0 0 1 88 46 V 86" fill="none" stroke="#B8934A" stroke-width="5.5" stroke-linecap="round"/>
+            <circle cx="46" cy="44" r="5.5" fill="#B8934A"/>
+            <path d="M 60 30 L 71 54 L 64 68 L 56 68 L 49 54 Z" fill="var(--burgundy)"/>
+            <circle cx="60" cy="54" r="2.8" fill="#EFE4CE"/>
+            <rect x="58" y="68" width="4" height="19" fill="var(--burgundy)"/>
+            <path d="M 22 92 Q 41 82 60 94 Q 79 82 98 92" fill="none" stroke="var(--burgundy)" stroke-width="5" stroke-linecap="round"/>
         </svg>
         `;
 
@@ -948,8 +785,6 @@
                 masthead_subtitle: "كراسات ومطارحات طلبة المدرسة العليا للأساتذة بالأغواط",
                 masthead_disclaimer: "مبادرة طلابية مستقلة لتبادل البحوث، المقالات، والملفات والملخصات بين طلبة المدرسة.",
                 archive_issue: "العدد الأول — خريف 2026",
-                upload_logo_text: "تحديث الشعار",
-                reset_text: "استعادة",
                 search_placeholder: "ابحث بالعنوان، اسم الطالب، القسم، أو الموضوع...",
                 clear_btn: "مسح",
                 tab_all: "الكل",
@@ -961,7 +796,6 @@
                 reset_filters: "إلغاء التصفية",
                 empty_title: "الفهرس فارغ حالياً أو لا توجد نتائج مطابقة",
                 empty_desc: "يمكنك أن تكون أول من ينشر ملفاً أو بحثاً أو ملخصاً في منصة ساج.",
-                show_all_btn: "العودة للفهرس الكامل",
                 sidebar_notes_title: "تنبيهات الطلبة",
                 sidebar_depts_title: "الأقسام والتخصصات",
                 share_btn: "مشاركة",
@@ -997,7 +831,18 @@
                 colophon_title: "ساج — المدرسة العليا للأساتذة بالأغواط",
                 colophon_disclaimer: "مبادرة طلابية مستقلة لتبادل الملفات والملخصات والفائدة العلمية بين الطلبة.",
                 all_depts_opt: "جميع الأقسام",
-                read_paper: "فتح الإسهام"
+                read_paper: "فتح الإسهام",
+                auth_login_title: "تسجيل الدخول إلى ساج",
+                auth_register_title: "إنشاء حساب طالب جديد",
+                auth_subtitle: "بوابة طلبة المدرسة العليا للأساتذة بالأغواط",
+                auth_tab_login: "تسجيل الدخول",
+                auth_tab_register: "إنشاء حساب جديد",
+                auth_lbl_name: "الاسم واللقب الكامل *",
+                auth_lbl_email: "البريد الإلكتروني *",
+                auth_lbl_password: "كلمة المرور *",
+                auth_btn_login: "دخول",
+                auth_btn_register: "تسجيل الحساب",
+                auth_logout: "خروج"
             },
             fr: {
                 doc_title: "SAJ — Cahiers étudiants de l’ENS Laghouat",
@@ -1009,8 +854,6 @@
                 masthead_subtitle: "Cahiers étudiants de l’ENS Laghouat",
                 masthead_disclaimer: "Initiative étudiante indépendante pour le partage de fichiers, recherches, articles et résumés.",
                 archive_issue: "N° 1 — Automne 2026",
-                upload_logo_text: "Emblème",
-                reset_text: "Rétablir",
                 search_placeholder: "Rechercher par titre, étudiant, département ou sujet...",
                 clear_btn: "Effacer",
                 tab_all: "Tout",
@@ -1022,7 +865,6 @@
                 reset_filters: "Réinitialiser",
                 empty_title: "Aucun fichier ou texte pour le moment",
                 empty_desc: "Soyez le premier à publier un fichier, une recherche ou un résumé sur SAJ.",
-                show_all_btn: "Afficher tout l'index",
                 sidebar_notes_title: "Notes étudiantes",
                 sidebar_depts_title: "Départements",
                 share_btn: "Partager",
@@ -1058,7 +900,18 @@
                 colophon_title: "SAJ — ENS Laghouat",
                 colophon_disclaimer: "Initiative étudiante indépendante dédiée au partage de fichiers et de savoirs.",
                 all_depts_opt: "Tous les départements",
-                read_paper: "Ouvrir"
+                read_paper: "Ouvrir",
+                auth_login_title: "Connexion à SAJ",
+                auth_register_title: "Créer un compte étudiant",
+                auth_subtitle: "Portail des étudiants de l'ENS Laghouat",
+                auth_tab_login: "Connexion",
+                auth_tab_register: "Inscription",
+                auth_lbl_name: "Nom et prénom *",
+                auth_lbl_email: "Adresse e-mail *",
+                auth_lbl_password: "Mot de passe *",
+                auth_btn_login: "Se connecter",
+                auth_btn_register: "Créer le compte",
+                auth_logout: "Déconnexion"
             },
             en: {
                 doc_title: "SAJ — Student Notebooks of ENS Laghouat",
@@ -1070,8 +923,6 @@
                 masthead_subtitle: "Student Notebooks & Working Papers of ENS Laghouat",
                 masthead_disclaimer: "Independent student initiative for sharing files, research papers, essays, and summaries.",
                 archive_issue: "Issue 1 — Fall 2026",
-                upload_logo_text: "Emblem",
-                reset_text: "Restore",
                 search_placeholder: "Search by title, student, department, or topic...",
                 clear_btn: "Clear",
                 tab_all: "All",
@@ -1083,7 +934,6 @@
                 reset_filters: "Reset",
                 empty_title: "No files or entries yet",
                 empty_desc: "Be the first to publish a file, paper, or summary on SAJ.",
-                show_all_btn: "Back to Full Index",
                 sidebar_notes_title: "Student Notes",
                 sidebar_depts_title: "Departments",
                 share_btn: "Share",
@@ -1119,7 +969,18 @@
                 colophon_title: "SAJ — ENS Laghouat",
                 colophon_disclaimer: "Independent student initiative dedicated to file and knowledge sharing.",
                 all_depts_opt: "All Departments",
-                read_paper: "Open Entry"
+                read_paper: "Open Entry",
+                auth_login_title: "Sign in to SAJ",
+                auth_register_title: "Create Student Account",
+                auth_subtitle: "ENS Laghouat Student Portal",
+                auth_tab_login: "Sign In",
+                auth_tab_register: "Register",
+                auth_lbl_name: "Full Name *",
+                auth_lbl_email: "Email Address *",
+                auth_lbl_password: "Password *",
+                auth_btn_login: "Sign In",
+                auth_btn_register: "Create Account",
+                auth_logout: "Sign Out"
             }
         };
 
@@ -1130,7 +991,6 @@
         let currentSortOrder = 'newest';
         let readerFontSize = 16;
         let currentLang = 'ar';
-        let customLogoDataUrl = null;
         let cmdSelectedIndex = 0;
         let activePublicationId = null;
 
@@ -1186,7 +1046,7 @@
 
         function syncScrollLock() {
             const anyOpen = document.querySelector(
-                '#reader-modal:not(.hidden), #publish-modal:not(.hidden), #about-modal:not(.hidden), #cmd-modal:not(.hidden)'
+                '#reader-modal:not(.hidden), #publish-modal:not(.hidden), #about-modal:not(.hidden), #cmd-modal:not(.hidden), #auth-modal:not(.hidden)'
             );
             document.body.style.overflow = anyOpen ? 'hidden' : 'auto';
         }
@@ -1209,11 +1069,10 @@
 
         async function initApp() {
             initTheme();
-            renderSpecialtySymbols();
-            loadCustomLogo();
             renderLogos();
             populateDepartments();
             renderStudentNotes();
+            await restoreUserSession();
 
             loadLocalPublicationsSync();
             renderAll(true);
@@ -1281,89 +1140,213 @@
                     closeReaderModal();
                     closeSubmitModal();
                     closeAboutModal();
+                    closeAuthModal();
                 }
             });
-        }
-
-        function verifyOwnerAccess() {
-            if (ownerAuthenticated) return true;
-            const entered = window.prompt(
-                currentLang === 'ar'
-                    ? 'إجراء خاص بصاحب المنصة فقط. أدخل رمز المالك للتحقق:'
-                    : 'Action réservée au propriétaire. Entrez le code propriétaire :'
-            );
-            if (entered && entered.trim() === OWNER_UNLOCK_CODE) {
-                ownerAuthenticated = true;
-                const lockIcon = document.getElementById('owner-lock-icon');
-                if (lockIcon) {
-                    lockIcon.setAttribute('data-lucide', 'unlock');
-                    if (window.lucide) lucide.createIcons();
-                }
-                showToast(currentLang === 'ar' ? 'تم التحقق من هوية المالك' : 'Propriétaire vérifié');
-                return true;
-            }
-            showToast(currentLang === 'ar' ? 'تم الرفض: تعديل الشعار متاح للمالك فقط' : 'Accès refusé : réservé au propriétaire');
-            return false;
-        }
-
-        function ownerLogoAction(action) {
-            if (!verifyOwnerAccess()) return;
-            if (action === 'upload') {
-                const input = document.getElementById('logo-file-input');
-                if (input) input.click();
-            } else if (action === 'reset') {
-                resetDefaultLogo();
-            }
-        }
-
-        function loadCustomLogo() {
-            const saved = safeStorageGet('saj_ensl_custom_logo');
-            if (saved) {
-                customLogoDataUrl = saved;
-                const btn = document.getElementById('reset-logo-btn');
-                if (btn) btn.classList.remove('hidden');
-            }
         }
 
         function renderLogos() {
-            const navSlot = document.getElementById('nav-badge-slot');
-            if (navSlot) navSlot.innerHTML = sajNavBadgeSVG;
+            ['nav-badge-slot', 'auth-badge-slot'].forEach(id => {
+                const slot = document.getElementById(id);
+                if (slot) slot.innerHTML = sajNavBadgeSVG;
+            });
 
             ['masthead-logo-slot', 'modal-logo-slot'].forEach(id => {
                 const el = document.getElementById(id);
-                if (!el) return;
-                el.innerHTML = customLogoDataUrl
-                    ? `<img src="${customLogoDataUrl}" alt="SAJ — ENSL Laghouat" class="w-full h-full object-contain logo-multiply">`
-                    : sajBrandLogoSVG;
+                if (el) el.innerHTML = sajBrandLogoSVG;
             });
         }
 
-        function handleLogoUpload(event) {
-            if (!ownerAuthenticated) return;
-            const file = event.target.files && event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                customLogoDataUrl = e.target.result;
-                safeStorageSet('saj_ensl_custom_logo', customLogoDataUrl);
-                renderLogos();
-                const btn = document.getElementById('reset-logo-btn');
-                if (btn) btn.classList.remove('hidden');
-                showToast(currentLang === 'ar' ? 'تم تحديث شعار ساج' : 'Emblème mis à jour');
+        /* إدارة تسجيل الدخول والحساب */
+        async function restoreUserSession() {
+            if (supabaseClient && supabaseClient.auth) {
+                try {
+                    const { data } = await supabaseClient.auth.getUser();
+                    if (data && data.user) {
+                        const meta = data.user.user_metadata || {};
+                        currentUser = {
+                            id: data.user.id,
+                            email: data.user.email,
+                            name: meta.full_name || data.user.email.split('@')[0],
+                            department: meta.department || departmentsList[0].id,
+                            year: meta.year || 'السنة الثانية'
+                        };
+                        safeStorageSet('saj_ensl_user', JSON.stringify(currentUser));
+                        renderAuthNav();
+                        return;
+                    }
+                } catch (e) {}
+            }
+            const savedUser = safeStorageGet('saj_ensl_user');
+            if (savedUser) {
+                try { currentUser = JSON.parse(savedUser); } catch (e) { currentUser = null; }
+            }
+            renderAuthNav();
+        }
+
+        function renderAuthNav() {
+            const slot = document.getElementById('auth-nav-slot');
+            if (!slot) return;
+            if (currentUser) {
+                const firstName = escapeHTML((currentUser.name || '').split(' ')[0]);
+                const logoutText = translations[currentLang].auth_logout;
+                slot.innerHTML = `
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] border border-editorial-rule bg-editorial-paper text-editorial-ink">
+                        <i data-lucide="user-check" class="w-3.5 h-3.5 text-editorial-burgundy"></i>
+                        <span class="font-semibold max-w-[90px] truncate">${firstName}</span>
+                        <button onclick="logoutUser()" class="text-editorial-muted hover:text-editorial-burgundy ms-1 underline cursor-pointer">${escapeHTML(logoutText)}</button>
+                    </div>
+                `;
+            } else {
+                const loginText = translations[currentLang].auth_tab_login;
+                slot.innerHTML = `
+                    <button onclick="openAuthModal('login')" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-[4px] border border-editorial-rule bg-editorial-paper hover:border-editorial-burgundy font-semibold text-editorial-ink transition-colors cursor-pointer">
+                        <i data-lucide="log-in" class="w-3.5 h-3.5 text-editorial-burgundy"></i>
+                        <span>${escapeHTML(loginText)}</span>
+                    </button>
+                `;
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function openAuthModal(mode = 'login') {
+            switchAuthMode(mode);
+            const modal = document.getElementById('auth-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                syncScrollLock();
+            }
+        }
+
+        function closeAuthModal() {
+            const modal = document.getElementById('auth-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+                syncScrollLock();
+            }
+        }
+
+        function switchAuthMode(mode) {
+            authMode = mode;
+            const regFields = document.getElementById('auth-register-fields');
+            const nameInput = document.getElementById('auth-name');
+            const tabLogin = document.getElementById('auth-tab-login');
+            const tabReg = document.getElementById('auth-tab-register');
+            const heading = document.getElementById('auth-modal-heading');
+            const submitBtn = document.getElementById('auth-submit-btn');
+
+            const isReg = mode === 'register';
+            if (regFields) regFields.classList.toggle('hidden', !isReg);
+            if (nameInput) nameInput.required = isReg;
+
+            if (tabLogin && tabReg) {
+                tabLogin.classList.toggle('border-editorial-burgundy', !isReg);
+                tabLogin.classList.toggle('text-editorial-burgundy', !isReg);
+                tabLogin.classList.toggle('border-transparent', isReg);
+                tabLogin.classList.toggle('text-editorial-muted', isReg);
+
+                tabReg.classList.toggle('border-editorial-burgundy', isReg);
+                tabReg.classList.toggle('text-editorial-burgundy', isReg);
+                tabReg.classList.toggle('border-transparent', !isReg);
+                tabReg.classList.toggle('text-editorial-muted', !isReg);
+            }
+
+            if (heading) {
+                heading.textContent = isReg
+                    ? translations[currentLang].auth_register_title
+                    : translations[currentLang].auth_login_title;
+            }
+            if (submitBtn) {
+                submitBtn.textContent = isReg
+                    ? translations[currentLang].auth_btn_register
+                    : translations[currentLang].auth_btn_login;
+            }
+        }
+
+        async function handleAuthSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value;
+            const name = document.getElementById('auth-name').value.trim();
+            const department = document.getElementById('auth-dept').value;
+            const year = document.getElementById('auth-year').value;
+            const submitBtn = document.getElementById('auth-submit-btn');
+
+            if (!email || !password) return;
+
+            if (submitBtn) submitBtn.disabled = true;
+
+            try {
+                if (supabaseClient && supabaseClient.auth) {
+                    if (authMode === 'register') {
+                        const { data, error } = await supabaseClient.auth.signUp({
+                            email,
+                            password,
+                            options: { data: { full_name: name || email.split('@')[0], department, year } }
+                        });
+                        if (!error && data && data.user) {
+                            currentUser = {
+                                id: data.user.id,
+                                email,
+                                name: name || email.split('@')[0],
+                                department,
+                                year
+                            };
+                            safeStorageSet('saj_ensl_user', JSON.stringify(currentUser));
+                            finishAuthSuccess(currentLang === 'ar' ? 'تم إنشاء الحساب وتسجيل الدخول بنجاح' : 'Compte créé et connecté');
+                            return;
+                        }
+                    } else {
+                        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                        if (!error && data && data.user) {
+                            const meta = data.user.user_metadata || {};
+                            currentUser = {
+                                id: data.user.id,
+                                email: data.user.email,
+                                name: meta.full_name || email.split('@')[0],
+                                department: meta.department || departmentsList[0].id,
+                                year: meta.year || 'السنة الثانية'
+                            };
+                            safeStorageSet('saj_ensl_user', JSON.stringify(currentUser));
+                            finishAuthSuccess(currentLang === 'ar' ? 'مرحباً بعودتك إلى ساج' : 'Connexion réussie');
+                            return;
+                        }
+                    }
+                }
+            } catch (err) {}
+
+            /* تسجيل دخول محلي احتياطي لضمان استمرارية الجلسة */
+            currentUser = {
+                id: 'local_' + Date.now(),
+                email,
+                name: name || email.split('@')[0],
+                department: department || departmentsList[0].id,
+                year: year || 'السنة الثانية'
             };
-            reader.readAsDataURL(file);
-            event.target.value = '';
+            safeStorageSet('saj_ensl_user', JSON.stringify(currentUser));
+            finishAuthSuccess(currentLang === 'ar' ? 'تم تسجيل الدخول إلى حسابك' : 'Connecté');
         }
 
-        function resetDefaultLogo() {
-            customLogoDataUrl = null;
-            safeStorageRemove('saj_ensl_custom_logo');
-            const btn = document.getElementById('reset-logo-btn');
-            if (btn) btn.classList.add('hidden');
-            renderLogos();
-            showToast(currentLang === 'ar' ? 'تمت استعادة شعار ساج الأصلي' : 'Emblème original rétabli');
+        function finishAuthSuccess(msg) {
+            const submitBtn = document.getElementById('auth-submit-btn');
+            if (submitBtn) submitBtn.disabled = false;
+            document.getElementById('auth-form').reset();
+            renderAuthNav();
+            closeAuthModal();
+            showToast(msg);
         }
 
+        async function logoutUser() {
+            if (supabaseClient && supabaseClient.auth) {
+                try { await supabaseClient.auth.signOut(); } catch (e) {}
+            }
+            currentUser = null;
+            safeStorageRemove('saj_ensl_user');
+            renderAuthNav();
+            showToast(currentLang === 'ar' ? 'تم تسجيل الخروج' : 'Déconnecté');
+        }
+
+        /* معالجة رفع الملفات */
         function handleFileSelection(event) {
             const file = event.target.files && event.target.files[0];
             const infoEl = document.getElementById('selected-file-info');
@@ -1413,9 +1396,7 @@
                             return { url: pubData.publicUrl, name: file.name, uploadedCloud: true };
                         }
                     }
-                } catch (err) {
-                    console.warn('Storage upload fallback:', err);
-                }
+                } catch (err) {}
             }
             if (file.size <= 3 * 1024 * 1024) {
                 const dataUrl = await readFileAsDataUrl(file);
@@ -1454,16 +1435,23 @@
         function populateDepartments() {
             const filterSel = document.getElementById('dept-filter');
             const formSel = document.getElementById('input-dept');
+            const authSel = document.getElementById('auth-dept');
+            const optionsHtml = departmentsList.map(d => `<option value="${d.id}">${escapeHTML(d[currentLang] || d.ar)}</option>`).join('');
+
             if (filterSel) {
                 const prev = filterSel.value || 'all';
-                filterSel.innerHTML = `<option value="all">${translations[currentLang].all_depts_opt}</option>` +
-                    departmentsList.map(d => `<option value="${d.id}">${escapeHTML(d[currentLang] || d.ar)}</option>`).join('');
+                filterSel.innerHTML = `<option value="all">${translations[currentLang].all_depts_opt}</option>` + optionsHtml;
                 filterSel.value = prev;
             }
             if (formSel) {
                 const prevForm = formSel.value || departmentsList[0].id;
-                formSel.innerHTML = departmentsList.map(d => `<option value="${d.id}">${escapeHTML(d[currentLang] || d.ar)}</option>`).join('');
+                formSel.innerHTML = optionsHtml;
                 formSel.value = prevForm;
+            }
+            if (authSel) {
+                const prevAuth = authSel.value || departmentsList[0].id;
+                authSel.innerHTML = optionsHtml;
+                authSel.value = prevAuth;
             }
         }
 
@@ -1536,9 +1524,7 @@
                         dot.title = 'متصل بالسحابة';
                     }
                 }
-            } catch (e) {
-                console.warn('Supabase sync offline fallback:', e);
-            }
+            } catch (e) {}
         }
 
         function savePublicationsLocal() {
@@ -1629,7 +1615,7 @@
                     : '';
 
                 return `
-                <article style="--i: ${staggerIdx}" class="${animate ? 'motion-entry' : 'bg-editorial-sheet/70 hover:bg-editorial-sheet transition-colors'} bg-editorial-sheet/90 border border-editorial-rule hover:border-editorial-burgundy/50 rounded-[4px] p-4 sm:p-5">
+                <article style="--i: ${staggerIdx}" class="${animate ? 'editorial-entry' : ''} bg-editorial-sheet/85 border border-editorial-rule hover:border-editorial-burgundy/50 rounded-[4px] p-4 sm:p-5">
                     <div class="flex items-start gap-3.5">
                         <span class="font-mono text-xs font-bold text-editorial-brass bg-editorial-paper border border-editorial-rule px-2 py-0.5 rounded-[3px] select-none shrink-0 mt-1">${indexNum}</span>
                         <div class="flex-grow min-w-0">
@@ -1661,7 +1647,7 @@
                                     <span class="text-editorial-muted">${escapeHTML(formatMinutes(pub.readMinutes))}</span>
                                     <button onclick="openReaderModal(${pid})" class="font-bold text-editorial-burgundy hover:underline underline-offset-4 cursor-pointer inline-flex items-center gap-1">
                                         <span>${escapeHTML(readLabel)}</span>
-                                        <span class="motion-arrow">${arrow}</span>
+                                        <span>${arrow}</span>
                                     </button>
                                 </div>
                             </div>
@@ -1763,6 +1749,7 @@
 
             populateDepartments();
             renderStudentNotes();
+            renderAuthNav();
             renderAll(false);
 
             if (activePublicationId) fillReaderModal(activePublicationId);
@@ -1897,6 +1884,14 @@
         }
 
         function openSubmitModal() {
+            if (currentUser) {
+                const authorEl = document.getElementById('input-author');
+                const deptEl = document.getElementById('input-dept');
+                const yearEl = document.getElementById('input-year');
+                if (authorEl && !authorEl.value) authorEl.value = currentUser.name || '';
+                if (deptEl && currentUser.department) deptEl.value = currentUser.department;
+                if (yearEl && currentUser.year) yearEl.value = currentUser.year;
+            }
             const modal = document.getElementById('publish-modal');
             if (modal) {
                 modal.classList.remove('hidden');
@@ -2122,7 +2117,7 @@
             const container = document.getElementById('toast-container');
             if (!container) return;
             const el = document.createElement('div');
-            el.className = 'bg-editorial-ink text-editorial-sheet text-xs px-4 py-2.5 rounded-[4px] border border-editorial-brass shadow-md fade-in-view';
+            el.className = 'bg-editorial-ink text-editorial-sheet text-xs px-4 py-2.5 rounded-[4px] border border-editorial-brass shadow-md modal-panel';
             el.textContent = msg;
             container.appendChild(el);
             setTimeout(() => el.remove(), 2800);
