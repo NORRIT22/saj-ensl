@@ -5,24 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ساج — كراسات ومطارحات طلبة المدرسة العليا للأساتذة بالأغواط</title>
 
-    <!-- تطبيق الثيم قبل أي رسم لتفادي الوميض -->
     <script>try{if(localStorage.getItem('saj_ensl_theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}</script>
 
-    <!-- Tailwind CSS (إصدار مثبّت) -->
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- أيقونات (إصدار مثبّت) -->
     <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
-
-    <!-- Supabase (إصدار مثبّت) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 
     <script>
-        // دعم الشفافية (/70 وغيرها) مع ألوان المتغيرات CSS
         const themeColor = (name) => ({ opacityValue }) => {
             const n = parseFloat(opacityValue);
             return (isNaN(n) || n >= 1)
@@ -55,7 +49,8 @@
 
     <style>
         :root {
-            --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
+            --ease-motion: cubic-bezier(0.22, 1, 0.36, 1);
+            --ease-snap: cubic-bezier(0.34, 1.36, 0.64, 1);
             --paper: #F7F5F0;
             --sheet: #FCFBF8;
             --stone: #ECE8DF;
@@ -88,45 +83,111 @@
 
         .font-editorial { font-family: 'Amiri', serif; }
 
-        #archival-paper-texture {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 1;
-            opacity: 0.025;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='paperNoise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paperNoise)'/%3E%3C/svg%3E");
+        /* موشن جرافيك: نبض هادئ للشارة الحية وانزلاق الأشرطة الهندسية */
+        @keyframes pulsePingSlow {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.35); opacity: 0.45; }
         }
 
-        .double-editorial-rule {
-            border-top: 2px solid var(--ink);
-            border-bottom: 1px solid var(--ink);
-            height: 5px;
+        @keyframes barSweep {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        @keyframes motionCardEnter {
+            from {
+                opacity: 0;
+                transform: translateY(12px) scale(0.992);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes mastheadDraw {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .motion-live-dot {
+            animation: pulsePingSlow 2.4s ease-in-out infinite;
+        }
+
+        .motion-bar-sweep {
+            position: relative;
+            overflow: hidden;
+        }
+        .motion-bar-sweep::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            width: 45%;
+            background: linear-gradient(90deg, transparent, rgba(184, 147, 74, 0.35), transparent);
+            animation: barSweep 3.8s var(--ease-motion) infinite;
+        }
+
+        .motion-entry {
+            opacity: 0;
+            animation: motionCardEnter 0.45s var(--ease-motion) forwards;
+            animation-delay: calc(var(--i, 0) * 45ms);
+            transition: transform 0.28s var(--ease-motion), background-color 0.25s ease, border-color 0.25s ease;
+        }
+
+        .motion-entry:hover {
+            background-color: var(--sheet);
+            transform: translateY(-2px);
+        }
+
+        .motion-entry:hover .entry-title {
+            color: var(--burgundy);
+        }
+
+        .motion-arrow {
+            display: inline-block;
+            transition: transform 0.25s var(--ease-snap);
+        }
+        .motion-entry:hover .motion-arrow {
+            transform: translateX(-4px);
+        }
+        html[dir="ltr"] .motion-entry:hover .motion-arrow {
+            transform: translateX(4px);
+        }
+
+        .motion-masthead {
+            animation: mastheadDraw 0.55s var(--ease-motion) both;
         }
 
         .tab-underline {
-            transition: transform 0.32s var(--ease-editorial), width 0.32s var(--ease-editorial);
+            transition: transform 0.36s var(--ease-snap), width 0.36s var(--ease-snap);
         }
 
-        .journal-entry { transition: background-color 0.25s ease, border-color 0.25s ease; }
-        .journal-entry:hover { background-color: var(--sheet); }
-        .journal-entry:hover .entry-title { color: var(--burgundy); }
-
-        .fade-in-view { animation: editorialReveal 0.3s var(--ease-editorial) forwards; }
-
-        @keyframes editorialReveal {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
+        .fade-in-view {
+            animation: motionCardEnter 0.32s var(--ease-motion) forwards;
         }
 
         .logo-multiply { mix-blend-mode: multiply; }
         html.dark .logo-multiply { mix-blend-mode: normal; filter: brightness(1.12); }
 
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            .motion-entry { opacity: 1 !important; }
+        }
+
         @media print {
             html, body { overflow: visible !important; height: auto !important; }
             body * { visibility: hidden; }
             #printable-sheet, #printable-sheet * { visibility: visible; }
-
-            /* إلغاء وضع النافذة العائمة ليمتد المحتوى على عدة صفحات */
             #reader-modal {
                 position: static !important;
                 overflow: visible !important;
@@ -135,8 +196,6 @@
             }
             #reader-modal > div { min-height: 0 !important; display: block !important; }
             #reader-modal .fade-in-view { animation: none !important; box-shadow: none !important; border: none !important; margin: 0 !important; max-width: none !important; }
-
-            /* ألوان الطباعة دائماً فاتحة حتى في الوضع الليلي */
             :root, html.dark {
                 --paper: #fff; --sheet: #fff; --stone: #f3f3f3; --rule: #ccc;
                 --ink: #000; --muted: #333; --burgundy: #5A1424; --brass: #8a6a2a;
@@ -157,89 +216,81 @@
 </head>
 <body class="antialiased selection:bg-editorial-burgundy selection:text-white flex flex-col min-h-screen relative">
 
-    <div id="archival-paper-texture" aria-hidden="true"></div>
-
-    <div class="fixed top-0 left-0 right-0 h-[2px] z-50 bg-transparent pointer-events-none">
+    <!-- شريط التقدم الحركي العلوي -->
+    <div class="fixed top-0 left-0 right-0 h-[3px] z-50 bg-editorial-rule/40 pointer-events-none">
         <div id="reading-progress" class="h-full bg-editorial-burgundy w-0 transition-all duration-150"></div>
     </div>
 
     <input type="file" id="logo-file-input" accept="image/*" class="hidden" onchange="handleLogoUpload(event)">
-
     <div id="toast-container" class="fixed bottom-6 left-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-    <!-- 1. الشريط العلوي -->
-    <div class="border-b border-editorial-rule bg-editorial-sheet/95 sticky top-0 z-40 backdrop-blur-sm">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-12 flex items-center justify-between text-xs text-editorial-muted">
-            <div class="flex items-center gap-3 sm:gap-4 truncate">
-                <span data-i18n="academic_year" class="font-semibold text-editorial-ink">السنة الجامعية 2026–2027</span>
-                <span class="text-editorial-rule">|</span>
-                <span data-i18n="initiative_badge" class="truncate">مبادرة طلابية مستقلة — الأغواط</span>
-            </div>
+    <!-- 1. شريط تنقل جامعي مبسط وحيوي -->
+    <nav class="border-b border-editorial-rule bg-editorial-sheet/95 sticky top-0 z-40 backdrop-blur-sm">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 h-13 py-2 flex items-center justify-between gap-3 text-xs">
+            <a href="#" onclick="resetAllFilters(); return false;" class="flex items-center gap-2.5 text-editorial-ink font-bold shrink-0 group">
+                <span class="w-2.5 h-2.5 rounded-full bg-editorial-burgundy motion-live-dot"></span>
+                <span data-i18n="masthead_title" class="font-editorial text-xl text-editorial-burgundy">ساج</span>
+                <span class="hidden sm:inline text-editorial-muted font-mono text-[11px]">ENSL LAGHOUAT</span>
+            </a>
 
-            <div class="flex items-center gap-2 sm:gap-2.5 shrink-0">
-                <button onclick="openCommandPalette()" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] border border-editorial-rule bg-editorial-paper hover:border-editorial-ink text-editorial-ink transition-colors cursor-pointer" title="Ctrl+K">
+            <div class="flex items-center gap-2 shrink-0">
+                <button onclick="openCommandPalette()" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-[4px] border border-editorial-rule bg-editorial-paper hover:border-editorial-burgundy text-editorial-ink transition-colors cursor-pointer" title="Ctrl+K">
                     <i data-lucide="search" class="w-3.5 h-3.5 text-editorial-burgundy"></i>
-                    <span data-i18n="quick_search" class="hidden sm:inline">فهرس البحث</span>
+                    <span data-i18n="quick_search" class="hidden sm:inline">بحث سريع</span>
                     <kbd class="hidden md:inline text-[10px] font-mono text-editorial-muted">Ctrl+K</kbd>
                 </button>
 
-                <button onclick="toggleTheme()" id="theme-toggle-btn" class="p-1.5 rounded-[3px] border border-editorial-rule bg-editorial-paper hover:border-editorial-ink text-editorial-ink transition-colors cursor-pointer" title="تبديل الوضع الليلي">
+                <button onclick="toggleTheme()" id="theme-toggle-btn" class="p-1.5 rounded-[4px] border border-editorial-rule bg-editorial-paper hover:border-editorial-burgundy text-editorial-ink transition-colors cursor-pointer" title="تبديل الوضع الليلي">
                     <i data-lucide="moon" id="theme-icon" class="w-3.5 h-3.5"></i>
                 </button>
 
-                <button onclick="cycleLanguage()" class="px-2.5 py-1 rounded-[3px] border border-editorial-rule bg-editorial-paper hover:border-editorial-ink font-semibold text-editorial-ink transition-colors cursor-pointer">
+                <button onclick="cycleLanguage()" class="px-2.5 py-1.5 rounded-[4px] border border-editorial-rule bg-editorial-paper hover:border-editorial-burgundy font-semibold text-editorial-ink transition-colors cursor-pointer">
                     <span id="lang-label">Français</span>
                 </button>
 
-                <button onclick="openAboutModal()" data-i18n="about_link" class="hidden md:inline-block hover:text-editorial-burgundy underline underline-offset-4 transition-colors cursor-pointer">
+                <button onclick="openAboutModal()" data-i18n="about_link" class="hidden md:inline-block px-2 py-1 text-editorial-muted hover:text-editorial-burgundy transition-colors cursor-pointer">
                     عن ساج
                 </button>
 
-                <button onclick="openSubmitModal()" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-[3px] bg-editorial-burgundy hover:opacity-90 text-white font-semibold transition-opacity cursor-pointer">
-                    <i data-lucide="pen-line" class="w-3.5 h-3.5"></i>
+                <button onclick="openSubmitModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] bg-editorial-burgundy hover:opacity-90 text-white font-semibold transition-all active:scale-95 cursor-pointer">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                     <span data-i18n="btn_publish">نشر إسهام</span>
                 </button>
             </div>
         </div>
-    </div>
+    </nav>
 
-    <!-- 2. الترويسة -->
-    <header class="max-w-6xl mx-auto w-full px-4 sm:px-6 pt-8 pb-6 relative z-10">
-        <div class="flex flex-col md:flex-row items-center justify-between gap-6 pb-6">
-
+    <!-- 2. واجهة رأسية جامعية نظيفة مع شريط موشن جرافيك -->
+    <header class="max-w-5xl mx-auto w-full px-4 sm:px-6 pt-8 pb-6 motion-masthead">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6">
             <div class="flex items-center gap-4 sm:gap-5">
-                <div class="w-20 h-20 sm:w-24 sm:h-24 shrink-0 flex items-center justify-center p-1 border border-editorial-rule bg-editorial-sheet rounded-[3px]">
+                <div class="w-20 h-20 sm:w-22 sm:h-22 shrink-0 flex items-center justify-center p-1.5 border border-editorial-rule bg-editorial-sheet rounded-[4px] shadow-2xs">
                     <div id="masthead-logo-slot" class="w-full h-full"></div>
                 </div>
                 <div>
-                    <div class="flex items-baseline gap-3">
-                        <h1 data-i18n="masthead_title" class="font-editorial text-4xl sm:text-5xl font-bold text-editorial-burgundy tracking-normal leading-none">
-                            ساج
-                        </h1>
-                        <span class="text-xs font-mono uppercase tracking-widest text-editorial-brass border border-editorial-brass/40 px-2 py-0.5 rounded-[2px]">
-                            ENSL • LAGHOUAT
-                        </span>
+                    <div class="flex flex-wrap items-center gap-2 text-[11px] font-mono text-editorial-brass mb-1">
+                        <span data-i18n="academic_year">السنة الجامعية 2026–2027</span>
+                        <span>•</span>
+                        <span data-i18n="archive_issue">العدد الأول — خريف 2026</span>
                     </div>
-                    <p data-i18n="masthead_subtitle" class="font-editorial text-lg sm:text-xl text-editorial-ink mt-1.5">
+                    <h1 data-i18n="masthead_subtitle" class="font-editorial text-2xl sm:text-4xl font-bold text-editorial-ink leading-tight">
                         كراسات ومطارحات طلبة المدرسة العليا للأساتذة بالأغواط
-                    </p>
-                    <p data-i18n="masthead_disclaimer" class="text-xs text-editorial-muted mt-1">
-                        مبادرة طلابية حرة ومستقلة لتبادل البحوث، المقالات، وملخصات المحاضرات (غير تابعة إدارياً للمدرسة).
+                    </h1>
+                    <p data-i18n="masthead_disclaimer" class="text-xs text-editorial-muted mt-1.5 max-w-2xl">
+                        مبادرة طلابية مستقلة لتبادل البحوث، المقالات، وملخصات المحاضرات بين طلبة المدرسة.
                     </p>
                 </div>
             </div>
 
-            <div class="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-3 border-t md:border-t-0 pt-3 md:pt-0 border-editorial-rule">
-                <div class="text-start md:text-end">
-                    <span data-i18n="archive_issue" class="block text-xs font-bold text-editorial-ink">العدد الجامعي الأول — خريف 2026</span>
-                    <div class="flex items-center gap-2 justify-start md:justify-end mt-0.5">
-                        <span id="archive-summary-text" class="text-xs text-editorial-muted">6 إسهامات مفهرسة</span>
-                        <span id="sync-status-dot" class="w-2 h-2 rounded-full bg-editorial-brass" title="حالة المزامنة"></span>
-                    </div>
+            <!-- مؤشر حركي لعدد الإسهامات وحالة المزامنة -->
+            <div class="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-editorial-rule">
+                <div class="flex items-center gap-2">
+                    <span id="sync-status-dot" class="w-2 h-2 rounded-full bg-editorial-brass motion-live-dot" title="حالة المزامنة"></span>
+                    <span id="archive-summary-text" class="text-xs font-bold text-editorial-burgundy">6 إسهامات مفهرسة</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <button onclick="triggerLogoUpload()" class="text-[11px] text-editorial-muted hover:text-editorial-burgundy underline underline-offset-4 cursor-pointer">
-                        <span data-i18n="upload_logo_text">تحديث صورة الشعار</span>
+                        <span data-i18n="upload_logo_text">تحديث الشعار</span>
                     </button>
                     <button id="reset-logo-btn" onclick="resetDefaultLogo()" class="hidden text-[11px] text-editorial-burgundy font-semibold hover:underline cursor-pointer">
                         (<span data-i18n="reset_text">استعادة</span>)
@@ -248,24 +299,25 @@
             </div>
         </div>
 
-        <div class="double-editorial-rule w-full"></div>
+        <!-- شريط موشن جرافيك فاصل -->
+        <div class="h-[3px] w-full bg-editorial-burgundy/85 motion-bar-sweep rounded-full"></div>
     </header>
 
-    <!-- 3. الجسم -->
-    <main class="max-w-6xl mx-auto w-full px-4 sm:px-6 pb-16 flex-grow relative z-10">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+    <!-- 3. المحتوى الرئيسي المبسط: الفهرس + قائمة الأقسام والمذكرات -->
+    <main class="max-w-5xl mx-auto w-full px-4 sm:px-6 pb-16 flex-grow">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-            <div class="lg:col-span-8">
-
-                <div class="pb-5 mb-6 border-b border-editorial-rule">
-                    <div class="relative flex items-center bg-editorial-sheet border border-editorial-rule focus-within:border-editorial-ink rounded-[3px] px-3 py-2 mb-4">
-                        <i data-lucide="search" class="w-4 h-4 text-editorial-muted shrink-0"></i>
+            <!-- فهرس المواد -->
+            <section class="lg:col-span-8">
+                <div class="bg-editorial-sheet border border-editorial-rule rounded-[4px] p-4 mb-6">
+                    <div class="relative flex items-center bg-editorial-paper border border-editorial-rule focus-within:border-editorial-burgundy rounded-[4px] px-3 py-2 mb-4 transition-colors">
+                        <i data-lucide="search" class="w-4 h-4 text-editorial-burgundy shrink-0"></i>
                         <input
                             type="text"
                             id="search-input"
                             oninput="handleSearch()"
                             data-i18n-placeholder="search_placeholder"
-                            placeholder="ابحث في الفهرس بالعنوان، اسم الطالب، القسم، أو الموضوع..."
+                            placeholder="ابحث بالعنوان، اسم الطالب، القسم، أو الموضوع..."
                             class="w-full bg-transparent px-3 text-sm text-editorial-ink placeholder-editorial-muted focus:outline-none"
                         >
                         <button id="clear-search-btn" onclick="clearSearch()" data-i18n="clear_btn" class="hidden text-xs text-editorial-burgundy font-semibold hover:underline px-2 cursor-pointer">
@@ -273,28 +325,28 @@
                         </button>
                     </div>
 
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div class="relative flex items-center gap-5 border-b border-editorial-rule/60 overflow-x-auto" id="category-tabs">
-                            <div id="tab-underline" class="tab-underline absolute bottom-0 left-0 h-[2px] bg-editorial-burgundy pointer-events-none"></div>
-                            <button onclick="setTypeFilter('all', this)" data-type="all" data-i18n="tab_all" class="type-btn pb-2.5 text-sm font-bold text-editorial-burgundy whitespace-nowrap cursor-pointer">
-                                جميع الإسهامات
+                            <div id="tab-underline" class="tab-underline absolute bottom-0 left-0 h-[2.5px] bg-editorial-burgundy pointer-events-none"></div>
+                            <button onclick="setTypeFilter('all', this)" data-type="all" data-i18n="tab_all" class="type-btn pb-2 text-xs sm:text-sm font-bold text-editorial-burgundy whitespace-nowrap cursor-pointer">
+                                الكل
                             </button>
-                            <button onclick="setTypeFilter('بحث', this)" data-type="بحث" data-i18n="tab_research" class="type-btn pb-2.5 text-sm font-medium text-editorial-muted hover:text-editorial-ink whitespace-nowrap cursor-pointer">
-                                بحوث ومذكرات
+                            <button onclick="setTypeFilter('بحث', this)" data-type="بحث" data-i18n="tab_research" class="type-btn pb-2 text-xs sm:text-sm font-medium text-editorial-muted hover:text-editorial-ink whitespace-nowrap cursor-pointer">
+                                بحوث
                             </button>
-                            <button onclick="setTypeFilter('مقال', this)" data-type="مقال" data-i18n="tab_articles" class="type-btn pb-2.5 text-sm font-medium text-editorial-muted hover:text-editorial-ink whitespace-nowrap cursor-pointer">
-                                مقالات وقراءات
+                            <button onclick="setTypeFilter('مقال', this)" data-type="مقال" data-i18n="tab_articles" class="type-btn pb-2 text-xs sm:text-sm font-medium text-editorial-muted hover:text-editorial-ink whitespace-nowrap cursor-pointer">
+                                مقالات
                             </button>
-                            <button onclick="setTypeFilter('ملخص درس', this)" data-type="ملخص درس" data-i18n="tab_lessons" class="type-btn pb-2.5 text-sm font-medium text-editorial-muted hover:text-editorial-ink whitespace-nowrap cursor-pointer">
-                                دروس وملخصات
+                            <button onclick="setTypeFilter('ملخص درس', this)" data-type="ملخص درس" data-i18n="tab_lessons" class="type-btn pb-2 text-xs sm:text-sm font-medium text-editorial-muted hover:text-editorial-ink whitespace-nowrap cursor-pointer">
+                                ملخصات
                             </button>
                         </div>
 
                         <div class="flex items-center gap-2 shrink-0">
-                            <select id="dept-filter" onchange="setDepartmentFilter(this.value)" class="bg-editorial-sheet border border-editorial-rule text-editorial-ink text-xs font-medium rounded-[3px] px-2.5 py-1.5 focus:outline-none focus:border-editorial-ink">
+                            <select id="dept-filter" onchange="setDepartmentFilter(this.value)" class="bg-editorial-paper border border-editorial-rule text-editorial-ink text-xs rounded-[4px] px-2.5 py-1.5 focus:outline-none focus:border-editorial-burgundy">
                                 <option value="all">جميع الأقسام</option>
                             </select>
-                            <select id="sort-select" onchange="setSortOrder(this.value)" class="bg-editorial-sheet border border-editorial-rule text-editorial-ink text-xs font-medium rounded-[3px] px-2.5 py-1.5 focus:outline-none focus:border-editorial-ink">
+                            <select id="sort-select" onchange="setSortOrder(this.value)" class="bg-editorial-paper border border-editorial-rule text-editorial-ink text-xs rounded-[4px] px-2.5 py-1.5 focus:outline-none focus:border-editorial-burgundy">
                                 <option value="newest" data-i18n="sort_newest">الأحدث</option>
                                 <option value="popular" data-i18n="sort_popular">الأكثر قراءة</option>
                             </select>
@@ -302,58 +354,41 @@
                     </div>
                 </div>
 
-                <div class="flex items-center justify-between text-xs text-editorial-muted mb-4">
+                <div class="flex items-center justify-between text-xs text-editorial-muted mb-3 px-1">
                     <span id="filter-status-label">عرض كافة المواد المفهرسة</span>
                     <button id="reset-filters-btn" onclick="resetAllFilters()" data-i18n="reset_filters" class="hidden text-editorial-burgundy font-semibold hover:underline cursor-pointer">
                         إلغاء التصفية
                     </button>
                 </div>
 
-                <div id="contributions-list" class="divide-y divide-editorial-rule border-t border-b border-editorial-rule"></div>
+                <div id="contributions-list" class="space-y-3"></div>
 
-                <div id="empty-state" class="hidden py-14 text-center border-b border-editorial-rule">
+                <div id="empty-state" class="hidden py-14 text-center bg-editorial-sheet border border-editorial-rule rounded-[4px]">
                     <p data-i18n="empty_title" class="font-editorial text-2xl text-editorial-ink mb-2">لا توجد مواد تطابق عبارة البحث</p>
                     <p data-i18n="empty_desc" class="text-xs text-editorial-muted mb-4">يمكنك توسيع نطاق البحث أو العودة إلى الفهرس الكامل.</p>
-                    <button onclick="resetAllFilters()" data-i18n="show_all_btn" class="px-4 py-1.5 text-xs font-semibold border border-editorial-ink text-editorial-ink hover:bg-editorial-ink hover:text-editorial-sheet rounded-[3px] transition-colors cursor-pointer">
+                    <button onclick="resetAllFilters()" data-i18n="show_all_btn" class="px-4 py-1.5 text-xs font-semibold border border-editorial-ink text-editorial-ink hover:bg-editorial-ink hover:text-editorial-sheet rounded-[4px] transition-colors cursor-pointer">
                         العودة للفهرس الكامل
                     </button>
                 </div>
-            </div>
+            </section>
 
-            <aside class="lg:col-span-4 lg:border-s lg:border-editorial-rule lg:ps-8 space-y-8">
-
-                <section>
-                    <div class="flex items-center justify-between border-b border-editorial-ink pb-2 mb-4">
-                        <h2 data-i18n="sidebar_notes_title" class="font-editorial text-xl font-bold text-editorial-ink">
-                            مذكرات وتنبيهات الطلبة
-                        </h2>
-                        <span class="text-[11px] font-mono text-editorial-brass">NOTES</span>
-                    </div>
-                    <div id="student-notes-list" class="space-y-4 divide-y divide-editorial-rule/70"></div>
-                </section>
-
-                <section>
-                    <div class="flex items-center justify-between border-b border-editorial-ink pb-2 mb-3">
-                        <h2 data-i18n="sidebar_depts_title" class="font-editorial text-xl font-bold text-editorial-ink">
-                            كشّاف الأقسام والتخصصات
-                        </h2>
-                        <span class="text-[11px] font-mono text-editorial-muted">9</span>
+            <!-- العمود الجانبي المبسط: الأقسام والمذكرات -->
+            <aside class="lg:col-span-4 space-y-6">
+                <section class="bg-editorial-sheet border border-editorial-rule rounded-[4px] p-4">
+                    <div class="flex items-center justify-between border-b border-editorial-rule pb-2 mb-3">
+                        <h2 data-i18n="sidebar_depts_title" class="font-editorial text-lg font-bold text-editorial-ink">الأقسام والتخصصات</h2>
+                        <span class="text-[11px] font-mono text-editorial-brass">9</span>
                     </div>
                     <ul id="departments-index" class="divide-y divide-editorial-rule/60 text-sm"></ul>
                 </section>
 
-                <section class="bg-editorial-stone/70 border border-editorial-rule p-4 rounded-[3px]">
-                    <h3 data-i18n="cite_guide_title" class="font-editorial text-lg font-bold text-editorial-burgundy mb-1.5">
-                        قاعدة التوثيق في ساج
-                    </h3>
-                    <p data-i18n="cite_guide_desc" class="text-xs text-editorial-muted leading-relaxed mb-3">
-                        يُرجى إرفاق المراجع المعتمدة في نهاية كل ملخص أو بحث لتسهيل رجوع الطلبة إلى المصادر الأصلية.
-                    </p>
-                    <div data-i18n="cite_guide_example" class="text-[11px] font-mono bg-editorial-sheet p-2.5 border border-editorial-rule text-editorial-ink leading-relaxed">
-                        اللقب، الاسم (السنة). عنوان الورقة أو الملخص. منصة ساج الطلابية — ENSL، الأغواط.
+                <section class="bg-editorial-sheet border border-editorial-rule rounded-[4px] p-4">
+                    <div class="flex items-center justify-between border-b border-editorial-rule pb-2 mb-3">
+                        <h2 data-i18n="sidebar_notes_title" class="font-editorial text-lg font-bold text-editorial-ink">تنبيهات الطلبة</h2>
+                        <span class="text-[11px] font-mono text-editorial-muted">NOTES</span>
                     </div>
+                    <div id="student-notes-list" class="space-y-3 divide-y divide-editorial-rule/60"></div>
                 </section>
-
             </aside>
         </div>
     </main>
@@ -361,9 +396,9 @@
     <!-- 4. نافذة القراءة والطباعة -->
     <div id="reader-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-stone-950/75 p-2 sm:p-6" onclick="if(event.target === this) closeReaderModal()">
         <div class="min-h-screen flex items-center justify-center" onclick="if(event.target === this) closeReaderModal()">
-            <div class="bg-editorial-sheet w-full max-w-3xl border border-editorial-ink shadow-xl my-4 fade-in-view">
+            <div class="bg-editorial-sheet w-full max-w-3xl border border-editorial-rule shadow-2xl my-4 rounded-[4px] fade-in-view">
 
-                <div class="no-print bg-editorial-paper border-b border-editorial-rule px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-10">
+                <div class="no-print bg-editorial-paper border-b border-editorial-rule px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-10 rounded-t-[4px]">
                     <div class="flex items-center gap-2 text-xs">
                         <span id="modal-type-badge" class="font-bold text-editorial-burgundy"></span>
                         <span class="text-editorial-rule">/</span>
@@ -377,17 +412,17 @@
                             <button onclick="changeFontSize(1)" class="px-2 py-1 text-xs font-bold hover:bg-editorial-stone cursor-pointer" title="تكبير الخط">A+</button>
                         </div>
 
-                        <button onclick="copyShareLink()" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] border border-editorial-rule bg-editorial-sheet hover:border-editorial-ink text-xs font-semibold text-editorial-ink cursor-pointer">
+                        <button onclick="copyShareLink()" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] border border-editorial-rule bg-editorial-sheet hover:border-editorial-burgundy text-xs font-semibold text-editorial-ink cursor-pointer">
                             <i data-lucide="share-2" class="w-3.5 h-3.5 text-editorial-burgundy"></i>
                             <span data-i18n="share_btn">مشاركة</span>
                         </button>
 
-                        <button onclick="copyCitation()" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] border border-editorial-rule bg-editorial-sheet hover:border-editorial-ink text-xs font-semibold text-editorial-ink cursor-pointer">
+                        <button onclick="copyCitation()" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] border border-editorial-rule bg-editorial-sheet hover:border-editorial-burgundy text-xs font-semibold text-editorial-ink cursor-pointer">
                             <i data-lucide="quote" class="w-3.5 h-3.5 text-editorial-burgundy"></i>
                             <span data-i18n="cite_btn">توثيق</span>
                         </button>
 
-                        <button onclick="window.print()" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] border border-editorial-rule bg-editorial-sheet hover:border-editorial-ink text-xs font-semibold text-editorial-ink cursor-pointer">
+                        <button onclick="window.print()" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] border border-editorial-rule bg-editorial-sheet hover:border-editorial-burgundy text-xs font-semibold text-editorial-ink cursor-pointer">
                             <i data-lucide="printer" class="w-3.5 h-3.5"></i>
                             <span data-i18n="print_btn">طباعة / PDF</span>
                         </button>
@@ -459,9 +494,9 @@
     <!-- 5. نافذة النشر -->
     <div id="publish-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-stone-950/75 p-3 sm:p-6" onclick="if(event.target === this) closeSubmitModal()">
         <div class="min-h-screen flex items-center justify-center" onclick="if(event.target === this) closeSubmitModal()">
-            <div class="bg-editorial-sheet w-full max-w-2xl border border-editorial-ink shadow-xl my-4 fade-in-view">
+            <div class="bg-editorial-sheet w-full max-w-2xl border border-editorial-rule shadow-2xl my-4 rounded-[4px] fade-in-view">
 
-                <div class="border-b border-editorial-rule px-6 py-4 flex items-center justify-between bg-editorial-paper">
+                <div class="border-b border-editorial-rule px-6 py-4 flex items-center justify-between bg-editorial-paper rounded-t-[4px]">
                     <div>
                         <h3 data-i18n="pub_title" class="font-editorial text-2xl font-bold text-editorial-ink">إيداع إسهام في كراسات ساج</h3>
                         <p data-i18n="pub_sub" class="text-xs text-editorial-muted">شارك زملاءك ملخص محاضرة، قراءة نقدية، أو فصلاً من بحث تخرج</p>
@@ -474,17 +509,17 @@
                 <form id="contribution-form" onsubmit="handleFormSubmit(event)" class="p-6 space-y-4">
                     <div>
                         <label data-i18n="lbl_title" class="block text-xs font-bold text-editorial-ink mb-1">عنوان الورقة أو الملخص *</label>
-                        <input type="text" id="input-title" required placeholder="مثال: مدخل إلى الخوارزميات وهياكل البيانات بلغة C..." class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-ink">
+                        <input type="text" id="input-title" required placeholder="مثال: مدخل إلى الخوارزميات وهياكل البيانات بلغة C..." class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label data-i18n="lbl_author" class="block text-xs font-bold text-editorial-ink mb-1">اسم الطالب(ة) *</label>
-                            <input type="text" id="input-author" required placeholder="الاسم واللقب" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-ink">
+                            <input type="text" id="input-author" required placeholder="الاسم واللقب" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
                         </div>
                         <div>
                             <label data-i18n="lbl_year" class="block text-xs font-bold text-editorial-ink mb-1">المستوى الجامعي *</label>
-                            <select id="input-year" required class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-ink">
+                            <select id="input-year" required class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
                                 <option value="السنة الأولى">السنة الأولى / 1ère Année</option>
                                 <option value="السنة الثانية">السنة الثانية / 2ème Année</option>
                                 <option value="السنة الثالثة (أستاذ تعليم متوسط)">السنة الثالثة (PEM) / 3ème Année</option>
@@ -497,11 +532,11 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label data-i18n="lbl_dept" class="block text-xs font-bold text-editorial-ink mb-1">القسم *</label>
-                            <select id="input-dept" required class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-ink"></select>
+                            <select id="input-dept" required class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy"></select>
                         </div>
                         <div>
                             <label data-i18n="lbl_type" class="block text-xs font-bold text-editorial-ink mb-1">طبيعة المادة *</label>
-                            <select id="input-type" required class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-ink">
+                            <select id="input-type" required class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
                                 <option value="بحث">بحث أو فصل مذكرة / Recherche</option>
                                 <option value="مقال">مقال أو قراءة نقدية / Article</option>
                                 <option value="ملخص درس">ملخص درس أو أعمال موجهة / Cours & TD</option>
@@ -511,22 +546,22 @@
 
                     <div>
                         <label data-i18n="lbl_abstract" class="block text-xs font-bold text-editorial-ink mb-1">ملخص تمهيدي *</label>
-                        <textarea id="input-abstract" rows="2" required placeholder="فقرة موجزة توضح موضوع الإسهام..." class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-ink"></textarea>
+                        <textarea id="input-abstract" rows="2" required placeholder="فقرة موجزة توضح موضوع الإسهام..." class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy"></textarea>
                     </div>
 
                     <div>
                         <label data-i18n="lbl_content" class="block text-xs font-bold text-editorial-ink mb-1">المتن الكامل *</label>
-                        <textarea id="input-content" rows="6" required placeholder="اكتب النص كاملاً مع تقسيم الفقرات..." class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-ink"></textarea>
+                        <textarea id="input-content" rows="6" required placeholder="اكتب النص كاملاً مع تقسيم الفقرات..." class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy"></textarea>
                     </div>
 
                     <div>
                         <label data-i18n="lbl_refs" class="block text-xs font-bold text-editorial-ink mb-1">المراجع المعتمدة (افصل بينها بفاصلة منقوطة ؛)</label>
-                        <input type="text" id="input-references" placeholder="اسم المؤلف، عنوان الكتاب؛ مرجع ثانٍ..." class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-ink">
+                        <input type="text" id="input-references" placeholder="اسم المؤلف، عنوان الكتاب؛ مرجع ثانٍ..." class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
                     </div>
 
                     <div>
                         <label data-i18n="lbl_pdf_url" class="block text-xs font-bold text-editorial-ink mb-1">رابط ملف PDF خارجي — Google Drive أو غيره (اختياري)</label>
-                        <input type="url" id="input-pdf-url" placeholder="https://drive.google.com/file/d/..." class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-ink">
+                        <input type="url" id="input-pdf-url" placeholder="https://drive.google.com/file/d/..." class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
                     </div>
 
                     <div class="pt-3 flex items-center justify-end gap-3 border-t border-editorial-rule">
@@ -545,7 +580,7 @@
     <!-- 6. نافذة عن المبادرة -->
     <div id="about-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-stone-950/75 p-3 sm:p-6" onclick="if(event.target === this) closeAboutModal()">
         <div class="min-h-screen flex items-center justify-center" onclick="if(event.target === this) closeAboutModal()">
-            <div class="bg-editorial-sheet w-full max-w-xl border border-editorial-ink shadow-xl p-6 sm:p-8 fade-in-view">
+            <div class="bg-editorial-sheet w-full max-w-xl border border-editorial-rule shadow-2xl p-6 sm:p-8 rounded-[4px] fade-in-view">
                 <div class="flex items-center justify-between border-b border-editorial-rule pb-3 mb-4">
                     <h3 data-i18n="about_modal_title" class="font-editorial text-2xl font-bold text-editorial-burgundy">عن «ساج»</h3>
                     <button onclick="closeAboutModal()" class="text-editorial-muted hover:text-editorial-ink cursor-pointer">
@@ -554,11 +589,11 @@
                 </div>
                 <div class="space-y-3 text-sm text-editorial-ink leading-relaxed">
                     <p data-i18n="about_p1">
-                        «ساج» (نسبةً إلى خشب الساج المتين الذي تُصنع منه ألواح الكتابة ومكاتب الدرس والرفوف العريقة) هي مبادرة طلابية تطوعية مستقلة أطلقها طلبة من المدرسة العليا للأساتذة طالب عبد الرحمن - الأغواط، بهدف حفظ وتداول الملخصات الجيدة، القراءات الأدبية، ومقدمات بحوث التخرج بين الدفعات.
+                        «ساج» مبادرة طلابية تطوعية مستقلة أطلقها طلبة المدرسة العليا للأساتذة طالب عبد الرحمن - الأغواط لحفظ وتداول الملخصات الجيدة، القراءات الأدبية، ومقدمات بحوث التخرج بين الدفعات.
                     </p>
                     <div class="bg-editorial-paper border-s-2 border-editorial-brass p-3.5 text-xs text-editorial-muted">
                         <strong data-i18n="disclaimer_heading" class="block text-editorial-ink mb-1">تنويه وإخلاء مسؤولية:</strong>
-                        <span data-i18n="disclaimer_body">هذا الموقع مبادرة طلابية مستقلة غير رسمية تهدف لتبادل الفائدة العلمية والبيداغوجية بين الطلبة، ولا يتبع إدارياً للمدرسة العليا للأساتذة بالأغواط ولا يمثلها بصفة رسمية. جميع الآراء والمواد المنشورة تعبّر عن أصحابها.</span>
+                        <span data-i18n="disclaimer_body">مبادرة طلابية مستقلة غير رسمية لتبادل الفائدة العلمية والبيداغوجية بين الطلبة، ولا تتبع إدارياً للمدرسة العليا للأساتذة بالأغواط ولا تمثلها بصفة رسمية.</span>
                     </div>
                 </div>
             </div>
@@ -567,7 +602,7 @@
 
     <!-- 7. لوحة البحث السريع -->
     <div id="cmd-modal" class="fixed inset-0 z-50 hidden bg-stone-950/65 p-4 sm:pt-20" onclick="if(event.target === this) closeCommandPalette()">
-        <div class="max-w-lg mx-auto bg-editorial-sheet border border-editorial-ink shadow-xl overflow-hidden fade-in-view">
+        <div class="max-w-lg mx-auto bg-editorial-sheet border border-editorial-rule shadow-2xl rounded-[4px] overflow-hidden fade-in-view">
             <div class="flex items-center border-b border-editorial-rule px-3.5 py-2.5">
                 <i data-lucide="search" class="w-4 h-4 text-editorial-burgundy mx-1.5"></i>
                 <input type="text" id="cmd-input" oninput="filterCommandPalette(this.value)" onkeydown="handleCmdKeydown(event)" data-i18n-placeholder="cmd_placeholder" placeholder="ابحث في الفهرس أو انتقل إلى قسم..." class="w-full bg-transparent text-sm text-editorial-ink placeholder-editorial-muted focus:outline-none">
@@ -577,26 +612,16 @@
         </div>
     </div>
 
-    <!-- 8. التذييل -->
-    <footer class="border-t-2 border-editorial-ink bg-editorial-stone/60 mt-auto relative z-10">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-editorial-rule">
-                <div>
-                    <span data-i18n="colophon_title" class="font-editorial text-xl font-bold text-editorial-ink block">
-                        ساج — كراسات طلابية مستقلة (الأغواط)
-                    </span>
-                    <p data-i18n="colophon_disclaimer" class="text-xs text-editorial-muted mt-1 max-w-2xl leading-relaxed">
-                        تنويه: مبادرة طلابية مستقلة غير رسمية تهدف لتبادل الفائدة العلمية والمعرفية بين طلبة المدرسة العليا للأساتذة بالأغواط، ولا تتبع الإدارة أو المؤسسة بشكل رسمي.
-                    </p>
-                </div>
-                <div class="flex items-center gap-4 text-xs font-semibold text-editorial-ink shrink-0">
-                    <button onclick="openAboutModal()" data-i18n="about_link" class="hover:text-editorial-burgundy underline underline-offset-4 cursor-pointer">عن ساج</button>
-                    <button onclick="openSubmitModal()" data-i18n="btn_publish" class="hover:text-editorial-burgundy underline underline-offset-4 cursor-pointer">نشر إسهام</button>
-                </div>
+    <!-- 8. التذييل الجامعي البسيط -->
+    <footer class="border-t border-editorial-rule bg-editorial-sheet mt-auto">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-editorial-muted">
+            <div>
+                <span data-i18n="colophon_title" class="font-editorial text-lg font-bold text-editorial-ink block">ساج — المدرسة العليا للأساتذة بالأغواط</span>
+                <span data-i18n="colophon_disclaimer">مبادرة طلابية مستقلة لتبادل الفائدة العلمية والمعرفية بين الطلبة.</span>
             </div>
-            <div class="pt-4 flex flex-col sm:flex-row items-center justify-between text-[11px] text-editorial-muted gap-2">
-                <span data-i18n="colophon_copy">حُرر ونُشر بجهود طلبة المدرسة العليا للأساتذة — منصة ساج الطلابية (2026)</span>
-                <span data-i18n="colophon_rights">حقوق النصوص محفوظة لأصحابها • متاح للاستفادة الطلابية المجانية</span>
+            <div class="flex items-center gap-4">
+                <button onclick="openAboutModal()" data-i18n="about_link" class="hover:text-editorial-burgundy underline underline-offset-4 cursor-pointer">عن ساج</button>
+                <button onclick="openSubmitModal()" data-i18n="btn_publish" class="hover:text-editorial-burgundy underline underline-offset-4 cursor-pointer">نشر إسهام</button>
             </div>
         </div>
     </footer>
@@ -697,31 +722,30 @@
                 titleAr: "نموذج واجهة مذكرة التخرج (Word / LaTeX)",
                 titleFr: "Modèle de page de garde de mémoire (Word / LaTeX)",
                 titleEn: "Graduation Thesis Cover Template (Word / LaTeX)",
-                bodyAr: "تمت إضافة القالب الموحد لواجهة مذكرات التخرج للسنة الثالثة والخامسة مضبوط الهوامش والخطوط وفق دليل المدرسة.",
-                bodyFr: "Mise à disposition du gabarit de page de garde pour les mémoires de 3e et 5e année selon les normes de l'école.",
+                bodyAr: "قالب واجهة مذكرات التخرج للسنة الثالثة والخامسة مضبوط الهوامش والخطوط وفق دليل المدرسة.",
+                bodyFr: "Gabarit de page de garde pour les mémoires de 3e et 5e année selon les normes de l'école.",
                 bodyEn: "Standardized cover page template for 3rd and 5th-year theses formatted to ENSL guidelines."
             },
             {
                 dateAr: "12 نوفمبر 2026", dateFr: "12 nov. 2026", dateEn: "Nov 12, 2026",
-                titleAr: "تنظيم حلقة قراءة حول ديداكتيك المواد العلمية",
+                titleAr: "حلقة قراءة حول ديداكتيك المواد العلمية",
                 titleFr: "Cercle de lecture sur la didactique des sciences",
                 titleEn: "Reading Circle on Science Didactics",
-                bodyAr: "يدعو طلبة السنة الرابعة زملاءهم في أقسام الرياضيات والفيزياء إلى جلسة نقاش مفتوحة بالمكتبة المركزية يوم الخميس صباحاً.",
-                bodyFr: "Les étudiants de 4e année invitent leurs camarades à une séance d'échange à la bibliothèque centrale jeudi matin.",
-                bodyEn: "4th-year students invite Mathematics and Physics peers to an open discussion at the central library Thursday morning."
+                bodyAr: "لقاء مفتوح لطلبة الرياضيات والفيزياء بالمكتبة المركزية يوم الخميس صباحاً.",
+                bodyFr: "Séance d'échange à la bibliothèque centrale jeudi matin pour mathématiques et physique.",
+                bodyEn: "Open discussion at the central library Thursday morning for Mathematics and Physics peers."
             },
             {
                 dateAr: "04 نوفمبر 2026", dateFr: "04 nov. 2026", dateEn: "Nov 04, 2026",
-                titleAr: "تجميع ملخصات مقياس علم النفس التربوي",
+                titleAr: "تجميع ملخصات علم النفس التربوي",
                 titleFr: "Collecte des résumés de psychopédagogie",
                 titleEn: "Collecting Educational Psychology Summaries",
-                bodyAr: "نرجو من طلبة السنة الثانية مشاركة ملخصات المحاضرات المشتركة لتيسير المراجعة قبل امتحانات السداسي الأول.",
-                bodyFr: "Appel aux étudiants de 2e année pour partager leurs notes de cours de psychopédagogie avant les examens.",
-                bodyEn: "Calling 2nd-year students to share shared lecture notes ahead of Semester 1 exams."
+                bodyAr: "مشاركة ملخصات المحاضرات المشتركة لتيسير المراجعة قبل امتحانات السداسي الأول.",
+                bodyFr: "Partage des notes de cours de psychopédagogie avant les examens du semestre.",
+                bodyEn: "Sharing lecture notes on educational psychology ahead of semester exams."
             }
         ];
 
-        // readTime مخزّن الآن كرقم (دقائق) ويُركَّب نصّه حسب اللغة
         const initialPublications = [
             {
                 id: 201,
@@ -831,33 +855,29 @@
             ar: {
                 doc_title: "ساج — كراسات ومطارحات طلبة المدرسة العليا للأساتذة بالأغواط",
                 academic_year: "السنة الجامعية 2026–2027",
-                initiative_badge: "مبادرة طلابية مستقلة — الأغواط",
-                quick_search: "فهرس البحث",
+                quick_search: "بحث سريع",
                 about_link: "عن ساج",
                 btn_publish: "نشر إسهام",
                 masthead_title: "ساج",
                 masthead_subtitle: "كراسات ومطارحات طلبة المدرسة العليا للأساتذة بالأغواط",
-                masthead_disclaimer: "مبادرة طلابية حرة ومستقلة لتبادل البحوث، المقالات، وملخصات المحاضرات (غير تابعة إدارياً للمدرسة).",
-                archive_issue: "العدد الجامعي الأول — خريف 2026",
-                upload_logo_text: "تحديث صورة الشعار",
+                masthead_disclaimer: "مبادرة طلابية مستقلة لتبادل البحوث، المقالات، وملخصات المحاضرات بين طلبة المدرسة.",
+                archive_issue: "العدد الأول — خريف 2026",
+                upload_logo_text: "تحديث الشعار",
                 reset_text: "استعادة",
-                search_placeholder: "ابحث في الفهرس بالعنوان، اسم الطالب، القسم، أو الموضوع...",
+                search_placeholder: "ابحث بالعنوان، اسم الطالب، القسم، أو الموضوع...",
                 clear_btn: "مسح",
-                tab_all: "جميع الإسهامات",
-                tab_research: "بحوث ومذكرات",
-                tab_articles: "مقالات وقراءات",
-                tab_lessons: "دروس وملخصات",
+                tab_all: "الكل",
+                tab_research: "بحوث",
+                tab_articles: "مقالات",
+                tab_lessons: "ملخصات",
                 sort_newest: "الأحدث",
                 sort_popular: "الأكثر قراءة",
                 reset_filters: "إلغاء التصفية",
                 empty_title: "لا توجد مواد تطابق عبارة البحث",
                 empty_desc: "يمكنك توسيع نطاق البحث أو العودة إلى الفهرس الكامل.",
                 show_all_btn: "العودة للفهرس الكامل",
-                sidebar_notes_title: "مذكرات وتنبيهات الطلبة",
-                sidebar_depts_title: "كشّاف الأقسام والتخصصات",
-                cite_guide_title: "قاعدة التوثيق في ساج",
-                cite_guide_desc: "يُرجى إرفاق المراجع المعتمدة في نهاية كل ملخص أو بحث لتسهيل رجوع الطلبة إلى المصادر الأصلية.",
-                cite_guide_example: "اللقب، الاسم (السنة). عنوان الورقة أو الملخص. منصة ساج الطلابية — ENSL، الأغواط.",
+                sidebar_notes_title: "تنبيهات الطلبة",
+                sidebar_depts_title: "الأقسام والتخصصات",
                 share_btn: "مشاركة",
                 cite_btn: "توثيق",
                 print_btn: "طباعة / PDF",
@@ -883,52 +903,46 @@
                 cancel_btn: "إلغاء",
                 submit_now_btn: "إدراج في الفهرس",
                 about_modal_title: "عن «ساج»",
-                about_p1: "«ساج» (نسبةً إلى خشب الساج المتين الذي تُصنع منه ألواح الكتابة ومكاتب الدرس والرفوف العريقة) هي مبادرة طلابية تطوعية مستقلة أطلقها طلبة من المدرسة العليا للأساتذة طالب عبد الرحمن - الأغواط، بهدف حفظ وتداول الملخصات الجيدة، القراءات الأدبية، ومقدمات بحوث التخرج بين الدفعات.",
+                about_p1: "«ساج» مبادرة طلابية تطوعية مستقلة أطلقها طلبة المدرسة العليا للأساتذة طالب عبد الرحمن - الأغواط لحفظ وتداول الملخصات الجيدة، القراءات الأدبية، ومقدمات بحوث التخرج بين الدفعات.",
                 disclaimer_heading: "تنويه وإخلاء مسؤولية:",
-                disclaimer_body: "هذا الموقع مبادرة طلابية مستقلة غير رسمية تهدف لتبادل الفائدة العلمية والبيداغوجية بين الطلبة، ولا يتبع إدارياً للمدرسة العليا للأساتذة بالأغواط ولا يمثلها بصفة رسمية. جميع الآراء والمواد المنشورة تعبّر عن أصحابها.",
+                disclaimer_body: "مبادرة طلابية مستقلة غير رسمية لتبادل الفائدة العلمية والبيداغوجية بين الطلبة، ولا تتبع إدارياً للمدرسة العليا للأساتذة بالأغواط ولا تمثلها بصفة رسمية.",
                 cmd_placeholder: "ابحث في الفهرس أو انتقل إلى قسم...",
-                colophon_title: "ساج — كراسات طلابية مستقلة (الأغواط)",
-                colophon_disclaimer: "تنويه: مبادرة طلابية مستقلة غير رسمية تهدف لتبادل الفائدة العلمية والمعرفية بين طلبة المدرسة العليا للأساتذة بالأغواط، ولا تتبع الإدارة أو المؤسسة بشكل رسمي.",
-                colophon_copy: "حُرر ونُشر بجهود طلبة المدرسة العليا للأساتذة — منصة ساج الطلابية (2026)",
-                colophon_rights: "حقوق النصوص محفوظة لأصحابها • متاح للاستفادة الطلابية المجانية",
+                colophon_title: "ساج — المدرسة العليا للأساتذة بالأغواط",
+                colophon_disclaimer: "مبادرة طلابية مستقلة لتبادل الفائدة العلمية والمعرفية بين الطلبة.",
                 all_depts_opt: "جميع الأقسام",
                 read_paper: "قراءة الورقة"
             },
             fr: {
                 doc_title: "SAJ — Cahiers étudiants de l’ENS Laghouat",
                 academic_year: "Année universitaire 2026–2027",
-                initiative_badge: "Initiative étudiante indépendante — Laghouat",
-                quick_search: "Index",
-                about_link: "À propos de SAJ",
+                quick_search: "Recherche",
+                about_link: "À propos",
                 btn_publish: "Publier",
                 masthead_title: "SAJ",
                 masthead_subtitle: "Cahiers étudiants de l’ENS Laghouat",
-                masthead_disclaimer: "Initiative étudiante libre et indépendante pour le partage de mémoires, d'articles et de résumés de cours (sans affiliation administrative officielle avec l'école).",
-                archive_issue: "Cahier N° 1 — Automne 2026",
-                upload_logo_text: "Importer l'emblème",
+                masthead_disclaimer: "Initiative étudiante indépendante pour le partage de recherches, d'articles et de résumés de cours.",
+                archive_issue: "N° 1 — Automne 2026",
+                upload_logo_text: "Emblème",
                 reset_text: "Rétablir",
-                search_placeholder: "Rechercher dans l'index SAJ par titre, étudiant, département ou sujet...",
+                search_placeholder: "Rechercher par titre, étudiant, département ou sujet...",
                 clear_btn: "Effacer",
-                tab_all: "Tout l'index",
-                tab_research: "Recherches & Mémoires",
-                tab_articles: "Articles & Lectures",
-                tab_lessons: "Cours & Résumés",
+                tab_all: "Tout",
+                tab_research: "Recherches",
+                tab_articles: "Articles",
+                tab_lessons: "Résumés",
                 sort_newest: "Plus récents",
                 sort_popular: "Plus lus",
                 reset_filters: "Réinitialiser",
                 empty_title: "Aucun texte ne correspond à votre recherche",
                 empty_desc: "Essayez d'élargir vos critères ou revenez à l'index complet.",
                 show_all_btn: "Afficher tout l'index",
-                sidebar_notes_title: "Notes & Avis des étudiants",
-                sidebar_depts_title: "Répertoire des départements",
-                cite_guide_title: "Norme de citation SAJ",
-                cite_guide_desc: "Veuillez indiquer les références bibliographiques à la fin de chaque résumé ou travail pour faciliter le retour aux sources.",
-                cite_guide_example: "Nom, Prénom (Année). Titre de la note ou du mémoire. Plateforme étudiante SAJ — ENSL, Laghouat.",
+                sidebar_notes_title: "Notes étudiantes",
+                sidebar_depts_title: "Départements",
                 share_btn: "Partager",
                 cite_btn: "Citer",
                 print_btn: "Imprimer / PDF",
                 sheet_header_1: "SAJ — Cahiers étudiants de l’ENS Laghouat",
-                sheet_header_2: "Initiative étudiante indépendante • Plateforme étudiante SAJ — ENSL",
+                sheet_header_2: "Initiative étudiante indépendante • Plateforme SAJ — ENSL",
                 abstract_heading: "Résumé",
                 refs_heading: "Références bibliographiques",
                 citation_label: "Référence à citer :",
@@ -949,52 +963,46 @@
                 cancel_btn: "Annuler",
                 submit_now_btn: "Inscrire à l'index",
                 about_modal_title: "À propos de « SAJ »",
-                about_p1: "« SAJ » (en référence au bois de teck robuste dont sont faits les pupitres d'étude, les tablettes d'écriture et les rayonnages de bibliothèques) est une initiative étudiante bénévole et indépendante lancée par des étudiants de l'École Normale Supérieure Taleb Abderrahmane de Laghouat afin de préserver et partager les meilleurs résumés de cours, lectures critiques et travaux de fin d'études.",
-                disclaimer_heading: "Avertissement et clause de non-responsabilité :",
-                disclaimer_body: "Ce site est une initiative étudiante indépendante à but purement pédagogique et collaboratif. Il ne relève pas de l'administration de l'ENS de Laghouat et ne la représente pas officiellement. Les textes n'engagent que leurs auteurs.",
-                cmd_placeholder: "Rechercher dans l'index SAJ ou aller vers un département...",
-                colophon_title: "SAJ — Cahiers étudiants indépendants (Laghouat)",
-                colophon_disclaimer: "Avertissement : Initiative étudiante indépendante sans lien administratif officiel avec l'ENS de Laghouat, dédiée au partage des savoirs entre étudiants.",
-                colophon_copy: "Édité par des étudiants de l'ENS — Plateforme étudiante SAJ (2026)",
-                colophon_rights: "Droits réservés aux auteurs • Libre accès étudiant",
+                about_p1: "« SAJ » est une initiative étudiante bénévole et indépendante lancée par des étudiants de l'ENS Taleb Abderrahmane de Laghouat pour partager résumés, lectures critiques et travaux d'études.",
+                disclaimer_heading: "Avertissement :",
+                disclaimer_body: "Initiative étudiante indépendante sans lien administratif officiel avec l'ENS de Laghouat.",
+                cmd_placeholder: "Rechercher ou aller vers un département...",
+                colophon_title: "SAJ — ENS Laghouat",
+                colophon_disclaimer: "Initiative étudiante indépendante dédiée au partage des savoirs.",
                 all_depts_opt: "Tous les départements",
                 read_paper: "Lire le texte"
             },
             en: {
                 doc_title: "SAJ — Student Notebooks of ENS Laghouat",
                 academic_year: "Academic Year 2026–2027",
-                initiative_badge: "Independent Student Initiative — Laghouat",
-                quick_search: "Index",
-                about_link: "About SAJ",
+                quick_search: "Quick Search",
+                about_link: "About",
                 btn_publish: "Submit",
                 masthead_title: "SAJ",
                 masthead_subtitle: "Student Notebooks & Working Papers of ENS Laghouat",
-                masthead_disclaimer: "An independent student-led platform for sharing research papers, essays, and lecture summaries (not administratively affiliated with the school).",
-                archive_issue: "Volume 1 — Fall 2026",
-                upload_logo_text: "Update Emblem",
+                masthead_disclaimer: "Independent student initiative for sharing research papers, essays, and lecture summaries.",
+                archive_issue: "Issue 1 — Fall 2026",
+                upload_logo_text: "Emblem",
                 reset_text: "Restore",
-                search_placeholder: "Search SAJ index by title, student, department, or topic...",
+                search_placeholder: "Search by title, student, department, or topic...",
                 clear_btn: "Clear",
-                tab_all: "All Contributions",
-                tab_research: "Research & Theses",
-                tab_articles: "Articles & Essays",
-                tab_lessons: "Lectures & Summaries",
+                tab_all: "All",
+                tab_research: "Research",
+                tab_articles: "Articles",
+                tab_lessons: "Summaries",
                 sort_newest: "Newest",
                 sort_popular: "Most Read",
-                reset_filters: "Reset Filters",
+                reset_filters: "Reset",
                 empty_title: "No papers match your search query",
                 empty_desc: "Try broadening your terms or return to the full index.",
                 show_all_btn: "Back to Full Index",
-                sidebar_notes_title: "Student Notes & Bulletins",
-                sidebar_depts_title: "Departments Directory",
-                cite_guide_title: "SAJ Citation Standard",
-                cite_guide_desc: "Please attach primary references at the end of each summary or paper to help peers trace original sources.",
-                cite_guide_example: "Last Name, First Name (Year). Title of Paper or Summary. SAJ Student Platform — ENSL, Laghouat.",
+                sidebar_notes_title: "Student Notes",
+                sidebar_depts_title: "Departments",
                 share_btn: "Share",
                 cite_btn: "Cite",
                 print_btn: "Print / PDF",
                 sheet_header_1: "SAJ — Student Notebooks of ENS Laghouat",
-                sheet_header_2: "Independent Student Initiative • SAJ Student Platform — ENSL",
+                sheet_header_2: "Independent Student Initiative • SAJ Platform — ENSL",
                 abstract_heading: "Abstract",
                 refs_heading: "Sources & References",
                 citation_label: "Citation Format:",
@@ -1015,14 +1023,12 @@
                 cancel_btn: "Cancel",
                 submit_now_btn: "Add to Index",
                 about_modal_title: "About «SAJ»",
-                about_p1: "«SAJ» (named after the durable teak wood used for traditional writing tablets, study desks, and library shelves) is an independent volunteer student initiative launched by students of École Normale Supérieure Taleb Abderrahmane – Laghouat to preserve and exchange quality summaries, literary readings, and thesis introductions across cohorts.",
-                disclaimer_heading: "Notice & Disclaimer:",
-                disclaimer_body: "This website is an unofficial, independent student initiative aimed at academic and pedagogical knowledge sharing among students, and is neither administratively affiliated with nor officially represents ENS Laghouat. All published views belong to their respective authors.",
-                cmd_placeholder: "Search SAJ index or jump to a department...",
-                colophon_title: "SAJ — Independent Student Notebooks (Laghouat)",
-                colophon_disclaimer: "Disclaimer: Independent student initiative with no official administrative affiliation with ENS Laghouat, dedicated to peer knowledge sharing.",
-                colophon_copy: "Edited & published by ENS students — SAJ Student Platform (2026)",
-                colophon_rights: "All texts remain property of their authors • Free student access",
+                about_p1: "«SAJ» is an independent volunteer student initiative launched by students of ENS Taleb Abderrahmane – Laghouat to preserve and share quality summaries, literary readings, and thesis work.",
+                disclaimer_heading: "Disclaimer:",
+                disclaimer_body: "Independent student initiative with no official administrative affiliation with ENS Laghouat.",
+                cmd_placeholder: "Search index or jump to a department...",
+                colophon_title: "SAJ — ENS Laghouat",
+                colophon_disclaimer: "Independent student initiative dedicated to peer knowledge sharing.",
                 all_depts_opt: "All Departments",
                 read_paper: "Read Paper"
             }
@@ -1039,7 +1045,6 @@
         let cmdSelectedIndex = 0;
         let activePublicationId = null;
 
-        /* ---------- تخزين محلي آمن ---------- */
         function safeStorageGet(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
         function safeStorageSet(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
         function safeStorageRemove(key) { try { localStorage.removeItem(key); } catch (e) {} }
@@ -1052,7 +1057,6 @@
             } catch (e) { return false; }
         }
 
-        /* ---------- زمن القراءة: رقم يُركَّب نصّه حسب اللغة ---------- */
         function parseMinutes(v) {
             if (typeof v === 'number' && v > 0) return Math.round(v);
             const m = String(v || '').match(/\d+/);
@@ -1084,7 +1088,6 @@
             };
         }
 
-        /* ---------- قفل التمرير الموحّد ---------- */
         function syncScrollLock() {
             const anyOpen = document.querySelector(
                 '#reader-modal:not(.hidden), #publish-modal:not(.hidden), #about-modal:not(.hidden), #cmd-modal:not(.hidden)'
@@ -1092,7 +1095,6 @@
             document.body.style.overflow = anyOpen ? 'hidden' : 'auto';
         }
 
-        /* ---------- الثيم ---------- */
         function initTheme() { updateThemeIcon(); }
 
         function toggleTheme() {
@@ -1109,7 +1111,6 @@
             if (window.lucide) lucide.createIcons();
         }
 
-        /* ---------- التهيئة ---------- */
         async function initApp() {
             initTheme();
             loadCustomLogo();
@@ -1187,7 +1188,6 @@
             });
         }
 
-        /* ---------- الشعار ---------- */
         function loadCustomLogo() {
             const saved = safeStorageGet('saj_ensl_custom_logo');
             if (saved) {
@@ -1222,7 +1222,7 @@
                 renderLogos();
                 const btn = document.getElementById('reset-logo-btn');
                 if (btn) btn.classList.remove('hidden');
-                showToast(currentLang === 'ar' ? 'تم تحديث صورة الشعار' : currentLang === 'fr' ? 'Emblème mis à jour' : 'Emblem updated');
+                showToast(currentLang === 'ar' ? 'تم تحديث الشعار' : currentLang === 'fr' ? 'Emblème mis à jour' : 'Emblem updated');
             };
             reader.readAsDataURL(file);
         }
@@ -1236,7 +1236,6 @@
             showToast(currentLang === 'ar' ? 'تمت استعادة الشعار الأصلي' : currentLang === 'fr' ? 'Emblème rétabli' : 'Emblem restored');
         }
 
-        /* ---------- تسميات ---------- */
         function getDeptLabel(deptId) {
             const found = departmentsList.find(d => d.id === deptId);
             if (!found) return deptId;
@@ -1288,8 +1287,8 @@
                 const t = currentLang === 'ar' ? n.titleAr : currentLang === 'fr' ? n.titleFr : n.titleEn;
                 const b = currentLang === 'ar' ? n.bodyAr : currentLang === 'fr' ? n.bodyFr : n.bodyEn;
                 return `
-                <article class="${idx > 0 ? 'pt-3.5' : ''}">
-                    <span class="block text-[11px] font-mono text-editorial-muted mb-1">${escapeHTML(d)}</span>
+                <article class="${idx > 0 ? 'pt-3' : ''}">
+                    <span class="block text-[11px] font-mono text-editorial-muted mb-0.5">${escapeHTML(d)}</span>
                     <h3 class="font-editorial text-base font-bold text-editorial-ink leading-snug mb-1">${escapeHTML(t)}</h3>
                     <p class="text-xs text-editorial-muted leading-relaxed">${escapeHTML(b)}</p>
                 </article>
@@ -1307,14 +1306,13 @@
                 <li>
                     <button onclick="quickFilterDept('${d.id}')" class="w-full py-2 flex items-center justify-between text-start hover:text-editorial-burgundy transition-colors cursor-pointer ${active ? 'font-bold text-editorial-burgundy' : 'text-editorial-ink'}">
                         <span class="text-xs">${escapeHTML(d[currentLang] || d.ar)}</span>
-                        <span class="text-[11px] font-mono text-editorial-muted">${count}</span>
+                        <span class="text-[11px] font-mono px-1.5 py-0.5 rounded-[2px] bg-editorial-paper border border-editorial-rule text-editorial-muted">${count}</span>
                     </button>
                 </li>
                 `;
             }).join('');
         }
 
-        /* ---------- البيانات ---------- */
         function loadLocalPublicationsSync() {
             const saved = safeStorageGet('saj_ensl_contributions_v1');
             if (saved) {
@@ -1342,7 +1340,6 @@
                 if (!error && Array.isArray(data)) {
                     const normalizedCloud = data.map(normalizePublication);
                     const cloudIds = new Set(normalizedCloud.map(d => d.id));
-                    // المنشورات التي حُفظت محلياً فقط لا تُحذف عند المزامنة
                     const localOnly = publications.filter(p => p.localOnly && !cloudIds.has(p.id));
                     const fallbackItems = initialPublications
                         .filter(p => !cloudIds.has(p.id))
@@ -1364,7 +1361,6 @@
             safeStorageSet('saj_ensl_contributions_v1', JSON.stringify(publications));
         }
 
-        /* ---------- العرض ---------- */
         function renderAll(animate = true) {
             const summaryEl = document.getElementById('archive-summary-text');
             if (summaryEl) {
@@ -1428,7 +1424,6 @@
             if (emptyEl) emptyEl.classList.add('hidden');
 
             const arrow = currentLang === 'ar' ? '←' : '→';
-            const animClass = animate ? 'fade-in-view' : '';
 
             listEl.innerHTML = filtered.map((pub, idx) => {
                 const indexNum = String(idx + 1).padStart(2, '0');
@@ -1436,13 +1431,14 @@
                 const deptLabel = getDeptLabel(pub.department);
                 const readLabel = translations[currentLang].read_paper;
                 const pid = Number(pub.id);
+                const staggerIdx = Math.min(idx, 10);
 
                 return `
-                <article class="journal-entry py-6 px-2 sm:px-3 ${animClass}">
-                    <div class="flex items-start gap-4">
-                        <span class="font-mono text-xs text-editorial-brass pt-1.5 select-none shrink-0">${indexNum}</span>
+                <article style="--i: ${staggerIdx}" class="${animate ? 'motion-entry' : 'bg-editorial-sheet/70 hover:bg-editorial-sheet transition-colors'} bg-editorial-sheet/80 border border-editorial-rule hover:border-editorial-burgundy/50 rounded-[4px] p-4 sm:p-5">
+                    <div class="flex items-start gap-3.5">
+                        <span class="font-mono text-xs font-bold text-editorial-brass bg-editorial-paper border border-editorial-rule px-2 py-0.5 rounded-[3px] select-none shrink-0 mt-1">${indexNum}</span>
                         <div class="flex-grow min-w-0">
-                            <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs mb-1.5">
+                            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs mb-1.5">
                                 <span class="font-bold text-editorial-burgundy">${escapeHTML(typeLabel)}</span>
                                 <span class="text-editorial-rule">•</span>
                                 <span class="text-editorial-muted font-medium">${escapeHTML(deptLabel)}</span>
@@ -1458,18 +1454,19 @@
                                 ${escapeHTML(pub.abstract)}
                             </p>
 
-                            <div class="flex flex-wrap items-center justify-between gap-3 text-xs">
+                            <div class="flex flex-wrap items-center justify-between gap-3 text-xs pt-2.5 border-t border-editorial-rule/60">
                                 <div class="text-editorial-ink">
                                     <span class="font-semibold">${escapeHTML(pub.author)}</span>
                                     <span class="text-editorial-muted mx-1.5">—</span>
                                     <span class="text-editorial-muted">${escapeHTML(pub.year)}</span>
                                 </div>
 
-                                <div class="flex items-center gap-4">
-                                    ${pub.pdf_url ? `<span class="text-[11px] font-mono px-1.5 py-0.5 bg-editorial-stone border border-editorial-rule text-editorial-burgundy rounded-[2px]">PDF</span>` : ''}
+                                <div class="flex items-center gap-3.5">
+                                    ${pub.pdf_url ? `<span class="text-[11px] font-mono px-1.5 py-0.5 bg-editorial-paper border border-editorial-rule text-editorial-burgundy rounded-[2px]">PDF</span>` : ''}
                                     <span class="text-editorial-muted">${escapeHTML(formatMinutes(pub.readMinutes))}</span>
-                                    <button onclick="openReaderModal(${pid})" class="font-bold text-editorial-burgundy hover:underline underline-offset-4 cursor-pointer">
-                                        ${escapeHTML(readLabel)} ${arrow}
+                                    <button onclick="openReaderModal(${pid})" class="font-bold text-editorial-burgundy hover:underline underline-offset-4 cursor-pointer inline-flex items-center gap-1">
+                                        <span>${escapeHTML(readLabel)}</span>
+                                        <span class="motion-arrow">${arrow}</span>
                                     </button>
                                 </div>
                             </div>
@@ -1480,7 +1477,6 @@
             }).join('');
         }
 
-        /* ---------- التصفية والترتيب ---------- */
         function setTypeFilter(type, btnEl) {
             currentTypeFilter = type;
             const target = btnEl || document.querySelector(`.type-btn[data-type="${type}"]`);
@@ -1522,7 +1518,7 @@
             if (!input) return;
             currentSearchQuery = input.value;
             if (clearBtn) clearBtn.classList.toggle('hidden', currentSearchQuery.length === 0);
-            renderPublicationsList(false); // بدون أنيميشن أثناء الكتابة
+            renderPublicationsList(false);
         }
 
         function clearSearch() {
@@ -1548,7 +1544,6 @@
             renderDepartmentsIndex();
         }
 
-        /* ---------- اللغة ---------- */
         function cycleLanguage() {
             const order = ['ar', 'fr', 'en'];
             currentLang = order[(order.indexOf(currentLang) + 1) % order.length];
@@ -1575,7 +1570,6 @@
             renderStudentNotes();
             renderAll(false);
 
-            // تحديث نافذة القراءة إن كانت مفتوحة
             if (activePublicationId) fillReaderModal(activePublicationId);
 
             requestAnimationFrame(() => {
@@ -1584,7 +1578,6 @@
             });
         }
 
-        /* ---------- نافذة القراءة ---------- */
         function fillReaderModal(id) {
             const pub = publications.find(p => Number(p.id) === Number(id));
             if (!pub) return;
@@ -1649,7 +1642,6 @@
             savePublicationsLocal();
             renderPublicationsList(false);
 
-            // زيادة العدّاد على الخادم عبر دالة RPC (انظر ملاحظة SQL)؛ الفشل صامت
             if (supabaseClient && pub.created_at && !pub.localOnly) {
                 supabaseClient.rpc('increment_views', { pub_id: pub.id }).then(() => {}, () => {});
             }
@@ -1705,7 +1697,6 @@
             copyTextSafe(url.toString(), msg);
         }
 
-        /* ---------- نافذة النشر ---------- */
         function openSubmitModal() {
             const modal = document.getElementById('publish-modal');
             if (modal) {
@@ -1755,7 +1746,6 @@
             const monthsAr = ["جانفي", "فيفري", "مارس", "أفريل", "ماي", "جوان", "جويلية", "أوت", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
             const formattedDate = `${today.getDate()} ${monthsAr[today.getMonth()]} ${today.getFullYear()}`;
 
-            // الحقول المرسلة للسحابة: read_time (snake_case) يوافق ما يقرأه الكود
             const newRecord = {
                 title,
                 type,
@@ -1817,7 +1807,6 @@
             }
         }
 
-        /* ---------- نافذة عن المبادرة ---------- */
         function openAboutModal() {
             const modal = document.getElementById('about-modal');
             if (modal) {
@@ -1834,7 +1823,6 @@
             }
         }
 
-        /* ---------- لوحة البحث السريع ---------- */
         function openCommandPalette() {
             const modal = document.getElementById('cmd-modal');
             const input = document.getElementById('cmd-input');
@@ -1906,12 +1894,11 @@
             container.innerHTML = html || `<div class="p-6 text-center text-xs text-editorial-muted">${currentLang === 'ar' ? 'لا توجد نتائج' : currentLang === 'fr' ? 'Aucun résultat' : 'No results'}</div>`;
         }
 
-        /* ---------- أدوات ---------- */
         function showToast(msg) {
             const container = document.getElementById('toast-container');
             if (!container) return;
             const el = document.createElement('div');
-            el.className = 'bg-editorial-ink text-editorial-sheet text-xs px-4 py-2.5 rounded-[3px] border border-editorial-brass shadow-md fade-in-view';
+            el.className = 'bg-editorial-ink text-editorial-sheet text-xs px-4 py-2.5 rounded-[4px] border border-editorial-brass shadow-md fade-in-view';
             el.textContent = msg;
             container.appendChild(el);
             setTimeout(() => el.remove(), 2800);
