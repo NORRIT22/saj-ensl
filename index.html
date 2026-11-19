@@ -87,7 +87,6 @@
             letter-spacing: -0.01em;
         }
 
-        /* حركات الموشن جرافيك */
         @keyframes pulsePingSlow {
             0%, 100% { transform: scale(1); opacity: 0.9; }
             50% { transform: scale(1.35); opacity: 0.45; }
@@ -120,7 +119,6 @@
             }
         }
 
-        /* تحريك عناصر شعار ساج المتعددة */
         @keyframes archStrokeDraw {
             from {
                 stroke-dashoffset: 260;
@@ -351,7 +349,7 @@
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6">
             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
                 <div class="saj-logo-box px-4 py-2 shrink-0 flex items-center justify-center border border-editorial-rule bg-editorial-sheet rounded-[4px] transition-colors hover:border-editorial-brass">
-                    <div id="masthead-logo-slot" class="h-16 sm:h-20 w-auto"></div>
+                    <div id="masthead-logo-slot" class="h-16 sm:h-20 min-w-[220px] sm:min-w-[265px] w-auto"></div>
                 </div>
                 <div>
                     <div class="flex flex-wrap items-center gap-2 text-[11px] font-mono text-editorial-brass mb-1">
@@ -631,7 +629,6 @@
                         </div>
                     </div>
 
-                    <!-- رفع ملف مباشر من الجهاز -->
                     <div class="bg-editorial-paper border border-dashed border-editorial-brass rounded-[4px] p-3.5">
                         <label for="input-file-upload" data-i18n="lbl_file_upload" class="block text-xs font-bold text-editorial-burgundy mb-1.5">
                             إرفاق ملف من الجهاز (PDF, DOC, DOCX, PPT, PPTX, TXT, MD, ZIP — حتى 15MB)
@@ -736,27 +733,25 @@
             ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
             : null;
 
-        /* مفتاح المالك الخاص بـ Taha Sleia لتعديل هوية الشعار فقط */
         const OWNER_UNLOCK_CODE = 'TAHA-SAJ-ENSL-0122';
         let ownerAuthenticated = false;
         let selectedUploadFile = null;
 
-        /* شعار منصة ساج المتحرك بدون أي تداخل مع مسافة فاصلة واضحة بين النص والرمز */
         const sajBrandLogoSVG = `
-        <svg viewBox="0 0 420 120" class="w-full h-full logo-multiply" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شعار منصة ساج المتحرك SAJ — ENSL Laghouat">
-            <!-- النصوص على اليمين مع هامش أمان كافٍ -->
-            <g transform="translate(262, 0)" text-anchor="end">
-                <text x="0" y="56" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="34">
+        <svg viewBox="0 0 440 120" class="w-full h-full logo-multiply" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شعار منصة ساج المتحرك SAJ — ENSL Laghouat">
+            <!-- النصوص على اليمين -->
+            <g transform="translate(248, 0)" text-anchor="end">
+                <text x="0" y="56" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="32">
                     <tspan fill="var(--burgundy)">ساج</tspan>
                     <tspan fill="#B8934A"> • SAJ</tspan>
                 </text>
-                <text x="0" y="88" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="14" letter-spacing="1.8" fill="var(--burgundy)">
+                <text x="0" y="88" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="13" letter-spacing="1.6" fill="var(--burgundy)">
                     ENSL LAGHOUAT
                 </text>
             </g>
 
-            <!-- الرمز المتحرك على اليسار بمسافة مستقلة -->
-            <g transform="translate(282, 4)">
+            <!-- الرمز المتحرك على اليسار بمسافة فاصلة واضحة -->
+            <g transform="translate(276, 4)">
                 <circle cx="56" cy="54" r="36" fill="#B8934A" class="saj-logo-aura"/>
                 <circle cx="56" cy="54" r="42" fill="none" stroke="#B8934A" stroke-width="1.4" stroke-dasharray="4 7" opacity="0.7" class="saj-logo-orbit"/>
 
@@ -775,7 +770,6 @@
         </svg>
         `;
 
-        /* شارة مختصرة متحركة لشريط التنقل */
         const sajNavBadgeSVG = `
         <svg viewBox="0 0 80 80" class="w-full h-full logo-multiply" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شارة ساج المتحركة">
             <rect x="3" y="3" width="74" height="74" rx="14" fill="var(--burgundy)"/>
