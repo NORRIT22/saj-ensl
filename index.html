@@ -912,6 +912,14 @@
     </footer>
 
     </div><!-- نهاية #app-shell -->
+<script>
+        setTimeout(function() {
+            var s = document.getElementById('saj-splash-screen');
+            var a = document.getElementById('app-shell');
+            if (s) { s.classList.add('splash-exit'); setTimeout(function(){ if(s && s.parentNode) s.remove(); }, 600); }
+            if (a) { a.classList.add('app-ready'); }
+        }, 2300);
+    </script>
 
     <script>
         const SUPABASE_URL = 'https://pjptbzefvrpthxnvnfgz.supabase.co';
@@ -2319,8 +2327,7 @@
             }
 
             const contentContainer = document.getElementById('modal-content');
-            const paragraphs = (pub.content || '').split('
-').filter(p => p.trim() !== '');
+            const paragraphs = (pub.content || '').split('\n').filter(p => p.trim() !== '');
             contentContainer.innerHTML = paragraphs.map(p => {
                 if (p.length < 80 && (p.endsWith(':') || p.startsWith('أولاً') || p.startsWith('ثانياً') || /^\d+\./.test(p))) {
                     return `<h3 class="text-lg font-bold text-editorial-burgundy pt-2">${escapeHTML(p)}</h3>`;
