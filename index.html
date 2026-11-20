@@ -160,39 +160,33 @@
             transform: translateY(0);
         }
 
-        /* 1. القرص الرملي الدافئ */
         @keyframes sajSandDiscIn {
             0% { opacity: 0; transform: scale(0.65); }
             100% { opacity: 0.88; transform: scale(1); }
         }
 
-        /* 2. التفاف الإطار الخارجي المتقطع الذهبي (#B8934A) */
         @keyframes sajDashedRingSpin {
             0% { opacity: 0; transform: scale(0.84) rotate(-85deg); }
             100% { opacity: 0.92; transform: scale(1) rotate(0deg); }
         }
 
-        /* 3. ارتفاع القوسين المعماريين */
         @keyframes sajArchRise {
             0% { stroke-dashoffset: 185; opacity: 0; }
             25% { opacity: 1; }
             100% { stroke-dashoffset: 0; opacity: 1; }
         }
 
-        /* 4. صعود ريشة القلم (#D96B84) من الأسفل للاستقرار في منتصف القوس */
         @keyframes sajNibAscend {
             0% { opacity: 0; transform: translateY(28px) scale(0.86); }
             70% { opacity: 1; transform: translateY(-2px) scale(1.02); }
             100% { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* 5. انفتاح الكتاب في القاعدة بالتزامن مع استقرار الريشة */
         @keyframes sajBookOpen {
             0% { opacity: 0; transform: scaleX(0.22) translateY(8px); }
             100% { opacity: 1; transform: scaleX(1) translateY(0); }
         }
 
-        /* 6. تقارب كلمة SAJ من اليسار وكلمة ساج من اليمين نحو المنتصف */
         @keyframes sajWordLeftIn {
             0% { opacity: 0; transform: translateX(-34px); }
             100% { opacity: 1; transform: translateX(0); }
@@ -203,13 +197,11 @@
             100% { opacity: 1; transform: translateX(0); }
         }
 
-        /* 7. ظهور عبارة ENSL LAGHOUAT بانسيابية تحتها */
         @keyframes sajSubCaptionIn {
             0% { opacity: 0; transform: translateY(8px); letter-spacing: 5.5px; }
             100% { opacity: 1; transform: translateY(0); letter-spacing: 3.2px; }
         }
 
-        /* 8. شريط التقدم المرافق لشاشة الانتظار (2 ثانية) */
         @keyframes sajSplashProgress {
             0% { transform: scaleX(0); }
             100% { transform: scaleX(1); }
@@ -316,7 +308,6 @@
             html, body { overflow: visible !important; height: auto !important; background: #fff !important; }
             #saj-splash-screen { display: none !important; }
             #app-shell { opacity: 1 !important; transform: none !important; }
-            /* تُطبَّق قواعد الطباعة الخاصة بالورقة فقط عند فتح نافذة القراءة */
             body.reader-open { display: block !important; min-height: 0 !important; }
             body.reader-open #app-shell > *:not(#reader-modal) { display: none !important; }
             body.reader-open #reader-modal {
@@ -346,7 +337,6 @@
 </head>
 <body class="antialiased selection:bg-editorial-burgundy selection:text-white flex flex-col min-h-screen">
 
-    <!-- شاشة الانتظار الافتتاحية الموحدة (2 ثانية) -->
     <div id="saj-splash-screen" role="status" aria-live="polite" aria-label="جاري تحميل منصة ساج">
         <div id="splash-logo-slot" class="w-[300px] sm:w-[390px] h-24 sm:h-32"></div>
         <div class="w-44 h-[2px] bg-editorial-rule/80 rounded-full overflow-hidden">
@@ -357,15 +347,12 @@
 
     <div id="app-shell" class="flex flex-col min-h-screen">
 
-    <!-- مؤشر التقدم في القراءة -->
     <div class="fixed top-0 left-0 right-0 h-[2px] z-50 bg-editorial-rule/40 pointer-events-none">
         <div id="reading-progress" class="h-full bg-editorial-burgundy w-0 transition-all duration-150"></div>
     </div>
 
-    <!-- إشعارات النظام -->
     <div id="toast-container" class="fixed bottom-6 left-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-    <!-- 1. شريط التنقل -->
     <nav class="border-b border-editorial-rule bg-editorial-sheet/95 sticky top-0 z-40 backdrop-blur-sm">
         <div class="max-w-5xl mx-auto px-3 sm:px-6 min-h-14 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
             <a href="#" onclick="resetAllFilters(); return false;" class="flex items-center gap-2 text-editorial-ink font-bold shrink-0">
@@ -393,7 +380,6 @@
                     عن ساج
                 </button>
 
-                <!-- حالة حساب الطالب -->
                 <div id="auth-nav-slot" class="flex items-center min-w-0"></div>
 
                 <button onclick="openSubmitModal()" class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-[4px] bg-editorial-burgundy hover:opacity-90 text-white font-semibold transition-opacity cursor-pointer shrink-0">
@@ -407,7 +393,6 @@
         </div>
     </nav>
 
-    <!-- 2. الترويسة الرئيسية -->
     <header class="max-w-5xl mx-auto w-full px-4 sm:px-6 pt-7 pb-6">
         <div class="bg-editorial-sheet border border-editorial-rule rounded-[4px] p-5 sm:p-6">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-5">
@@ -443,7 +428,6 @@
         </div>
     </header>
 
-    <!-- 3. المحتوى الرئيسي -->
     <main class="max-w-5xl mx-auto w-full px-4 sm:px-6 pb-16 flex-grow">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
@@ -531,7 +515,7 @@
         </div>
     </main>
 
-    <!-- 4. نافذة تسجيل الدخول السريع (Google + البريد الإلكتروني) -->
+    <!-- نافذة تسجيل الدخول السريع -->
     <div id="auth-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-stone-950/75 p-3 sm:p-6" onclick="if(event.target === this) closeAuthModal()">
         <div class="min-h-screen flex items-center justify-center" onclick="if(event.target === this) closeAuthModal()">
             <div class="bg-editorial-sheet w-full max-w-md border border-editorial-rule shadow-2xl my-4 rounded-[4px] modal-panel">
@@ -553,7 +537,6 @@
                         سجّل دخولك بنقرة واحدة عبر حساب Google لحفظ إسهاماتك وملء بياناتك تلقائياً عند النشر.
                     </p>
 
-                    <!-- زر تسجيل الدخول بحساب Google -->
                     <button type="button" id="btn-oauth-google" onclick="signInWithOAuthProvider('google')" class="w-full py-2.5 px-4 rounded-[4px] border border-editorial-rule bg-editorial-paper hover:border-editorial-burgundy hover:bg-editorial-stone/60 text-editorial-ink font-bold text-sm flex items-center justify-center gap-3 transition-colors cursor-pointer">
                         <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                             <path fill="#4285F4" d="M23.49 12.275c0-.85-.075-1.675-.215-2.475H12v4.69h6.45c-.28 1.49-1.125 2.75-2.395 3.6v2.99h3.875c2.265-2.085 3.56-5.16 3.56-8.805z"/>
@@ -564,7 +547,6 @@
                         <span data-i18n="auth_btn_google">المتابعة باستخدام Google</span>
                     </button>
 
-                    <!-- فاصل وخيار البريد الإلكتروني البديل عند الحاجة -->
                     <div class="pt-2">
                         <button type="button" onclick="toggleEmailAuthPanel()" class="w-full flex items-center justify-center gap-2 text-[11px] text-editorial-muted hover:text-editorial-burgundy py-1.5 cursor-pointer">
                             <span class="h-px flex-1 bg-editorial-rule"></span>
@@ -633,8 +615,7 @@
         </div>
     </div>
 
-
-    <!-- 4.5 نافذة تأكيد تسجيل الخروج -->
+    <!-- نافذة تأكيد تسجيل الخروج -->
     <div id="logout-confirm-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-stone-950/75 p-4" onclick="if(event.target === this) closeLogoutConfirmModal()">
         <div class="min-h-screen flex items-center justify-center" onclick="if(event.target === this) closeLogoutConfirmModal()">
             <div class="bg-editorial-sheet w-full max-w-sm border border-editorial-rule shadow-2xl rounded-[4px] p-6 modal-panel">
@@ -659,7 +640,7 @@
         </div>
     </div>
 
-    <!-- 5. نافذة القراءة والطباعة -->
+    <!-- نافذة القراءة والطباعة -->
     <div id="reader-modal" class="fixed inset-0 z-50 hidden overflow-y-scroll bg-stone-950/75 p-2 sm:p-6" style="height: 100dvh; -webkit-overflow-scrolling: touch;" onclick="if(event.target === this) closeReaderModal()">
         <div class="w-full max-w-3xl mx-auto my-2 sm:my-6" onclick="event.stopPropagation()">
             <div class="bg-editorial-sheet w-full border border-editorial-rule shadow-2xl rounded-[4px]">
@@ -760,7 +741,7 @@
         </div>
     </div>
 
-    <!-- 6. نافذة النشر (ملفات + نصوص) -->
+    <!-- نافذة النشر -->
     <div id="publish-modal" class="fixed inset-0 z-50 hidden overflow-y-scroll bg-stone-950/75 p-3 sm:p-6" style="height: 100dvh; -webkit-overflow-scrolling: touch;" onclick="if(event.target === this) closeSubmitModal()">
         <div class="w-full max-w-2xl mx-auto my-2 sm:my-6" onclick="event.stopPropagation()">
             <div class="bg-editorial-sheet w-full border border-editorial-rule shadow-2xl rounded-[4px]">
@@ -797,6 +778,15 @@
                                 <option value="السنة السادسة">السنة السادسة / 6ème Année</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div class="bg-editorial-paper border border-editorial-rule rounded-[4px] p-3 min-w-0">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                            <span class="text-xs font-bold text-editorial-ink">صورة ملف محايدة للمنشور (سياسة الحيادية والمحتوى اللائق)</span>
+                            <span class="text-[10px] font-mono text-editorial-muted">NEUTRAL AVATAR</span>
+                        </div>
+                        <div id="publish-avatar-grid" class="grid grid-cols-3 sm:grid-cols-6 gap-2"></div>
+                        <p id="publish-avatar-caption" class="text-[11px] text-editorial-muted mt-2"></p>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
@@ -861,7 +851,7 @@
         </div>
     </div>
 
-    <!-- 7. نافذة عن المبادرة -->
+    <!-- نافذة عن المبادرة -->
     <div id="about-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-stone-950/75 p-3 sm:p-6" onclick="if(event.target === this) closeAboutModal()">
         <div class="min-h-screen flex items-center justify-center" onclick="if(event.target === this) closeAboutModal()">
             <div class="bg-editorial-sheet w-full max-w-xl border border-editorial-rule shadow-2xl p-6 sm:p-8 rounded-[4px] modal-panel">
@@ -884,7 +874,7 @@
         </div>
     </div>
 
-    <!-- 8. لوحة البحث السريع -->
+    <!-- لوحة البحث السريع -->
     <div id="cmd-modal" class="fixed inset-0 z-50 hidden bg-stone-950/65 p-4 sm:pt-20" onclick="if(event.target === this) closeCommandPalette()">
         <div class="max-w-lg mx-auto bg-editorial-sheet border border-editorial-rule shadow-2xl rounded-[4px] overflow-hidden modal-panel">
             <div class="flex items-center border-b border-editorial-rule px-3.5 py-2.5">
@@ -896,7 +886,7 @@
         </div>
     </div>
 
-    <!-- 9. التذييل الموحد الهوية -->
+    <!-- التذييل الموحد الهوية -->
     <footer class="border-t border-editorial-rule bg-editorial-sheet mt-auto">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-editorial-muted">
             <div class="flex items-center gap-3">
@@ -914,8 +904,9 @@
         </div>
     </footer>
 
-    </div><!-- نهاية #app-shell -->
-<script>
+    </div>
+
+    <script>
         setTimeout(function() {
             var s = document.getElementById('saj-splash-screen');
             var a = document.getElementById('app-shell');
@@ -935,15 +926,79 @@
             }
         } catch (e) { supabaseClient = null; }
 
+        const NEUTRAL_AVATARS = [
+            { id: 'arch-sand', labelAr: 'قوس رملي', labelFr: 'Arche sable', labelEn: 'Sand Arch', bg: '#EFE4CE', fg: '#5A1424', accent: '#B8934A', motif: 'arch' },
+            { id: 'nib-rose', labelAr: 'ريشة القلم', labelFr: 'Plume', labelEn: 'Nib', bg: '#F5E6EA', fg: '#5A1424', accent: '#D96B84', motif: 'nib' },
+            { id: 'folio-stone', labelAr: 'كراس ورقي', labelFr: 'Cahier', labelEn: 'Folio', bg: '#ECE8DF', fg: '#1A1918', accent: '#B8934A', motif: 'book' },
+            { id: 'compass-brass', labelAr: 'بوصلة ذهبية', labelFr: 'Compas doré', labelEn: 'Brass Seal', bg: '#F3ECE0', fg: '#7A5B1E', accent: '#B8934A', motif: 'seal' },
+            { id: 'column-slate', labelAr: 'عمود أكاديمي', labelFr: 'Colonne', labelEn: 'Pillar', bg: '#E6E9EC', fg: '#23303D', accent: '#64748B', motif: 'pillar' },
+            { id: 'olive-leaf', labelAr: 'غصن زيتون', labelFr: 'Rameau', labelEn: 'Emblem', bg: '#E7ECE6', fg: '#243B2A', accent: '#5A7D63', motif: 'leaf' }
+        ];
+
+        function getNeutralAvatarById(id) {
+            return NEUTRAL_AVATARS.find(a => a.id === id) || NEUTRAL_AVATARS[0];
+        }
+
+        function getNeutralAvatarLabel(av) {
+            if (!av) return '';
+            return currentLang === 'ar' ? av.labelAr : currentLang === 'fr' ? av.labelFr : av.labelEn;
+        }
+
+        function renderNeutralAvatarSVG(av) {
+            const item = typeof av === 'string' ? getNeutralAvatarById(av) : (av || NEUTRAL_AVATARS[0]);
+            let motifSvg = '';
+            if (item.motif === 'arch') {
+                motifSvg = `<path d="M22 44 V26 A10 10 0 0 1 42 26 V44" fill="none" stroke="${item.fg}" stroke-width="3" stroke-linecap="round"/><line x1="18" y1="44" x2="46" y2="44" stroke="${item.accent}" stroke-width="2.5" stroke-linecap="round"/>`;
+            } else if (item.motif === 'nib') {
+                motifSvg = `<path d="M32 15 L40 31 L35 39 L29 39 L24 31 Z" fill="${item.accent}" stroke="${item.fg}" stroke-width="1.8" stroke-linejoin="round"/><circle cx="32" cy="30" r="2.2" fill="${item.bg}"/><line x1="32" y1="39" x2="32" y2="48" stroke="${item.fg}" stroke-width="2.2" stroke-linecap="round"/>`;
+            } else if (item.motif === 'book') {
+                motifSvg = `<path d="M18 39 Q25 34 32 40 Q39 34 46 39 V22 Q39 18 32 23 Q25 18 18 22 Z" fill="${item.bg}" stroke="${item.fg}" stroke-width="2" stroke-linejoin="round"/><line x1="32" y1="23" x2="32" y2="40" stroke="${item.accent}" stroke-width="1.8"/>`;
+            } else if (item.motif === 'seal') {
+                motifSvg = `<circle cx="32" cy="32" r="12" fill="none" stroke="${item.fg}" stroke-width="2.2" stroke-dasharray="4 3"/><circle cx="32" cy="32" r="5" fill="${item.accent}"/>`;
+            } else if (item.motif === 'pillar') {
+                motifSvg = `<rect x="25" y="21" width="14" height="3" rx="1" fill="${item.fg}"/><rect x="27" y="24" width="10" height="16" fill="${item.accent}" opacity="0.85"/><rect x="24" y="40" width="16" height="3.5" rx="1" fill="${item.fg}"/>`;
+            } else {
+                motifSvg = `<path d="M22 39 C24 27 32 21 42 19 C39 29 33 36 22 39 Z" fill="${item.accent}" stroke="${item.fg}" stroke-width="1.6" stroke-linejoin="round"/><path d="M20 42 L34 28" stroke="${item.fg}" stroke-width="1.8" stroke-linecap="round"/>`;
+            }
+            return `<svg viewBox="0 0 64 64" class="w-full h-full block" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="64" height="64" rx="32" fill="${item.bg}"/><circle cx="32" cy="32" r="29" fill="none" stroke="${item.accent}" stroke-width="1.5" opacity="0.7"/>${motifSvg}</svg>`;
+        }
+
+        let selectedPublishAvatarId = 'arch-sand';
+
+        function selectPublishAvatar(id) {
+            selectedPublishAvatarId = id;
+            renderPublishAvatarPicker();
+        }
+
+        function renderPublishAvatarPicker() {
+            const grid = document.getElementById('publish-avatar-grid');
+            const caption = document.getElementById('publish-avatar-caption');
+            if (!grid) return;
+            grid.innerHTML = NEUTRAL_AVATARS.map(av => {
+                const active = av.id === selectedPublishAvatarId;
+                const lbl = getNeutralAvatarLabel(av);
+                return `
+                    <button type="button" onclick="selectPublishAvatar('${av.id}')" title="${escapeHTML(lbl)}" aria-pressed="${active}" class="group flex flex-col items-center gap-1 p-1.5 rounded-[4px] border transition-colors cursor-pointer ${active ? 'border-editorial-burgundy bg-editorial-sheet ring-1 ring-editorial-burgundy/40' : 'border-editorial-rule bg-editorial-sheet/60 hover:border-editorial-brass'}">
+                        <span class="w-9 h-9 rounded-full overflow-hidden shrink-0">${renderNeutralAvatarSVG(av)}</span>
+                        <span class="text-[10px] font-medium text-editorial-ink truncate max-w-full">${escapeHTML(lbl)}</span>
+                    </button>
+                `;
+            }).join('');
+            if (caption) {
+                const cur = getNeutralAvatarById(selectedPublishAvatarId);
+                caption.textContent = tr(
+                    `الصورة المحايدة المختارة: ${cur.labelAr} (سياسة المحتوى اللائق والحيادية)`,
+                    `Avatar neutre sélectionné : ${cur.labelFr} (politique de neutralité)`,
+                    `Selected neutral avatar: ${cur.labelEn} (neutrality policy)`
+                );
+            }
+        }
+
         let selectedUploadFile = null;
         let fileInfoState = { kind: 'none', name: '', size: '0' };
         let currentUser = null;
         let authMode = 'login';
 
-        /* شعار ساج الموحّد بالحركة التفصيلية:
-           - بناء الشعار الدائري: قرص رملي دافئ + التفاف الإطار المتقطع الذهبي (#B8934A)
-           - ارتفاع القوسين المعماريين + صعود ريشة القلم (#D96B84) من الأسفل مع انفتاح الكتاب في القاعدة
-           - تقارب SAJ من اليسار و "ساج" من اليمين نحو المنتصف وظهور ENSL LAGHOUAT تحتها */
         const sajBrandLogoSVG = `
         <svg viewBox="0 0 470 150" direction="ltr" class="w-full h-full logo-surface __ANIM_CLASS__" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شعار منصة ساج SAJ — ENSL Laghouat">
             <defs>
@@ -954,36 +1009,23 @@
                 </linearGradient>
             </defs>
 
-            <!-- الكتلة النصية (يسار) -->
             <g transform="translate(148, 0)">
                 <text class="saj-word-en" x="-12" y="76" text-anchor="end" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="48" letter-spacing="1" fill="url(#sajBrassGrad__UID__)">SAJ</text>
                 <text class="saj-word-ar" x="6" y="76" text-anchor="start" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="52" fill="var(--burgundy)">ساج</text>
                 <text class="saj-sub-caption" x="2" y="106" text-anchor="middle" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="14.5" letter-spacing="3.2" fill="var(--burgundy)">ENSL LAGHOUAT</text>
             </g>
 
-            <!-- الشارة الدائرية المعمارية (يمين) -->
             <g transform="translate(362, 74)">
-                <!-- الهالة الدائرية المنقطة الذهبية (#B8934A) -->
                 <circle class="saj-dashed-ring" cx="0" cy="0" r="61" fill="none" stroke="url(#sajBrassGrad__UID__)" stroke-width="2" stroke-dasharray="5 7.5" stroke-linecap="round" opacity="0.9"/>
-
-                <!-- القرص الرملي الدافئ -->
                 <circle class="saj-sand-disc" cx="0" cy="0" r="51" fill="#EBDDC3" opacity="0.82"/>
-
-                <!-- القوسان المعماريان -->
                 <path class="saj-arch-outer" d="M -32 34 V -14 A 32 32 0 0 1 32 -14 V 34" fill="none" stroke="url(#sajBrassGrad__UID__)" stroke-width="5.2" stroke-linecap="round"/>
                 <path class="saj-arch-inner" d="M -22 33 V -14 A 22 22 0 0 1 22 -14 V 33" fill="none" stroke="url(#sajBrassGrad__UID__)" stroke-width="2.4" stroke-linecap="round" opacity="0.85"/>
-
-                <!-- القرص الذهبي الداخلي يسار الريشة -->
                 <circle class="saj-brass-dot" cx="-13" cy="-16" r="6.5" fill="url(#sajBrassGrad__UID__)"/>
-
-                <!-- ريشة القلم (#D96B84) الصاعدة من الأسفل لتستقر في منتصف القوس -->
                 <g class="saj-pen-nib">
                     <path d="M 0 -30 L 12 -4 L 5 11 L -5 11 L -12 -4 Z" fill="var(--nib-rose)"/>
                     <circle cx="0" cy="-4" r="3" fill="#EBDDC3"/>
                     <rect x="-2" y="11" width="4" height="23" fill="var(--nib-rose)"/>
                 </g>
-
-                <!-- الكتاب المفتوح في القاعدة -->
                 <g class="saj-open-book">
                     <path d="M -42 36 Q -21 26 0 38 Q 21 26 42 36" fill="none" stroke="url(#sajBrassGrad__UID__)" stroke-width="4.5" stroke-linecap="round"/>
                     <path d="M -46 42 Q -23 31 0 44 Q 23 31 46 42" fill="none" stroke="var(--burgundy)" stroke-width="4.8" stroke-linecap="round"/>
@@ -992,7 +1034,6 @@
         </svg>
         `;
 
-        /* ختم الشريط العلوي والتذييل الموحّد الهوية */
         const sajNavBadgeSVG = `
         <svg viewBox="0 0 120 120" class="w-full h-full saj-logo-animated" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ختم ساج">
             <circle class="saj-sand-disc" cx="60" cy="60" r="50" fill="#EFE4CE"/>
@@ -1296,7 +1337,6 @@
         function safeStorageSet(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
         function safeStorageRemove(key) { try { localStorage.removeItem(key); } catch (e) {} }
 
-        /* نص حسب اللغة الحالية: tr(عربي، فرنسي، إنجليزي) */
         function tr(ar, fr, en) {
             return currentLang === 'ar' ? ar : currentLang === 'fr' ? fr : (en !== undefined ? en : fr);
         }
@@ -1305,7 +1345,6 @@
             try { return decodeURIComponent(str); } catch (e) { return str; }
         }
 
-        /* اسم الملف من الرابط؛ وإن لم يكن للمسار امتداد (مثل روابط Google Drive) يُستعمل اسم النطاق */
         function deriveFileName(url) {
             try {
                 const u = new URL(url);
@@ -1362,7 +1401,8 @@
                 views: Number(raw.views) || 1,
                 references: refs,
                 file_url: fileLink,
-                file_name: raw.file_name || ((fileLink && !fileLink.startsWith('data:')) ? deriveFileName(fileLink) : null)
+                file_name: raw.file_name || ((fileLink && !fileLink.startsWith('data:')) ? deriveFileName(fileLink) : null),
+                avatar_id: raw.avatar_id || 'arch-sand'
             };
         }
 
@@ -1395,7 +1435,6 @@
             const splash = document.getElementById('saj-splash-screen');
             const appShell = document.getElementById('app-shell');
 
-            // بعد انتهاء الثانيتين يتم الانتقال السلس إلى واجهة المنصة الرئيسية وتفعيل حركة شعار الترويسة
             setTimeout(() => {
                 if (splash) splash.classList.add('splash-exit');
                 if (appShell) appShell.classList.add('app-ready');
@@ -1421,8 +1460,8 @@
             populateDepartments();
             renderStudentNotes();
             renderFileInfo();
+            renderPublishAvatarPicker();
 
-            // العرض الأول من التخزين المحلي مباشرة دون انتظار الشبكة
             loadLocalPublicationsSync();
             renderAll(true);
             initScrollProgress();
@@ -1458,7 +1497,6 @@
                 if (tabsEl) new ResizeObserver(refreshTabUnderline).observe(tabsEl);
             }
             requestAnimationFrame(refreshTabUnderline);
-            // تتغير عروض الأزرار بعد تحميل الخط
             if (document.fonts && document.fonts.ready) document.fonts.ready.then(refreshTabUnderline);
         }
 
@@ -1491,7 +1529,7 @@
 
         function initShortcuts() {
             document.addEventListener('keydown', (e) => {
-                const key = String(e.key || '').toLowerCase(); // قد تكون e.key فارغة عند الملء التلقائي
+                const key = String(e.key || '').toLowerCase();
                 if ((e.ctrlKey || e.metaKey) && key === 'k') {
                     e.preventDefault();
                     openCommandPalette();
@@ -1507,13 +1545,11 @@
         }
 
         function renderLogos() {
-            // توحيد الختم في الشريط العلوي والتذييل ونافذة الدخول
             ['nav-badge-slot', 'footer-badge-slot', 'auth-badge-slot'].forEach(id => {
                 const slot = document.getElementById(id);
                 if (slot) slot.innerHTML = sajNavBadgeSVG;
             });
 
-            // شعار شاشة الانتظار المتحرك
             const splashSlot = document.getElementById('splash-logo-slot');
             if (splashSlot) {
                 splashSlot.innerHTML = sajBrandLogoSVG
@@ -1521,7 +1557,6 @@
                     .split('__ANIM_CLASS__').join('saj-logo-animated');
             }
 
-            // معرّف التدرّج يجب أن يكون فريداً لكل نسخة من الشعار داخل الصفحة
             ['masthead-logo-slot', 'modal-logo-slot'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
@@ -1532,7 +1567,6 @@
             });
         }
 
-        /* إدارة تسجيل الدخول والحساب (Google OAuth + البريد الإلكتروني) */
         function applySupabaseUser(user) {
             if (!user) return;
             const meta = user.user_metadata || {};
@@ -1565,7 +1599,6 @@
             if (btn) btn.disabled = true;
 
             try {
-                // عنوان العودة النظيف بدون معاملات OAuth قديمة
                 const redirectUrl = window.location.origin + window.location.pathname;
                 const { data, error } = await supabaseClient.auth.signInWithOAuth({
                     provider,
@@ -1600,7 +1633,6 @@
         async function restoreUserSession() {
             let cloudChecked = false;
             if (supabaseClient && supabaseClient.auth) {
-                // الاستماع الفوري لعودة المستخدم من Google OAuth
                 supabaseClient.auth.onAuthStateChange((event, session) => {
                     if (session && session.user) {
                         const wasSignedOut = !currentUser;
@@ -1623,7 +1655,6 @@
                     const user = data && data.session && data.session.user;
                     if (user) {
                         applySupabaseUser(user);
-                        // تنظيف معاملات OAuth من شريط العنوان إن وجدت
                         if (window.location.hash.includes('access_token=') || window.location.search.includes('code=')) {
                             const cleanUrl = window.location.origin + window.location.pathname;
                             window.history.replaceState({}, document.title, cleanUrl);
@@ -1763,7 +1794,6 @@
             if (!email || !password) return;
             if (submitBtn) submitBtn.disabled = true;
 
-            // لا يُلجأ إلى الحساب المحلي إلا إذا تعذّر الوصول إلى الخدمة السحابية أصلاً
             let useLocalFallback = !(supabaseClient && supabaseClient.auth);
 
             if (!useLocalFallback) {
@@ -1783,7 +1813,6 @@
                             finishAuthSuccess(tr('تم إنشاء الحساب وتسجيل الدخول بنجاح', 'Compte créé et connecté', 'Account created and signed in'));
                             return;
                         } else if (data && data.user) {
-                            // التسجيل يتطلب تأكيد البريد الإلكتروني قبل فتح الجلسة
                             document.getElementById('auth-form').reset();
                             if (submitBtn) submitBtn.disabled = false;
                             switchAuthMode('login');
@@ -1818,7 +1847,6 @@
                 }
             }
 
-            /* ملف محلي احتياطي عند انقطاع الاتصال بالخدمة (لا يمنح أي صلاحيات سحابية) */
             currentUser = {
                 id: 'local_' + Date.now(),
                 email,
@@ -1868,7 +1896,6 @@
             showToast(tr('تم تسجيل الخروج', 'Déconnecté', 'Signed out'));
         }
 
-        /* معالجة رفع الملفات */
         function renderFileInfo() {
             const infoEl = document.getElementById('selected-file-info');
             if (!infoEl) return;
@@ -2235,7 +2262,7 @@
 
                             <div class="flex flex-wrap items-center justify-between gap-3 text-xs pt-2.5 border-t border-editorial-rule/60">
                                 <div class="text-editorial-ink">
-                                    <span class="font-semibold">${escapeHTML(pub.author)}</span>
+                                    <span class="inline-flex items-center gap-1.5 font-semibold"><span class="w-4 h-4 rounded-full overflow-hidden shrink-0 inline-block">${renderNeutralAvatarSVG(pub.avatar_id)}</span><span>${escapeHTML(pub.author)}</span></span>
                                     <span class="text-editorial-muted mx-1.5">—</span>
                                     <span class="text-editorial-muted">${escapeHTML(pub.year)}</span>
                                 </div>
@@ -2349,7 +2376,8 @@
             renderStudentNotes();
             renderAuthNav();
             renderFileInfo();
-            switchAuthMode(authMode); // data-i18n يعيد نصوص «تسجيل الدخول» حتى في وضع إنشاء الحساب
+            renderPublishAvatarPicker();
+            switchAuthMode(authMode);
             renderAll(false);
 
             if (activePublicationId) fillReaderModal(activePublicationId);
@@ -2365,7 +2393,8 @@
             document.getElementById('modal-type-badge').textContent = getTypeLabel(pub.type);
             document.getElementById('modal-dept-label').textContent = getDeptLabel(pub.department);
             document.getElementById('modal-title').textContent = pub.title;
-            document.getElementById('modal-author').textContent = pub.author;
+            const modalAuthorEl = document.getElementById('modal-author');
+            modalAuthorEl.innerHTML = `<span class="inline-flex items-center gap-1.5 align-middle"><span class="w-5 h-5 rounded-full overflow-hidden shrink-0 inline-block">${renderNeutralAvatarSVG(pub.avatar_id)}</span><span>${escapeHTML(pub.author)}</span></span>`;
             document.getElementById('modal-year').textContent = `${getDeptLabel(pub.department)} (${pub.year})`;
             document.getElementById('modal-date').textContent = pub.date;
             document.getElementById('modal-reading-time').textContent = formatMinutes(pub.readMinutes);
@@ -2496,6 +2525,7 @@
                 if (deptEl && currentUser.department) deptEl.value = currentUser.department;
                 if (yearEl && currentUser.year) yearEl.value = currentUser.year;
             }
+            renderPublishAvatarPicker();
             const modal = document.getElementById('publish-modal');
             if (modal) {
                 modal.classList.remove('hidden');
@@ -2576,7 +2606,8 @@
                     content: content || (attachedName ? `الملف المرفق: ${attachedName}` : abstract),
                     references,
                     file_url: attachedUrl,
-                    file_name: attachedName
+                    file_name: attachedName,
+                    avatar_id: selectedPublishAvatarId
                 };
 
                 let insertedItem = normalizePublication({
@@ -2597,7 +2628,6 @@
                             .select()
                             .single();
 
-                        // Retry with core columns if schema differs (e.g., references/file_name/views)
                         if (res.error) {
                             const fallbackPayload = {
                                 title: cloudPayload.title,
@@ -2627,7 +2657,6 @@
                                 file_name: res.data.file_name || attachedName
                             });
                         } else {
-                            // Attempt insert without .select() in case SELECT policy differs from INSERT policy
                             const plainInsert = await supabaseClient
                                 .from('contributions')
                                 .insert([{
@@ -2664,6 +2693,8 @@
                 renderFileInfo();
 
                 document.getElementById('contribution-form').reset();
+                selectedPublishAvatarId = 'arch-sand';
+                renderPublishAvatarPicker();
                 closeSubmitModal();
                 resetAllFilters();
                 renderAll(true);
