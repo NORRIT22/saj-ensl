@@ -1273,7 +1273,7 @@
             });
         }
 
-        /* إدارة تسجيل الدخول والحساب (Google / Apple OAuth + البريد الإلكتروني) */
+        /* إدارة تسجيل الدخول والحساب (Google OAuth + البريد الإلكتروني) */
         function applySupabaseUser(user) {
             if (!user) return;
             const meta = user.user_metadata || {};
@@ -1341,7 +1341,7 @@
         async function restoreUserSession() {
             let cloudChecked = false;
             if (supabaseClient && supabaseClient.auth) {
-                // الاستماع الفوري لعودة المستخدم من Google أو Apple OAuth
+                // الاستماع الفوري لعودة المستخدم من Google OAuth
                 supabaseClient.auth.onAuthStateChange((event, session) => {
                     if (session && session.user) {
                         const wasSignedOut = !currentUser;
@@ -1628,6 +1628,16 @@
                 selectedUploadFile = null;
                 fileInfoState = { kind: 'none', name: '', size: '0' };
                 renderFileInfo();
+                return;
+            }
+            const allowedExts = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'txt', 'md', 'zip'];
+            const fileExt = (file.name.split('.').pop() || '').toLowerCase();
+            if (!allowedExts.includes(fileExt)) {
+                selectedUploadFile = null;
+                event.target.value = '';
+                fileInfoState = { kind: 'none', name: '', size: '0' };
+                renderFileInfo();
+                showToast(tr('صيغة الملف غير مدعومة أو غير مسموحة', 'Format de fichier non pris en charge', 'Unsupported or disallowed file format'));
                 return;
             }
             const maxBytes = 15 * 1024 * 1024;
