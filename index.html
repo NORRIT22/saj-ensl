@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ساج — كراسات ومطارحات طلبة المدرسة العليا للأساتذة بالأغواط</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23EFE4CE' stroke='%23B8934A' stroke-width='3'/%3E%3Cpath d='M32 12l8 18-5 10h-6l-5-10z' fill='%235A1424'/%3E%3C/svg%3E">
 
     <script>try{if(localStorage.getItem('saj_ensl_theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}</script>
 
@@ -13,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 
     <script>
@@ -23,7 +24,7 @@
                 ? `var(--${name})`
                 : `color-mix(in srgb, var(--${name}) ${n * 100}%, transparent)`;
         };
-        tailwind.config = {
+        if (window.tailwind) tailwind.config = {
             theme: {
                 extend: {
                     colors: {
@@ -132,29 +133,34 @@
         }
 
         @media print {
-            html, body { overflow: visible !important; height: auto !important; }
-            body * { visibility: hidden; }
-            #printable-sheet, #printable-sheet * { visibility: visible; }
-            #reader-modal {
+            @page { margin: 1.8cm 2cm; }
+            :root, html.dark {
+                --paper: #fff; --sheet: #fff; --stone: #f3f3f3; --rule: #ccc;
+                --ink: #000; --muted: #333; --burgundy: #5A1424; --brass: #8a6a2a;
+            }
+            html, body { overflow: visible !important; height: auto !important; background: #fff !important; }
+            /* تُطبَّق قواعد الطباعة الخاصة بالورقة فقط عند فتح نافذة القراءة */
+            body.reader-open { display: block !important; min-height: 0 !important; }
+            body.reader-open > *:not(#reader-modal) { display: none !important; }
+            body.reader-open #reader-modal {
                 position: static !important;
+                inset: auto !important;
                 overflow: visible !important;
                 background: none !important;
                 padding: 0 !important;
             }
             #reader-modal > div { min-height: 0 !important; display: block !important; }
             #reader-modal .modal-panel { animation: none !important; box-shadow: none !important; border: none !important; margin: 0 !important; max-width: none !important; }
-            :root, html.dark {
-                --paper: #fff; --sheet: #fff; --stone: #f3f3f3; --rule: #ccc;
-                --ink: #000; --muted: #333; --burgundy: #5A1424; --brass: #8a6a2a;
-            }
             #printable-sheet {
                 position: static !important;
                 width: 100%;
-                padding: 1.8cm 2cm;
+                padding: 0 !important;
                 background: #FFFFFF !important;
                 color: #000000 !important;
                 box-shadow: none !important;
                 border: none !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
             .logo-surface { mix-blend-mode: multiply; }
             .no-print { display: none !important; }
@@ -316,7 +322,7 @@
                 <section class="bg-editorial-sheet border border-editorial-rule rounded-[4px] p-4">
                     <div class="flex items-center justify-between border-b border-editorial-rule pb-2 mb-3">
                         <h2 data-i18n="sidebar_depts_title" class="text-base font-bold text-editorial-ink">الأقسام والتخصصات</h2>
-                        <span class="text-[11px] font-mono text-editorial-brass">9</span>
+                        <span id="dept-count" class="text-[11px] font-mono text-editorial-brass">9</span>
                     </div>
                     <ul id="departments-index" class="divide-y divide-editorial-rule/60 text-sm"></ul>
                 </section>
@@ -664,11 +670,15 @@
         const SUPABASE_URL = 'https://pjptbzefvrpthxnvnfgz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqcHRiemVmdnJwdGh4bnZuZmd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUwNDA0NDIsImV4cCI6MjExMDYxNjQ0Mn0.Zr8sZFWAH_E8aoaX71J6Q2b5NH-QVTVdhoV2Q1Vz448';
         const STORAGE_BUCKET = 'contributions-files';
-        const supabaseClient = (window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY)
-            ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-            : null;
+        let supabaseClient = null;
+        try {
+            if (window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY) {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        } catch (e) { supabaseClient = null; }
 
         let selectedUploadFile = null;
+        let fileInfoState = { kind: 'none', name: '', size: '0' };
         let currentUser = null;
         let authMode = 'login';
 
@@ -676,9 +686,9 @@
            يساراً: SAJ بالذهبي و "ساج" بالعنابي وتحتهما ENSL LAGHOUAT
            يميناً: قوس باب الجزائر المزدوج، دائرة منقطة، قرص ذهبي، ريشة قلم عنابية، وكتاب مفتوح */
         const sajBrandLogoSVG = `
-        <svg viewBox="0 0 470 150" class="w-full h-full logo-surface" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شعار منصة ساج SAJ — ENSL Laghouat">
+        <svg viewBox="0 0 470 150" direction="ltr" class="w-full h-full logo-surface" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شعار منصة ساج SAJ — ENSL Laghouat">
             <defs>
-                <linearGradient id="sajBrassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <linearGradient id="sajBrassGrad__UID__" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stop-color="#D4AF6A"/>
                     <stop offset="50%" stop-color="#B8934A"/>
                     <stop offset="100%" stop-color="#9A7632"/>
@@ -687,7 +697,7 @@
 
             <!-- الكتلة النصية (يسار) -->
             <g transform="translate(148, 0)">
-                <text x="-12" y="76" text-anchor="end" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="48" letter-spacing="1" fill="url(#sajBrassGrad)">SAJ</text>
+                <text x="-12" y="76" text-anchor="end" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="48" letter-spacing="1" fill="url(#sajBrassGrad__UID__)">SAJ</text>
                 <text x="6" y="76" text-anchor="start" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="52" fill="var(--burgundy)">ساج</text>
                 <text x="2" y="106" text-anchor="middle" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="14.5" letter-spacing="3.2" fill="var(--burgundy)">ENSL LAGHOUAT</text>
             </g>
@@ -695,17 +705,17 @@
             <!-- الشارة الهندسية (يمين) -->
             <g transform="translate(362, 74)">
                 <!-- الهالة الدائرية المنقطة -->
-                <circle cx="0" cy="0" r="61" fill="none" stroke="url(#sajBrassGrad)" stroke-width="2" stroke-dasharray="5 7.5" stroke-linecap="round" opacity="0.85"/>
+                <circle cx="0" cy="0" r="61" fill="none" stroke="url(#sajBrassGrad__UID__)" stroke-width="2" stroke-dasharray="5 7.5" stroke-linecap="round" opacity="0.85"/>
 
                 <!-- الخلفية الدائرية الرملية الدافئة -->
                 <circle cx="0" cy="0" r="51" fill="#EBDDC3" opacity="0.72"/>
 
                 <!-- القوس المعماري المزدوج -->
-                <path d="M -32 34 V -14 A 32 32 0 0 1 32 -14 V 34" fill="none" stroke="url(#sajBrassGrad)" stroke-width="5.2" stroke-linecap="round"/>
-                <path d="M -22 33 V -14 A 22 22 0 0 1 22 -14 V 33" fill="none" stroke="url(#sajBrassGrad)" stroke-width="2.4" stroke-linecap="round" opacity="0.85"/>
+                <path d="M -32 34 V -14 A 32 32 0 0 1 32 -14 V 34" fill="none" stroke="url(#sajBrassGrad__UID__)" stroke-width="5.2" stroke-linecap="round"/>
+                <path d="M -22 33 V -14 A 22 22 0 0 1 22 -14 V 33" fill="none" stroke="url(#sajBrassGrad__UID__)" stroke-width="2.4" stroke-linecap="round" opacity="0.85"/>
 
                 <!-- القرص الذهبي الداخلي يسار الريشة -->
-                <circle cx="-13" cy="-16" r="6.5" fill="url(#sajBrassGrad)"/>
+                <circle cx="-13" cy="-16" r="6.5" fill="url(#sajBrassGrad__UID__)"/>
 
                 <!-- ريشة القلم العنابية في المحور -->
                 <path d="M 0 -30 L 12 -4 L 5 11 L -5 11 L -12 -4 Z" fill="var(--burgundy)"/>
@@ -713,7 +723,7 @@
                 <rect x="-2" y="11" width="4" height="23" fill="var(--burgundy)"/>
 
                 <!-- الكتاب المفتوح الذهبي والعنابي -->
-                <path d="M -42 36 Q -21 26 0 38 Q 21 26 42 36" fill="none" stroke="url(#sajBrassGrad)" stroke-width="4.5" stroke-linecap="round"/>
+                <path d="M -42 36 Q -21 26 0 38 Q 21 26 42 36" fill="none" stroke="url(#sajBrassGrad__UID__)" stroke-width="4.5" stroke-linecap="round"/>
                 <path d="M -46 42 Q -23 31 0 44 Q 23 31 46 42" fill="none" stroke="var(--burgundy)" stroke-width="4.8" stroke-linecap="round"/>
             </g>
         </svg>
@@ -998,6 +1008,30 @@
         function safeStorageSet(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
         function safeStorageRemove(key) { try { localStorage.removeItem(key); } catch (e) {} }
 
+        /* نص حسب اللغة الحالية: tr(عربي، فرنسي، إنجليزي) */
+        function tr(ar, fr, en) {
+            return currentLang === 'ar' ? ar : currentLang === 'fr' ? fr : (en !== undefined ? en : fr);
+        }
+
+        function safeDecode(str) {
+            try { return decodeURIComponent(str); } catch (e) { return str; }
+        }
+
+        /* اسم الملف من الرابط؛ وإن لم يكن للمسار امتداد (مثل روابط Google Drive) يُستعمل اسم النطاق */
+        function deriveFileName(url) {
+            try {
+                const u = new URL(url);
+                const last = safeDecode(u.pathname.split('/').filter(Boolean).pop() || '');
+                return /\.[A-Za-z0-9]{1,6}$/.test(last) ? last : u.hostname;
+            } catch (e) { return null; }
+        }
+
+        const KNOWN_FILE_EXTS = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'txt', 'md', 'zip', 'rar', 'xls', 'xlsx', 'odt', 'odp', 'csv', 'png', 'jpg', 'jpeg'];
+        function fileExtLabel(name) {
+            const m = String(name || '').match(/\.([A-Za-z0-9]{1,5})$/);
+            return (m && KNOWN_FILE_EXTS.includes(m[1].toLowerCase())) ? m[1].toUpperCase() : 'LINK';
+        }
+
         function isSafeUrl(url) {
             if (!url) return false;
             const trimmed = String(url).trim();
@@ -1036,12 +1070,11 @@
 
             return {
                 ...raw,
-                id: String(raw.id),
                 readMinutes: parseMinutes(raw.read_time ?? raw.readTime),
                 views: Number(raw.views) || 1,
                 references: refs,
                 file_url: fileLink,
-                file_name: raw.file_name || (fileLink ? decodeURIComponent(fileLink.split('/').pop().split('?')[0]) : null)
+                file_name: raw.file_name || ((fileLink && !fileLink.startsWith('data:')) ? deriveFileName(fileLink) : null)
             };
         }
 
@@ -1049,7 +1082,8 @@
             const anyOpen = document.querySelector(
                 '#reader-modal:not(.hidden), #publish-modal:not(.hidden), #about-modal:not(.hidden), #cmd-modal:not(.hidden), #auth-modal:not(.hidden)'
             );
-            document.body.style.overflow = anyOpen ? 'hidden' : 'auto';
+            document.body.style.overflow = anyOpen ? 'hidden' : '';
+            document.body.classList.toggle('reader-open', !!document.querySelector('#reader-modal:not(.hidden)'));
         }
 
         function initTheme() { updateThemeIcon(); }
@@ -1073,35 +1107,41 @@
             renderLogos();
             populateDepartments();
             renderStudentNotes();
-            await restoreUserSession();
+            renderFileInfo();
 
+            // العرض الأول من التخزين المحلي مباشرة دون انتظار الشبكة
             loadLocalPublicationsSync();
             renderAll(true);
-
-            if (typeof ResizeObserver !== 'undefined') {
-                const tabsEl = document.getElementById('category-tabs');
-                if (tabsEl) {
-                    new ResizeObserver(() => {
-                        const activeBtn = document.querySelector(`.type-btn[data-type="${currentTypeFilter}"]`);
-                        if (activeBtn) updateTabUnderline(activeBtn);
-                    }).observe(tabsEl);
-                }
-            }
-            requestAnimationFrame(() => {
-                updateTabUnderline(document.querySelector('.type-btn[data-type="all"]'));
-            });
             initScrollProgress();
             initShortcuts();
+            initTabUnderline();
+
+            await restoreUserSession();
             if (window.lucide) lucide.createIcons();
 
             await syncCloudPublications();
             renderAll(false);
 
             const params = new URLSearchParams(window.location.search);
-            const sharedId = params.get('id');
-            if (sharedId && publications.some(p => String(p.id) === String(sharedId))) {
+            const sharedId = Number(params.get('id'));
+            if (sharedId && publications.some(p => Number(p.id) === sharedId)) {
                 openReaderModal(sharedId);
             }
+        }
+
+        function refreshTabUnderline() {
+            const activeBtn = document.querySelector(`.type-btn[data-type="${currentTypeFilter}"]`);
+            if (activeBtn) updateTabUnderline(activeBtn);
+        }
+
+        function initTabUnderline() {
+            if (typeof ResizeObserver !== 'undefined') {
+                const tabsEl = document.getElementById('category-tabs');
+                if (tabsEl) new ResizeObserver(refreshTabUnderline).observe(tabsEl);
+            }
+            requestAnimationFrame(refreshTabUnderline);
+            // تتغير عروض الأزرار بعد تحميل الخط
+            if (document.fonts && document.fonts.ready) document.fonts.ready.then(refreshTabUnderline);
         }
 
         if (document.readyState === 'loading') {
@@ -1133,15 +1173,16 @@
 
         function initShortcuts() {
             document.addEventListener('keydown', (e) => {
-                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                const key = String(e.key || '').toLowerCase(); // قد تكون e.key فارغة عند الملء التلقائي
+                if ((e.ctrlKey || e.metaKey) && key === 'k') {
                     e.preventDefault();
                     openCommandPalette();
-                } else if (e.key === 'Escape') {
-                    if (!document.getElementById('cmd-modal')?.classList.contains('hidden')) return closeCommandPalette();
-                    if (!document.getElementById('auth-modal')?.classList.contains('hidden')) return closeAuthModal();
-                    if (!document.getElementById('publish-modal')?.classList.contains('hidden')) return closeSubmitModal();
-                    if (!document.getElementById('about-modal')?.classList.contains('hidden')) return closeAboutModal();
-                    if (!document.getElementById('reader-modal')?.classList.contains('hidden')) return closeReaderModal();
+                } else if (key === 'escape') {
+                    closeCommandPalette();
+                    closeReaderModal();
+                    closeSubmitModal();
+                    closeAboutModal();
+                    closeAuthModal();
                 }
             });
         }
@@ -1152,23 +1193,27 @@
                 if (slot) slot.innerHTML = sajNavBadgeSVG;
             });
 
+            // معرّف التدرّج يجب أن يكون فريداً لكل نسخة من الشعار داخل الصفحة
             ['masthead-logo-slot', 'modal-logo-slot'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) el.innerHTML = sajBrandLogoSVG;
+                if (el) el.innerHTML = sajBrandLogoSVG.split('__UID__').join('_' + id);
             });
         }
 
         /* إدارة تسجيل الدخول والحساب */
         async function restoreUserSession() {
+            let cloudChecked = false;
             if (supabaseClient && supabaseClient.auth) {
                 try {
-                    const { data } = await supabaseClient.auth.getUser();
-                    if (data && data.user) {
-                        const meta = data.user.user_metadata || {};
+                    const { data } = await supabaseClient.auth.getSession();
+                    cloudChecked = true;
+                    const user = data && data.session && data.session.user;
+                    if (user) {
+                        const meta = user.user_metadata || {};
                         currentUser = {
-                            id: data.user.id,
-                            email: data.user.email,
-                            name: meta.full_name || data.user.email.split('@')[0],
+                            id: user.id,
+                            email: user.email,
+                            name: meta.full_name || (user.email || '').split('@')[0] || 'user',
                             department: meta.department || departmentsList[0].id,
                             year: meta.year || 'السنة الثانية'
                         };
@@ -1180,7 +1225,16 @@
             }
             const savedUser = safeStorageGet('saj_ensl_user');
             if (savedUser) {
-                try { currentUser = JSON.parse(savedUser); } catch (e) { currentUser = null; }
+                try {
+                    const parsed = JSON.parse(savedUser);
+                    const isLocalProfile = parsed && String(parsed.id || '').startsWith('local_');
+                    // حساب سحابي بلا جلسة سحابية فعلية = بيانات قديمة تُهمَل
+                    if (parsed && (isLocalProfile || !cloudChecked)) {
+                        currentUser = parsed;
+                    } else {
+                        safeStorageRemove('saj_ensl_user');
+                    }
+                } catch (e) { currentUser = null; }
             }
             renderAuthNav();
         }
@@ -1264,6 +1318,27 @@
             }
         }
 
+        function isNetworkAuthError(error) {
+            return !error || error.name === 'AuthRetryableFetchError' || !error.status;
+        }
+
+        function authErrorMessage(error) {
+            const code = (error && (error.code || error.message) || '').toString().toLowerCase();
+            if (code.includes('invalid_credentials') || code.includes('invalid login')) {
+                return tr('البريد الإلكتروني أو كلمة المرور غير صحيحة', 'E-mail ou mot de passe incorrect', 'Incorrect email or password');
+            }
+            if (code.includes('already') || code.includes('registered')) {
+                return tr('هذا البريد مسجّل مسبقاً، جرّب تسجيل الدخول', 'Cet e-mail est déjà inscrit, essayez de vous connecter', 'This email is already registered, try signing in');
+            }
+            if (code.includes('not_confirmed') || code.includes('not confirmed')) {
+                return tr('يرجى تأكيد بريدك الإلكتروني أولاً', 'Veuillez d’abord confirmer votre e-mail', 'Please confirm your email first');
+            }
+            if (code.includes('weak') || code.includes('password')) {
+                return tr('كلمة المرور غير مقبولة (6 أحرف على الأقل)', 'Mot de passe refusé (6 caractères minimum)', 'Password rejected (6 characters minimum)');
+            }
+            return tr('تعذّر إتمام العملية، حاول مجدداً', 'Opération impossible, réessayez', 'Could not complete the request, try again');
+        }
+
         async function handleAuthSubmit(e) {
             e.preventDefault();
             const email = document.getElementById('auth-email').value.trim();
@@ -1274,49 +1349,64 @@
             const submitBtn = document.getElementById('auth-submit-btn');
 
             if (!email || !password) return;
-
             if (submitBtn) submitBtn.disabled = true;
 
-            try {
-                if (supabaseClient && supabaseClient.auth) {
+            // لا يُلجأ إلى الحساب المحلي إلا إذا تعذّر الوصول إلى الخدمة السحابية أصلاً
+            let useLocalFallback = !(supabaseClient && supabaseClient.auth);
+
+            if (!useLocalFallback) {
+                try {
                     if (authMode === 'register') {
                         const { data, error } = await supabaseClient.auth.signUp({
                             email,
                             password,
                             options: { data: { full_name: name || email.split('@')[0], department, year } }
                         });
-                        if (!error && data && data.user) {
-                            currentUser = {
-                                id: data.user.id,
-                                email,
-                                name: name || email.split('@')[0],
-                                department,
-                                year
-                            };
+                        if (error) {
+                            if (isNetworkAuthError(error)) useLocalFallback = true;
+                            else { if (submitBtn) submitBtn.disabled = false; showToast(authErrorMessage(error)); return; }
+                        } else if (data && data.user && data.session) {
+                            currentUser = { id: data.user.id, email, name: name || email.split('@')[0], department, year };
                             safeStorageSet('saj_ensl_user', JSON.stringify(currentUser));
-                            finishAuthSuccess(currentLang === 'ar' ? 'تم إنشاء الحساب وتسجيل الدخول بنجاح' : 'Compte créé et connecté');
+                            finishAuthSuccess(tr('تم إنشاء الحساب وتسجيل الدخول بنجاح', 'Compte créé et connecté', 'Account created and signed in'));
                             return;
+                        } else if (data && data.user) {
+                            // التسجيل يتطلب تأكيد البريد الإلكتروني قبل فتح الجلسة
+                            document.getElementById('auth-form').reset();
+                            if (submitBtn) submitBtn.disabled = false;
+                            switchAuthMode('login');
+                            showToast(tr('تم إنشاء الحساب، أكّد بريدك الإلكتروني ثم سجّل الدخول', 'Compte créé : confirmez votre e-mail puis connectez-vous', 'Account created: confirm your email, then sign in'));
+                            return;
+                        } else {
+                            useLocalFallback = true;
                         }
                     } else {
                         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-                        if (!error && data && data.user) {
+                        if (error) {
+                            if (isNetworkAuthError(error)) useLocalFallback = true;
+                            else { if (submitBtn) submitBtn.disabled = false; showToast(authErrorMessage(error)); return; }
+                        } else if (data && data.user) {
                             const meta = data.user.user_metadata || {};
                             currentUser = {
                                 id: data.user.id,
-                                email: data.user.email,
+                                email: data.user.email || email,
                                 name: meta.full_name || email.split('@')[0],
                                 department: meta.department || departmentsList[0].id,
                                 year: meta.year || 'السنة الثانية'
                             };
                             safeStorageSet('saj_ensl_user', JSON.stringify(currentUser));
-                            finishAuthSuccess(currentLang === 'ar' ? 'مرحباً بعودتك إلى ساج' : 'Connexion réussie');
+                            finishAuthSuccess(tr('مرحباً بعودتك إلى ساج', 'Connexion réussie', 'Welcome back to SAJ'));
                             return;
+                        } else {
+                            useLocalFallback = true;
                         }
                     }
+                } catch (err) {
+                    useLocalFallback = true;
                 }
-            } catch (err) {}
+            }
 
-            /* تسجيل دخول محلي احتياطي لضمان استمرارية الجلسة */
+            /* ملف محلي احتياطي عند انقطاع الاتصال بالخدمة (لا يمنح أي صلاحيات سحابية) */
             currentUser = {
                 id: 'local_' + Date.now(),
                 email,
@@ -1325,7 +1415,7 @@
                 year: year || 'السنة الثانية'
             };
             safeStorageSet('saj_ensl_user', JSON.stringify(currentUser));
-            finishAuthSuccess(currentLang === 'ar' ? 'تم تسجيل الدخول إلى حسابك' : 'Connecté');
+            finishAuthSuccess(tr('تعذّر الاتصال بالخدمة — تم فتح جلسة محلية على هذا المتصفح', 'Service injoignable — session locale ouverte sur ce navigateur', 'Service unreachable — local session opened on this browser'));
         }
 
         function finishAuthSuccess(msg) {
@@ -1344,29 +1434,43 @@
             currentUser = null;
             safeStorageRemove('saj_ensl_user');
             renderAuthNav();
-            showToast(currentLang === 'ar' ? 'تم تسجيل الخروج' : 'Déconnecté');
+            showToast(tr('تم تسجيل الخروج', 'Déconnecté', 'Signed out'));
         }
 
         /* معالجة رفع الملفات */
+        function renderFileInfo() {
+            const infoEl = document.getElementById('selected-file-info');
+            if (!infoEl) return;
+            const st = fileInfoState;
+            if (st.kind === 'selected') {
+                infoEl.textContent = tr(`الملف المحدد: ${st.name} (${st.size} KB)`, `Fichier sélectionné : ${st.name} (${st.size} Ko)`, `Selected file: ${st.name} (${st.size} KB)`);
+            } else if (st.kind === 'toolarge') {
+                infoEl.textContent = tr('حجم الملف يتجاوز الحد الأقصى المسموح به (15MB).', 'Le fichier dépasse la taille maximale autorisée (15 Mo).', 'The file exceeds the 15MB limit.');
+            } else {
+                infoEl.textContent = tr('لم يتم اختيار ملف بعد (يمكن نشر نص فقط أو ملف مع وصف مختصر).', 'Aucun fichier choisi (vous pouvez publier un texte seul ou un fichier avec une courte description).', 'No file chosen yet (you can publish text only, or a file with a short description).');
+            }
+        }
+
         function handleFileSelection(event) {
             const file = event.target.files && event.target.files[0];
-            const infoEl = document.getElementById('selected-file-info');
             if (!file) {
                 selectedUploadFile = null;
-                if (infoEl) infoEl.textContent = 'لم يتم اختيار ملف بعد (يمكن نشر نص فقط أو ملف مع وصف مختصر).';
+                fileInfoState = { kind: 'none', name: '', size: '0' };
+                renderFileInfo();
                 return;
             }
             const maxBytes = 15 * 1024 * 1024;
             if (file.size > maxBytes) {
                 selectedUploadFile = null;
                 event.target.value = '';
-                if (infoEl) infoEl.textContent = 'حجم الملف يتجاوز الحد الأقصى المسموح به (15MB).';
-                showToast('حجم الملف أكبر من 15MB');
+                fileInfoState = { kind: 'toolarge', name: file.name, size: '0' };
+                renderFileInfo();
+                showToast(tr('حجم الملف أكبر من 15MB', 'Fichier supérieur à 15 Mo', 'File larger than 15MB'));
                 return;
             }
             selectedUploadFile = file;
-            const sizeKb = (file.size / 1024).toFixed(1);
-            if (infoEl) infoEl.textContent = `الملف المحدد: ${file.name} (${sizeKb} KB)`;
+            fileInfoState = { kind: 'selected', name: file.name, size: (file.size / 1024).toFixed(1) };
+            renderFileInfo();
         }
 
         function readFileAsDataUrl(file) {
@@ -1476,6 +1580,8 @@
         function renderDepartmentsIndex() {
             const list = document.getElementById('departments-index');
             if (!list) return;
+            const countEl = document.getElementById('dept-count');
+            if (countEl) countEl.textContent = String(departmentsList.length);
             list.innerHTML = departmentsList.map(d => {
                 const count = publications.filter(p => p.department === d.id).length;
                 const active = currentDeptFilter === d.id;
@@ -1576,7 +1682,7 @@
                 filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
             } else {
                 filtered.sort((a, b) =>
-                    (new Date(b.created_at || 0) - new Date(a.created_at || 0)) || String(b.id || '').localeCompare(String(a.id || ''), undefined, { numeric: true }));
+                    (new Date(b.created_at || 0) - new Date(a.created_at || 0)) || ((b.id || 0) - (a.id || 0)));
             }
 
             if (statusEl) {
@@ -1609,10 +1715,10 @@
                 const typeLabel = getTypeLabel(pub.type);
                 const deptLabel = getDeptLabel(pub.department);
                 const readLabel = translations[currentLang].read_paper;
-                const pid = String(pub.id);
+                const pid = Number(pub.id);
                 const staggerIdx = Math.min(idx, 10);
                 const extBadge = pub.file_name
-                    ? `<span class="text-[11px] font-mono px-1.5 py-0.5 bg-editorial-paper border border-editorial-brass/60 text-editorial-burgundy rounded-[2px]">${escapeHTML(pub.file_name.split('.').pop().toUpperCase() || 'FILE')}</span>`
+                    ? `<span class="text-[11px] font-mono px-1.5 py-0.5 bg-editorial-paper border border-editorial-brass/60 text-editorial-burgundy rounded-[2px]">${escapeHTML(fileExtLabel(pub.file_name))}</span>`
                     : '';
 
                 return `
@@ -1628,7 +1734,7 @@
                                 <span class="text-editorial-muted">${escapeHTML(pub.date)}</span>
                             </div>
 
-                            <h3 onclick="openReaderModal('${escapeAttr(pid)}')" class="entry-title text-lg sm:text-xl font-bold text-editorial-ink leading-snug mb-2 cursor-pointer transition-colors">
+                            <h3 onclick="openReaderModal(${pid})" class="entry-title text-lg sm:text-xl font-bold text-editorial-ink leading-snug mb-2 cursor-pointer transition-colors">
                                 ${escapeHTML(pub.title)}
                             </h3>
 
@@ -1646,7 +1752,7 @@
                                 <div class="flex items-center gap-3.5">
                                     ${extBadge}
                                     <span class="text-editorial-muted">${escapeHTML(formatMinutes(pub.readMinutes))}</span>
-                                    <button onclick="openReaderModal('${escapeAttr(pid)}')" class="font-bold text-editorial-burgundy hover:underline underline-offset-4 cursor-pointer inline-flex items-center gap-1">
+                                    <button onclick="openReaderModal(${pid})" class="font-bold text-editorial-burgundy hover:underline underline-offset-4 cursor-pointer inline-flex items-center gap-1">
                                         <span>${escapeHTML(readLabel)}</span>
                                         <span>${arrow}</span>
                                     </button>
@@ -1681,8 +1787,8 @@
             renderDepartmentsIndex();
         }
 
-        function quickFilterDept(deptId) {
-            currentDeptFilter = currentDeptFilter === deptId ? 'all' : deptId;
+        function quickFilterDept(deptId, forceSet = false) {
+            currentDeptFilter = (!forceSet && currentDeptFilter === deptId) ? 'all' : deptId;
             const sel = document.getElementById('dept-filter');
             if (sel) sel.value = currentDeptFilter;
             renderPublicationsList(true);
@@ -1751,18 +1857,17 @@
             populateDepartments();
             renderStudentNotes();
             renderAuthNav();
+            renderFileInfo();
+            switchAuthMode(authMode); // data-i18n يعيد نصوص «تسجيل الدخول» حتى في وضع إنشاء الحساب
             renderAll(false);
 
             if (activePublicationId) fillReaderModal(activePublicationId);
 
-            requestAnimationFrame(() => {
-                const activeBtn = document.querySelector(`.type-btn[data-type="${currentTypeFilter}"]`);
-                if (activeBtn) updateTabUnderline(activeBtn);
-            });
+            requestAnimationFrame(refreshTabUnderline);
         }
 
         function fillReaderModal(id) {
-            const pub = publications.find(p => String(p.id) === String(id));
+            const pub = publications.find(p => Number(p.id) === Number(id));
             if (!pub) return;
 
             document.getElementById('modal-type-badge').textContent = getTypeLabel(pub.type);
@@ -1821,9 +1926,9 @@
         }
 
         function openReaderModal(id) {
-            const pub = publications.find(p => String(p.id) === String(id));
+            const pub = publications.find(p => Number(p.id) === Number(id));
             if (!pub) return;
-            activePublicationId = String(pub.id);
+            activePublicationId = pub.id;
 
             pub.views = (pub.views || 0) + 1;
             savePublicationsLocal();
@@ -1866,7 +1971,9 @@
                     document.body.removeChild(temp);
                 }
                 showToast(successMsg);
-            } catch (e) {}
+            } catch (e) {
+                showToast(tr('تعذّر النسخ، انسخ يدوياً', 'Copie impossible, copiez manuellement', 'Copy failed, please copy manually'));
+            }
         }
 
         function copyCitation() {
@@ -1924,109 +2031,114 @@
             if (!title || !author || !abstract) return;
 
             if (pdfUrl && !isSafeUrl(pdfUrl)) {
-                showToast(currentLang === 'ar' ? 'يرجى إدخال رابط صحيح يبدأ بـ https://' : currentLang === 'fr' ? 'Lien invalide' : 'Invalid URL');
+                showToast(tr('يرجى إدخال رابط صحيح يبدأ بـ https://', 'Lien invalide', 'Invalid URL'));
                 return;
             }
 
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.textContent = currentLang === 'ar' ? 'جاري الرفع والنشر...' : currentLang === 'fr' ? 'Envoi en cours...' : 'Uploading...';
+                submitBtn.textContent = tr('جاري الرفع والنشر...', 'Envoi en cours...', 'Uploading...');
             }
 
-            let attachedUrl = isSafeUrl(pdfUrl) ? pdfUrl : null;
-            let attachedName = attachedUrl ? decodeURIComponent(attachedUrl.split('/').pop().split('?')[0]) : null;
-            let uploadedToCloud = false;
+            try {
+                let attachedUrl = pdfUrl || null;
+                let attachedName = attachedUrl ? deriveFileName(attachedUrl) : null;
+                let fileNotStored = false;
 
-            if (selectedUploadFile) {
-                const uploaded = await uploadStudentFile(selectedUploadFile);
-                if (uploaded) {
-                    if (uploaded.url) attachedUrl = uploaded.url;
-                    attachedName = uploaded.name;
-                    uploadedToCloud = uploaded.uploadedCloud;
+                if (selectedUploadFile) {
+                    const uploaded = await uploadStudentFile(selectedUploadFile);
+                    if (uploaded) {
+                        attachedName = uploaded.name;
+                        if (uploaded.url) attachedUrl = uploaded.url;
+                        else if (!pdfUrl) fileNotStored = true;
+                    }
                 }
-            }
 
-            const references = refsRaw ? refsRaw.split(/[؛;]/).map(r => r.trim()).filter(Boolean) : [];
-            const words = (content || abstract).split(/\s+/).length;
-            const mins = Math.max(2, Math.ceil(words / 160));
+                const references = refsRaw ? refsRaw.split(/[؛;]/).map(r => r.trim()).filter(Boolean) : [];
+                const words = (content || abstract).split(/\s+/).length;
+                const mins = Math.max(2, Math.ceil(words / 160));
 
-            const today = new Date();
-            const monthsAr = ["جانفي", "فيفري", "مارس", "أفريل", "ماي", "جوان", "جويلية", "أوت", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
-            const formattedDate = `${today.getDate()} ${monthsAr[today.getMonth()]} ${today.getFullYear()}`;
+                const today = new Date();
+                const monthsAr = ["جانفي", "فيفري", "مارس", "أفريل", "ماي", "جوان", "جويلية", "أوت", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+                const formattedDate = `${today.getDate()} ${monthsAr[today.getMonth()]} ${today.getFullYear()}`;
 
-            const newRecord = {
-                title,
-                type,
-                department,
-                author,
-                year,
-                date: formattedDate,
-                read_time: String(mins),
-                views: 1,
-                abstract,
-                content: content || (attachedName ? `الملف المرفق: ${attachedName}` : abstract),
-                references,
-                file_url: attachedUrl,
-                file_name: attachedName
-            };
+                const newRecord = {
+                    title,
+                    type,
+                    department,
+                    author,
+                    year,
+                    date: formattedDate,
+                    read_time: String(mins),
+                    views: 1,
+                    abstract,
+                    content: content || (attachedName ? `الملف المرفق: ${attachedName}` : abstract),
+                    references,
+                    file_url: attachedUrl,
+                    file_name: attachedName
+                };
 
-            let insertedItem = normalizePublication({
-                id: Date.now(),
-                created_at: new Date().toISOString(),
-                ...newRecord
-            });
+                let insertedItem = normalizePublication({
+                    id: Date.now(),
+                    created_at: new Date().toISOString(),
+                    ...newRecord
+                });
 
-            if (supabaseClient) {
-                try {
-                    const cloudPayload = { ...newRecord };
-                    if (typeof cloudPayload.file_url === 'string' && cloudPayload.file_url.startsWith('data:')) {
-                        delete cloudPayload.file_url;
-                    }
-                    const { data, error } = await supabaseClient
-                        .from('contributions')
-                        .insert([cloudPayload])
-                        .select()
-                        .single();
+                if (supabaseClient) {
+                    try {
+                        const cloudPayload = { ...newRecord };
+                        if (typeof cloudPayload.file_url === 'string' && cloudPayload.file_url.startsWith('data:')) {
+                            delete cloudPayload.file_url;
+                        }
+                        const { data, error } = await supabaseClient
+                            .from('contributions')
+                            .insert([cloudPayload])
+                            .select()
+                            .single();
 
-                    if (!error && data) {
-                        insertedItem = normalizePublication({
-                            ...data,
-                            file_url: data.file_url || attachedUrl,
-                            file_name: data.file_name || attachedName
-                        });
-                    } else {
+                        if (!error && data) {
+                            insertedItem = normalizePublication({
+                                ...data,
+                                file_url: data.file_url || attachedUrl,
+                                file_name: data.file_name || attachedName
+                            });
+                        } else {
+                            insertedItem.localOnly = true;
+                        }
+                    } catch (err) {
                         insertedItem.localOnly = true;
-                        showToast(currentLang === 'ar' ? 'تم الحفظ محلياً في المتصفح' : currentLang === 'fr' ? 'Enregistré localement' : 'Saved locally');
                     }
-                } catch (err) {
+                } else {
                     insertedItem.localOnly = true;
                 }
-            } else {
-                insertedItem.localOnly = true;
-            }
 
-            publications.unshift(insertedItem);
-            savePublicationsLocal();
+                publications.unshift(insertedItem);
+                savePublicationsLocal();
 
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = translations[currentLang].submit_now_btn;
-            }
+                selectedUploadFile = null;
+                fileInfoState = { kind: 'none', name: '', size: '0' };
+                renderFileInfo();
 
-            const hadFile = Boolean(selectedUploadFile);
-            selectedUploadFile = null;
-            const infoEl = document.getElementById('selected-file-info');
-            if (infoEl) infoEl.textContent = 'لم يتم اختيار ملف بعد (يمكن نشر نص فقط أو ملف مع وصف مختصر).';
+                document.getElementById('contribution-form').reset();
+                closeSubmitModal();
+                resetAllFilters();
+                renderAll(true);
 
-            document.getElementById('contribution-form').reset();
-            closeSubmitModal();
-            resetAllFilters();
-            renderAll(true);
-
-            if (hadFile && !uploadedToCloud) {
-                showToast(currentLang === 'ar' ? 'تم النشر، لكن تعذّر رفع الملف إلى السحابة (تحقق من إعدادات Storage في Supabase)' : currentLang === 'fr' ? 'Publié, mais le fichier n’a pas pu être téléversé sur le cloud' : 'Published, but cloud file upload failed');
-            } else if (!insertedItem.localOnly || uploadedToCloud) {
-                showToast(currentLang === 'ar' ? 'تم نشر الملف والإسهام بنجاح' : currentLang === 'fr' ? 'Fichier et contribution publiés' : 'File and entry published');
+                if (fileNotStored) {
+                    showToast(tr('تعذّر حفظ الملف (حجمه كبير والرفع السحابي غير متاح) — نُشر الوصف فقط', 'Fichier non enregistré (trop volumineux, envoi cloud indisponible) — description publiée seule', 'File not stored (too large, cloud upload unavailable) — description published only'));
+                } else if (insertedItem.localOnly) {
+                    showToast(tr('تم الحفظ محلياً في المتصفح', 'Enregistré localement', 'Saved locally'));
+                } else {
+                    showToast(tr('تم نشر الملف والإسهام بنجاح', 'Fichier et contribution publiés', 'File and entry published'));
+                }
+            } catch (err) {
+                console.error(err);
+                showToast(tr('حدث خطأ أثناء النشر، حاول مرة أخرى', 'Erreur lors de la publication, réessayez', 'Publishing failed, please try again'));
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = translations[currentLang].submit_now_btn;
+                }
             }
         }
 
@@ -2066,17 +2178,25 @@
             }
         }
 
+        function highlightCmd() {
+            document.querySelectorAll('.cmd-item').forEach((el, i) => {
+                const on = i === cmdSelectedIndex;
+                el.classList.toggle('bg-editorial-paper', on);
+                if (on && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
+            });
+        }
+
         function handleCmdKeydown(e) {
             const items = document.querySelectorAll('.cmd-item');
             if (!items.length) return;
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 cmdSelectedIndex = (cmdSelectedIndex + 1) % items.length;
-                items.forEach((el, i) => el.classList.toggle('bg-editorial-paper', i === cmdSelectedIndex));
+                highlightCmd();
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 cmdSelectedIndex = (cmdSelectedIndex - 1 + items.length) % items.length;
-                items.forEach((el, i) => el.classList.toggle('bg-editorial-paper', i === cmdSelectedIndex));
+                highlightCmd();
             } else if (e.key === 'Enter') {
                 e.preventDefault();
                 if (items[cmdSelectedIndex]) items[cmdSelectedIndex].click();
@@ -2097,8 +2217,8 @@
                 !q || d.ar.toLowerCase().includes(q) || d.fr.toLowerCase().includes(q) || d.en.toLowerCase().includes(q)
             ).slice(0, 3);
 
-            let html = matchedPubs.map((p, i) => `
-                <button onclick="closeCommandPalette(); openReaderModal('${escapeAttr(String(p.id))}')" class="cmd-item w-full px-4 py-2.5 text-start hover:bg-editorial-paper flex items-center justify-between gap-3 cursor-pointer ${i === 0 ? 'bg-editorial-paper' : ''}">
+            let html = matchedPubs.map(p => `
+                <button onclick="closeCommandPalette(); openReaderModal(${Number(p.id)})" class="cmd-item w-full px-4 py-2.5 text-start hover:bg-editorial-paper flex items-center justify-between gap-3 cursor-pointer">
                     <div class="min-w-0">
                         <div class="text-sm font-bold text-editorial-ink truncate">${escapeHTML(p.title)}</div>
                         <div class="text-[11px] text-editorial-muted">${escapeHTML(p.author)} • ${escapeHTML(getDeptLabel(p.department))}</div>
@@ -2108,13 +2228,14 @@
             `).join('');
 
             html += matchedDepts.map(d => `
-                <button onclick="closeCommandPalette(); quickFilterDept('${d.id}')" class="cmd-item w-full px-4 py-2 text-start hover:bg-editorial-paper flex items-center justify-between text-xs text-editorial-ink cursor-pointer">
+                <button onclick="closeCommandPalette(); quickFilterDept('${d.id}', true)" class="cmd-item w-full px-4 py-2 text-start hover:bg-editorial-paper flex items-center justify-between text-xs text-editorial-ink cursor-pointer">
                     <span>${escapeHTML(d[currentLang] || d.ar)}</span>
                     <span class="text-editorial-muted font-mono">DEPT</span>
                 </button>
             `).join('');
 
-            container.innerHTML = html || `<div class="p-6 text-center text-xs text-editorial-muted">${currentLang === 'ar' ? 'لا توجد نتائج' : currentLang === 'fr' ? 'Aucun résultat' : 'No results'}</div>`;
+            container.innerHTML = html || `<div class="p-6 text-center text-xs text-editorial-muted">${escapeHTML(tr('لا توجد نتائج', 'Aucun résultat', 'No results'))}</div>`;
+            highlightCmd();
         }
 
         function showToast(msg) {
@@ -2132,10 +2253,6 @@
             const div = document.createElement('div');
             div.textContent = String(str);
             return div.innerHTML;
-        }
-
-        function escapeAttr(str) {
-            return String(str ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
         }
     </script>
 </body>
