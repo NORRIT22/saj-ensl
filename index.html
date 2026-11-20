@@ -59,6 +59,7 @@
             --ink: #1A1918;
             --muted: #57534E;
             --burgundy: #5A1424;
+            --nib-rose: #D96B84;
             --brass: #B8934A;
         }
 
@@ -70,6 +71,7 @@
             --ink: #EDE9E1;
             --muted: #A69F95;
             --burgundy: #D46A82;
+            --nib-rose: #E58298;
             --brass: #C9A55C;
         }
 
@@ -123,25 +125,200 @@
             mix-blend-mode: normal;
         }
 
+        /* =========================================================
+           حركات بناء الشعار الدائري وتقارب النصوص + شاشة الانتظار
+           ========================================================= */
+        #saj-splash-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background-color: var(--paper);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.25rem;
+            padding: 1.5rem;
+            transition: opacity 0.55s var(--ease-editorial), transform 0.55s var(--ease-editorial), visibility 0.55s;
+        }
+
+        #saj-splash-screen.splash-exit {
+            opacity: 0;
+            transform: scale(1.015);
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        #app-shell {
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.6s var(--ease-editorial), transform 0.6s var(--ease-editorial);
+        }
+
+        #app-shell.app-ready {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 1. القرص الرملي الدافئ */
+        @keyframes sajSandDiscIn {
+            0% { opacity: 0; transform: scale(0.65); }
+            100% { opacity: 0.88; transform: scale(1); }
+        }
+
+        /* 2. التفاف الإطار الخارجي المتقطع الذهبي (#B8934A) */
+        @keyframes sajDashedRingSpin {
+            0% { opacity: 0; transform: scale(0.84) rotate(-85deg); }
+            100% { opacity: 0.92; transform: scale(1) rotate(0deg); }
+        }
+
+        /* 3. ارتفاع القوسين المعماريين */
+        @keyframes sajArchRise {
+            0% { stroke-dashoffset: 185; opacity: 0; }
+            25% { opacity: 1; }
+            100% { stroke-dashoffset: 0; opacity: 1; }
+        }
+
+        /* 4. صعود ريشة القلم (#D96B84) من الأسفل للاستقرار في منتصف القوس */
+        @keyframes sajNibAscend {
+            0% { opacity: 0; transform: translateY(28px) scale(0.86); }
+            70% { opacity: 1; transform: translateY(-2px) scale(1.02); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* 5. انفتاح الكتاب في القاعدة بالتزامن مع استقرار الريشة */
+        @keyframes sajBookOpen {
+            0% { opacity: 0; transform: scaleX(0.22) translateY(8px); }
+            100% { opacity: 1; transform: scaleX(1) translateY(0); }
+        }
+
+        /* 6. تقارب كلمة SAJ من اليسار وكلمة ساج من اليمين نحو المنتصف */
+        @keyframes sajWordLeftIn {
+            0% { opacity: 0; transform: translateX(-34px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes sajWordRightIn {
+            0% { opacity: 0; transform: translateX(34px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
+        /* 7. ظهور عبارة ENSL LAGHOUAT بانسيابية تحتها */
+        @keyframes sajSubCaptionIn {
+            0% { opacity: 0; transform: translateY(8px); letter-spacing: 5.5px; }
+            100% { opacity: 1; transform: translateY(0); letter-spacing: 3.2px; }
+        }
+
+        /* 8. شريط التقدم المرافق لشاشة الانتظار (2 ثانية) */
+        @keyframes sajSplashProgress {
+            0% { transform: scaleX(0); }
+            100% { transform: scaleX(1); }
+        }
+
+        .saj-logo-animated .saj-sand-disc {
+            transform-box: fill-box;
+            transform-origin: center;
+            opacity: 0;
+            animation: sajSandDiscIn 0.55s var(--ease-editorial) 0.05s forwards;
+        }
+
+        .saj-logo-animated .saj-dashed-ring {
+            transform-box: fill-box;
+            transform-origin: center;
+            opacity: 0;
+            animation: sajDashedRingSpin 0.85s var(--ease-editorial) 0.1s forwards;
+        }
+
+        .saj-logo-animated .saj-arch-outer,
+        .saj-logo-animated .saj-arch-inner {
+            stroke-dasharray: 185;
+            stroke-dashoffset: 185;
+            opacity: 0;
+        }
+
+        .saj-logo-animated .saj-arch-outer {
+            animation: sajArchRise 0.65s var(--ease-editorial) 0.32s forwards;
+        }
+
+        .saj-logo-animated .saj-arch-inner {
+            animation: sajArchRise 0.6s var(--ease-editorial) 0.44s forwards;
+        }
+
+        .saj-logo-animated .saj-pen-nib,
+        .saj-logo-animated .saj-brass-dot {
+            transform-box: fill-box;
+            transform-origin: center;
+            opacity: 0;
+            animation: sajNibAscend 0.62s var(--ease-editorial) 0.62s forwards;
+        }
+
+        .saj-logo-animated .saj-open-book {
+            transform-box: fill-box;
+            transform-origin: center;
+            opacity: 0;
+            animation: sajBookOpen 0.58s var(--ease-editorial) 0.68s forwards;
+        }
+
+        .saj-logo-animated .saj-word-en {
+            transform-box: fill-box;
+            transform-origin: right center;
+            opacity: 0;
+            animation: sajWordLeftIn 0.62s var(--ease-editorial) 0.82s forwards;
+        }
+
+        .saj-logo-animated .saj-word-ar {
+            transform-box: fill-box;
+            transform-origin: left center;
+            opacity: 0;
+            animation: sajWordRightIn 0.62s var(--ease-editorial) 0.82s forwards;
+        }
+
+        .saj-logo-animated .saj-sub-caption {
+            opacity: 0;
+            animation: sajSubCaptionIn 0.55s var(--ease-editorial) 1.08s forwards;
+        }
+
+        .splash-progress-fill {
+            transform-origin: right center;
+            animation: sajSplashProgress 1.85s var(--ease-editorial) 0.08s forwards;
+        }
+
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 animation-duration: 0.01ms !important;
                 animation-iteration-count: 1 !important;
                 transition-duration: 0.01ms !important;
             }
-            .editorial-entry { opacity: 1 !important; }
+            .editorial-entry,
+            .saj-logo-animated .saj-sand-disc,
+            .saj-logo-animated .saj-dashed-ring,
+            .saj-logo-animated .saj-arch-outer,
+            .saj-logo-animated .saj-arch-inner,
+            .saj-logo-animated .saj-pen-nib,
+            .saj-logo-animated .saj-brass-dot,
+            .saj-logo-animated .saj-open-book,
+            .saj-logo-animated .saj-word-en,
+            .saj-logo-animated .saj-word-ar,
+            .saj-logo-animated .saj-sub-caption,
+            #app-shell {
+                opacity: 1 !important;
+                stroke-dashoffset: 0 !important;
+                transform: none !important;
+            }
         }
 
         @media print {
             @page { margin: 1.8cm 2cm; }
             :root, html.dark {
                 --paper: #fff; --sheet: #fff; --stone: #f3f3f3; --rule: #ccc;
-                --ink: #000; --muted: #333; --burgundy: #5A1424; --brass: #8a6a2a;
+                --ink: #000; --muted: #333; --burgundy: #5A1424; --nib-rose: #D96B84; --brass: #8a6a2a;
             }
             html, body { overflow: visible !important; height: auto !important; background: #fff !important; }
+            #saj-splash-screen { display: none !important; }
+            #app-shell { opacity: 1 !important; transform: none !important; }
             /* تُطبَّق قواعد الطباعة الخاصة بالورقة فقط عند فتح نافذة القراءة */
             body.reader-open { display: block !important; min-height: 0 !important; }
-            body.reader-open > *:not(#reader-modal) { display: none !important; }
+            body.reader-open #app-shell > *:not(#reader-modal) { display: none !important; }
             body.reader-open #reader-modal {
                 position: static !important;
                 inset: auto !important;
@@ -168,6 +345,17 @@
     </style>
 </head>
 <body class="antialiased selection:bg-editorial-burgundy selection:text-white flex flex-col min-h-screen">
+
+    <!-- شاشة الانتظار الافتتاحية الموحدة (2 ثانية) -->
+    <div id="saj-splash-screen" role="status" aria-live="polite" aria-label="جاري تحميل منصة ساج">
+        <div id="splash-logo-slot" class="w-[300px] sm:w-[390px] h-24 sm:h-32"></div>
+        <div class="w-44 h-[2px] bg-editorial-rule/80 rounded-full overflow-hidden">
+            <div class="h-full w-full bg-editorial-burgundy splash-progress-fill"></div>
+        </div>
+        <p class="text-[11px] font-mono tracking-wider text-editorial-muted">كراسات ومطارحات طلبة المدرسة العليا للأساتذة بالأغواط</p>
+    </div>
+
+    <div id="app-shell" class="flex flex-col min-h-screen">
 
     <!-- مؤشر التقدم في القراءة -->
     <div class="fixed top-0 left-0 right-0 h-[2px] z-50 bg-editorial-rule/40 pointer-events-none">
@@ -705,12 +893,15 @@
         </div>
     </div>
 
-    <!-- 9. التذييل -->
+    <!-- 9. التذييل الموحد الهوية -->
     <footer class="border-t border-editorial-rule bg-editorial-sheet mt-auto">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-editorial-muted">
-            <div>
-                <span data-i18n="colophon_title" class="text-base font-bold text-editorial-ink block">ساج — المدرسة العليا للأساتذة بالأغواط</span>
-                <span data-i18n="colophon_disclaimer">مبادرة طلابية مستقلة لتبادل الملفات والملخصات والفائدة العلمية بين الطلبة.</span>
+            <div class="flex items-center gap-3">
+                <span id="footer-badge-slot" class="w-10 h-10 shrink-0"></span>
+                <div>
+                    <span data-i18n="colophon_title" class="text-base font-bold text-editorial-ink block">ساج — المدرسة العليا للأساتذة بالأغواط</span>
+                    <span data-i18n="colophon_disclaimer">مبادرة طلابية مستقلة لتبادل الملفات والملخصات والفائدة العلمية بين الطلبة.</span>
+                </div>
             </div>
             <div class="flex items-center gap-4">
                 <button onclick="openAboutModal()" data-i18n="about_link" class="hover:text-editorial-burgundy underline underline-offset-4 cursor-pointer">عن ساج</button>
@@ -719,6 +910,8 @@
             </div>
         </div>
     </footer>
+
+    </div><!-- نهاية #app-shell -->
 
     <script>
         const SUPABASE_URL = 'https://pjptbzefvrpthxnvnfgz.supabase.co';
@@ -736,11 +929,12 @@
         let currentUser = null;
         let authMode = 'login';
 
-        /* شعار ساج المطابق للمرجع المرفق:
-           يساراً: SAJ بالذهبي و "ساج" بالعنابي وتحتهما ENSL LAGHOUAT
-           يميناً: قوس باب الجزائر المزدوج، دائرة منقطة، قرص ذهبي، ريشة قلم عنابية، وكتاب مفتوح */
+        /* شعار ساج الموحّد بالحركة التفصيلية:
+           - بناء الشعار الدائري: قرص رملي دافئ + التفاف الإطار المتقطع الذهبي (#B8934A)
+           - ارتفاع القوسين المعماريين + صعود ريشة القلم (#D96B84) من الأسفل مع انفتاح الكتاب في القاعدة
+           - تقارب SAJ من اليسار و "ساج" من اليمين نحو المنتصف وظهور ENSL LAGHOUAT تحتها */
         const sajBrandLogoSVG = `
-        <svg viewBox="0 0 470 150" direction="ltr" class="w-full h-full logo-surface" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شعار منصة ساج SAJ — ENSL Laghouat">
+        <svg viewBox="0 0 470 150" direction="ltr" class="w-full h-full logo-surface __ANIM_CLASS__" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شعار منصة ساج SAJ — ENSL Laghouat">
             <defs>
                 <linearGradient id="sajBrassGrad__UID__" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stop-color="#D4AF6A"/>
@@ -751,48 +945,59 @@
 
             <!-- الكتلة النصية (يسار) -->
             <g transform="translate(148, 0)">
-                <text x="-12" y="76" text-anchor="end" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="48" letter-spacing="1" fill="url(#sajBrassGrad__UID__)">SAJ</text>
-                <text x="6" y="76" text-anchor="start" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="52" fill="var(--burgundy)">ساج</text>
-                <text x="2" y="106" text-anchor="middle" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="14.5" letter-spacing="3.2" fill="var(--burgundy)">ENSL LAGHOUAT</text>
+                <text class="saj-word-en" x="-12" y="76" text-anchor="end" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="48" letter-spacing="1" fill="url(#sajBrassGrad__UID__)">SAJ</text>
+                <text class="saj-word-ar" x="6" y="76" text-anchor="start" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="52" fill="var(--burgundy)">ساج</text>
+                <text class="saj-sub-caption" x="2" y="106" text-anchor="middle" font-family="'IBM Plex Sans Arabic', sans-serif" font-weight="700" font-size="14.5" letter-spacing="3.2" fill="var(--burgundy)">ENSL LAGHOUAT</text>
             </g>
 
-            <!-- الشارة الهندسية (يمين) -->
+            <!-- الشارة الدائرية المعمارية (يمين) -->
             <g transform="translate(362, 74)">
-                <!-- الهالة الدائرية المنقطة -->
-                <circle cx="0" cy="0" r="61" fill="none" stroke="url(#sajBrassGrad__UID__)" stroke-width="2" stroke-dasharray="5 7.5" stroke-linecap="round" opacity="0.85"/>
+                <!-- الهالة الدائرية المنقطة الذهبية (#B8934A) -->
+                <circle class="saj-dashed-ring" cx="0" cy="0" r="61" fill="none" stroke="url(#sajBrassGrad__UID__)" stroke-width="2" stroke-dasharray="5 7.5" stroke-linecap="round" opacity="0.9"/>
 
-                <!-- الخلفية الدائرية الرملية الدافئة -->
-                <circle cx="0" cy="0" r="51" fill="#EBDDC3" opacity="0.72"/>
+                <!-- القرص الرملي الدافئ -->
+                <circle class="saj-sand-disc" cx="0" cy="0" r="51" fill="#EBDDC3" opacity="0.82"/>
 
-                <!-- القوس المعماري المزدوج -->
-                <path d="M -32 34 V -14 A 32 32 0 0 1 32 -14 V 34" fill="none" stroke="url(#sajBrassGrad__UID__)" stroke-width="5.2" stroke-linecap="round"/>
-                <path d="M -22 33 V -14 A 22 22 0 0 1 22 -14 V 33" fill="none" stroke="url(#sajBrassGrad__UID__)" stroke-width="2.4" stroke-linecap="round" opacity="0.85"/>
+                <!-- القوسان المعماريان -->
+                <path class="saj-arch-outer" d="M -32 34 V -14 A 32 32 0 0 1 32 -14 V 34" fill="none" stroke="url(#sajBrassGrad__UID__)" stroke-width="5.2" stroke-linecap="round"/>
+                <path class="saj-arch-inner" d="M -22 33 V -14 A 22 22 0 0 1 22 -14 V 33" fill="none" stroke="url(#sajBrassGrad__UID__)" stroke-width="2.4" stroke-linecap="round" opacity="0.85"/>
 
                 <!-- القرص الذهبي الداخلي يسار الريشة -->
-                <circle cx="-13" cy="-16" r="6.5" fill="url(#sajBrassGrad__UID__)"/>
+                <circle class="saj-brass-dot" cx="-13" cy="-16" r="6.5" fill="url(#sajBrassGrad__UID__)"/>
 
-                <!-- ريشة القلم العنابية في المحور -->
-                <path d="M 0 -30 L 12 -4 L 5 11 L -5 11 L -12 -4 Z" fill="var(--burgundy)"/>
-                <circle cx="0" cy="-4" r="3" fill="#EBDDC3"/>
-                <rect x="-2" y="11" width="4" height="23" fill="var(--burgundy)"/>
+                <!-- ريشة القلم (#D96B84) الصاعدة من الأسفل لتستقر في منتصف القوس -->
+                <g class="saj-pen-nib">
+                    <path d="M 0 -30 L 12 -4 L 5 11 L -5 11 L -12 -4 Z" fill="var(--nib-rose)"/>
+                    <circle cx="0" cy="-4" r="3" fill="#EBDDC3"/>
+                    <rect x="-2" y="11" width="4" height="23" fill="var(--nib-rose)"/>
+                </g>
 
-                <!-- الكتاب المفتوح الذهبي والعنابي -->
-                <path d="M -42 36 Q -21 26 0 38 Q 21 26 42 36" fill="none" stroke="url(#sajBrassGrad__UID__)" stroke-width="4.5" stroke-linecap="round"/>
-                <path d="M -46 42 Q -23 31 0 44 Q 23 31 46 42" fill="none" stroke="var(--burgundy)" stroke-width="4.8" stroke-linecap="round"/>
+                <!-- الكتاب المفتوح في القاعدة -->
+                <g class="saj-open-book">
+                    <path d="M -42 36 Q -21 26 0 38 Q 21 26 42 36" fill="none" stroke="url(#sajBrassGrad__UID__)" stroke-width="4.5" stroke-linecap="round"/>
+                    <path d="M -46 42 Q -23 31 0 44 Q 23 31 46 42" fill="none" stroke="var(--burgundy)" stroke-width="4.8" stroke-linecap="round"/>
+                </g>
             </g>
         </svg>
         `;
 
-        /* أيقونة شريط التنقل المصغرة */
+        /* ختم الشريط العلوي والتذييل الموحّد الهوية */
         const sajNavBadgeSVG = `
-        <svg viewBox="0 0 120 120" class="w-full h-full" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شارة ساج">
-            <circle cx="60" cy="60" r="54" fill="#EFE4CE" stroke="#B8934A" stroke-width="2.5" stroke-dasharray="5 6"/>
-            <path d="M 32 86 V 46 A 28 28 0 0 1 88 46 V 86" fill="none" stroke="#B8934A" stroke-width="5.5" stroke-linecap="round"/>
-            <circle cx="46" cy="44" r="5.5" fill="#B8934A"/>
-            <path d="M 60 30 L 71 54 L 64 68 L 56 68 L 49 54 Z" fill="var(--burgundy)"/>
-            <circle cx="60" cy="54" r="2.8" fill="#EFE4CE"/>
-            <rect x="58" y="68" width="4" height="19" fill="var(--burgundy)"/>
-            <path d="M 22 92 Q 41 82 60 94 Q 79 82 98 92" fill="none" stroke="var(--burgundy)" stroke-width="5" stroke-linecap="round"/>
+        <svg viewBox="0 0 120 120" class="w-full h-full saj-logo-animated" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ختم ساج">
+            <circle class="saj-sand-disc" cx="60" cy="60" r="50" fill="#EFE4CE"/>
+            <circle class="saj-dashed-ring" cx="60" cy="60" r="55" fill="none" stroke="#B8934A" stroke-width="2.5" stroke-dasharray="5 6"/>
+            <path class="saj-arch-outer" d="M 32 86 V 46 A 28 28 0 0 1 88 46 V 86" fill="none" stroke="#B8934A" stroke-width="5.5" stroke-linecap="round"/>
+            <path class="saj-arch-inner" d="M 40 85 V 46 A 20 20 0 0 1 80 46 V 85" fill="none" stroke="#B8934A" stroke-width="2.4" stroke-linecap="round" opacity="0.85"/>
+            <circle class="saj-brass-dot" cx="46" cy="44" r="5.5" fill="#B8934A"/>
+            <g class="saj-pen-nib">
+                <path d="M 60 30 L 71 54 L 64 68 L 56 68 L 49 54 Z" fill="var(--nib-rose)"/>
+                <circle cx="60" cy="54" r="2.8" fill="#EFE4CE"/>
+                <rect x="58" y="68" width="4" height="19" fill="var(--nib-rose)"/>
+            </g>
+            <g class="saj-open-book">
+                <path d="M 26 86 Q 43 77 60 88 Q 77 77 94 86" fill="none" stroke="#B8934A" stroke-width="4" stroke-linecap="round"/>
+                <path d="M 22 92 Q 41 82 60 94 Q 79 82 98 92" fill="none" stroke="var(--burgundy)" stroke-width="4.8" stroke-linecap="round"/>
+            </g>
         </svg>
         `;
 
@@ -1174,9 +1379,33 @@
             if (window.lucide) lucide.createIcons();
         }
 
+        function runSplashTransition() {
+            const splash = document.getElementById('saj-splash-screen');
+            const appShell = document.getElementById('app-shell');
+
+            // بعد انتهاء الثانيتين يتم الانتقال السلس إلى واجهة المنصة الرئيسية وتفعيل حركة شعار الترويسة
+            setTimeout(() => {
+                if (splash) splash.classList.add('splash-exit');
+                if (appShell) appShell.classList.add('app-ready');
+
+                const mastheadSlot = document.getElementById('masthead-logo-slot');
+                if (mastheadSlot) {
+                    mastheadSlot.innerHTML = sajBrandLogoSVG
+                        .split('__UID__').join('_masthead-logo-slot')
+                        .split('__ANIM_CLASS__').join('saj-logo-animated');
+                }
+                requestAnimationFrame(refreshTabUnderline);
+
+                setTimeout(() => {
+                    if (splash && splash.parentNode) splash.remove();
+                }, 600);
+            }, 2000);
+        }
+
         async function initApp() {
             initTheme();
             renderLogos();
+            runSplashTransition();
             populateDepartments();
             renderStudentNotes();
             renderFileInfo();
@@ -1261,15 +1490,28 @@
         }
 
         function renderLogos() {
-            ['nav-badge-slot', 'auth-badge-slot'].forEach(id => {
+            // توحيد الختم في الشريط العلوي والتذييل ونافذة الدخول
+            ['nav-badge-slot', 'footer-badge-slot', 'auth-badge-slot'].forEach(id => {
                 const slot = document.getElementById(id);
                 if (slot) slot.innerHTML = sajNavBadgeSVG;
             });
 
+            // شعار شاشة الانتظار المتحرك
+            const splashSlot = document.getElementById('splash-logo-slot');
+            if (splashSlot) {
+                splashSlot.innerHTML = sajBrandLogoSVG
+                    .split('__UID__').join('_splash-logo-slot')
+                    .split('__ANIM_CLASS__').join('saj-logo-animated');
+            }
+
             // معرّف التدرّج يجب أن يكون فريداً لكل نسخة من الشعار داخل الصفحة
             ['masthead-logo-slot', 'modal-logo-slot'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) el.innerHTML = sajBrandLogoSVG.split('__UID__').join('_' + id);
+                if (el) {
+                    el.innerHTML = sajBrandLogoSVG
+                        .split('__UID__').join('_' + id)
+                        .split('__ANIM_CLASS__').join('');
+                }
             });
         }
 
@@ -1348,7 +1590,7 @@
                         applySupabaseUser(session.user);
                         if (event === 'SIGNED_IN' && wasSignedOut) {
                             closeAuthModal();
-                    closeLogoutConfirmModal();
+                            closeLogoutConfirmModal();
                             showToast(tr('تم تسجيل الدخول بنجاح', 'Connecté avec succès', 'Signed in successfully'));
                         }
                     } else if (event === 'SIGNED_OUT') {
@@ -1576,7 +1818,7 @@
             document.getElementById('auth-form').reset();
             renderAuthNav();
             closeAuthModal();
-                    closeLogoutConfirmModal();
+            closeLogoutConfirmModal();
             showToast(msg);
         }
 
@@ -2077,7 +2319,8 @@
             }
 
             const contentContainer = document.getElementById('modal-content');
-            const paragraphs = (pub.content || '').split('\n').filter(p => p.trim() !== '');
+            const paragraphs = (pub.content || '').split('
+').filter(p => p.trim() !== '');
             contentContainer.innerHTML = paragraphs.map(p => {
                 if (p.length < 80 && (p.endsWith(':') || p.startsWith('أولاً') || p.startsWith('ثانياً') || /^\d+\./.test(p))) {
                     return `<h3 class="text-lg font-bold text-editorial-burgundy pt-2">${escapeHTML(p)}</h3>`;
