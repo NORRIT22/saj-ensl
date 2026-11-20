@@ -1931,6 +1931,7 @@
 
         async function uploadStudentFile(file) {
             if (!file) return null;
+            let storageError = '';
             if (supabaseClient) {
                 try {
                     const ext = (file.name.split('.').pop() || 'bin').replace(/[^a-zA-Z0-9]/g, '');
@@ -1945,16 +1946,22 @@
                             .from(STORAGE_BUCKET)
                             .getPublicUrl(filePath);
                         if (pubData && pubData.publicUrl) {
-                            return { url: pubData.publicUrl, name: file.name, uploadedCloud: true };
+                            return { url: pubData.publicUrl, name: file.name, uploadedCloud: true, storageError: '' };
                         }
+                    } else {
+                        storageError = error.message || error.code || 'Storage upload rejected';
                     }
-                } catch (err) {}
+                } catch (err) {
+                    storageError = (err && err.message) || 'Storage network error';
+                }
+            } else {
+                storageError = 'Supabase client unavailable';
             }
             if (file.size <= 8 * 1024 * 1024) {
                 const dataUrl = await readFileAsDataUrl(file);
-                return { url: dataUrl, name: file.name, uploadedCloud: false };
+                return { url: dataUrl, name: file.name, uploadedCloud: false, storageError };
             }
-            return { url: null, name: file.name, uploadedCloud: false };
+            return { url: null, name: file.name, uploadedCloud: false, storageError };
         }
 
         function getDeptLabel(deptId) {
@@ -2534,11 +2541,15 @@
                 let attachedUrl = pdfUrl || null;
                 let attachedName = attachedUrl ? deriveFileName(attachedUrl) : null;
                 let fileNotStored = false;
+                let storageUploadError = '';
 
                 if (selectedUploadFile) {
                     const uploaded = await uploadStudentFile(selectedUploadFile);
                     if (uploaded) {
                         attachedName = uploaded.name;
+                        if (!uploaded.uploadedCloud && uploaded.storageError) {
+                            storageUploadError = uploaded.storageError;
+                        }
                         if (uploaded.url) attachedUrl = uploaded.url;
                         else if (!pdfUrl) fileNotStored = true;
                     }
@@ -2580,21 +2591,62 @@
                         if (typeof cloudPayload.file_url === 'string' && cloudPayload.file_url.startsWith('data:')) {
                             delete cloudPayload.file_url;
                         }
-                        const { data, error } = await supabaseClient
+                        let res = await supabaseClient
                             .from('contributions')
                             .insert([cloudPayload])
                             .select()
                             .single();
 
-                        if (!error && data) {
+                        // Retry with core columns if schema differs (e.g., references/file_name/views)
+                        if (res.error) {
+                            const fallbackPayload = {
+                                title: cloudPayload.title,
+                                type: cloudPayload.type,
+                                department: cloudPayload.department,
+                                author: cloudPayload.author,
+                                year: cloudPayload.year,
+                                date: cloudPayload.date,
+                                abstract: cloudPayload.abstract,
+                                content: cloudPayload.content
+                            };
+                            if (cloudPayload.file_url) fallbackPayload.file_url = cloudPayload.file_url;
+                            const retryRes = await supabaseClient
+                                .from('contributions')
+                                .insert([fallbackPayload])
+                                .select()
+                                .single();
+                            if (!retryRes.error && retryRes.data) {
+                                res = retryRes;
+                            }
+                        }
+
+                        if (!res.error && res.data) {
                             insertedItem = normalizePublication({
-                                ...data,
-                                file_url: data.file_url || attachedUrl,
-                                file_name: data.file_name || attachedName
+                                ...res.data,
+                                file_url: res.data.file_url || attachedUrl,
+                                file_name: res.data.file_name || attachedName
                             });
                         } else {
-                            insertedItem.localOnly = true;
-                            insertedItem.cloudError = (error && (error.message || error.code)) || 'رفض الإدراج من قاعدة البيانات';
+                            // Attempt insert without .select() in case SELECT policy differs from INSERT policy
+                            const plainInsert = await supabaseClient
+                                .from('contributions')
+                                .insert([{
+                                    title: cloudPayload.title,
+                                    type: cloudPayload.type,
+                                    department: cloudPayload.department,
+                                    author: cloudPayload.author,
+                                    year: cloudPayload.year,
+                                    date: cloudPayload.date,
+                                    abstract: cloudPayload.abstract,
+                                    content: cloudPayload.content
+                                }]);
+                            if (!plainInsert.error) {
+                                insertedItem.localOnly = false;
+                                setTimeout(() => syncCloudPublications(true), 400);
+                            } else {
+                                insertedItem.localOnly = true;
+                                insertedItem.cloudError = (res.error && (res.error.message || res.error.code)) || (plainInsert.error && plainInsert.error.message) || 'رفض الإدراج من قاعدة البيانات';
+                            }
                         }
                     } catch (err) {
                         insertedItem.localOnly = true;
@@ -2616,16 +2668,22 @@
                 resetAllFilters();
                 renderAll(true);
 
-                if (fileNotStored) {
-                    showToast(tr('تعذّر حفظ الملف (حجمه كبير والرفع السحابي غير متاح) — نُشر الوصف فقط', 'Fichier non enregistré (trop volumineux, envoi cloud indisponible) — description publiée seule', 'File not stored (too large, cloud upload unavailable) — description published only'));
-                } else if (insertedItem.localOnly) {
+                if (insertedItem.localOnly) {
                     showToast(tr(
-                        'تنبيه: حُفظ محلياً على هذا الجهاز فقط ولم يُرفع لقاعدة البيانات (' + (insertedItem.cloudError || 'تحقق من صلاحيات RLS') + ')',
-                        'Attention : enregistré localement uniquement (' + (insertedItem.cloudError || 'vérifiez RLS') + ')',
-                        'Warning: saved locally on this device only (' + (insertedItem.cloudError || 'check RLS policy') + ')'
+                        'تنبيه: حُفظ محلياً على هذا الجهاز فقط ولم يُنشر للجميع (' + (insertedItem.cloudError || 'تحقق من سياسات RLS في Supabase') + ')',
+                        'Attention : enregistré localement uniquement (' + (insertedItem.cloudError || 'vérifiez RLS Supabase') + ')',
+                        'Warning: saved locally only (' + (insertedItem.cloudError || 'check Supabase RLS') + ')'
                     ));
+                } else if (storageUploadError && selectedUploadFile) {
+                    showToast(tr(
+                        'نُشر النص للجميع، لكن تعذّر رفع الملف للسحابة (' + storageUploadError + ') — فعّل سياسات Storage في Supabase',
+                        'Texte publié, mais échec d’envoi du fichier (' + storageUploadError + ')',
+                        'Entry published, but file upload failed (' + storageUploadError + ')'
+                    ));
+                } else if (fileNotStored) {
+                    showToast(tr('تعذّر حفظ الملف (حجمه كبير والرفع السحابي غير متاح) — نُشر الوصف فقط', 'Fichier non enregistré (trop volumineux, envoi cloud indisponible) — description publiée seule', 'File not stored (too large, cloud upload unavailable) — description published only'));
                 } else {
-                    showToast(tr('تم نشر الملف والإسهام بنجاح في السحابة', 'Fichier et contribution publiés dans le cloud', 'File and entry published to cloud'));
+                    showToast(tr('تم نشر الملف والإسهام بنجاح للجميع', 'Fichier et contribution publiés pour tous', 'File and entry published for everyone'));
                 }
             } catch (err) {
                 console.error(err);
@@ -2742,7 +2800,7 @@
             el.className = 'bg-editorial-ink text-editorial-sheet text-xs px-4 py-2.5 rounded-[4px] border border-editorial-brass shadow-md modal-panel';
             el.textContent = msg;
             container.appendChild(el);
-            setTimeout(() => el.remove(), 2800);
+            setTimeout(() => el.remove(), 5500);
         }
 
         function escapeHTML(str) {
