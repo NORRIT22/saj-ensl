@@ -338,7 +338,7 @@
         </div>
     </main>
 
-    <!-- 4. نافذة تسجيل الدخول وإنشاء الحساب -->
+    <!-- 4. نافذة تسجيل الدخول السريع (Google / Apple) -->
     <div id="auth-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-stone-950/75 p-3 sm:p-6" onclick="if(event.target === this) closeAuthModal()">
         <div class="min-h-screen flex items-center justify-center" onclick="if(event.target === this) closeAuthModal()">
             <div class="bg-editorial-sheet w-full max-w-md border border-editorial-rule shadow-2xl my-4 rounded-[4px] modal-panel">
@@ -355,61 +355,95 @@
                     </button>
                 </div>
 
-                <!-- التبديل بين تسجيل الدخول وإنشاء حساب -->
-                <div class="grid grid-cols-2 border-b border-editorial-rule bg-editorial-paper/50 text-xs font-bold">
-                    <button type="button" id="auth-tab-login" onclick="switchAuthMode('login')" data-i18n="auth_tab_login" class="py-2.5 border-b-2 border-editorial-burgundy text-editorial-burgundy cursor-pointer">
-                        تسجيل الدخول
+                <div class="p-6 space-y-3.5">
+                    <p data-i18n="auth_one_click_desc" class="text-xs text-editorial-muted leading-relaxed text-center pb-1">
+                        سجّل دخولك بنقرة واحدة عبر حسابك لحفظ إسهاماتك وملء بياناتك تلقائياً عند النشر.
+                    </p>
+
+                    <!-- زر تسجيل الدخول بحساب Google -->
+                    <button type="button" id="btn-oauth-google" onclick="signInWithOAuthProvider('google')" class="w-full py-2.5 px-4 rounded-[4px] border border-editorial-rule bg-editorial-paper hover:border-editorial-burgundy hover:bg-editorial-stone/60 text-editorial-ink font-bold text-sm flex items-center justify-center gap-3 transition-colors cursor-pointer">
+                        <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill="#4285F4" d="M23.49 12.275c0-.85-.075-1.675-.215-2.475H12v4.69h6.45c-.28 1.49-1.125 2.75-2.395 3.6v2.99h3.875c2.265-2.085 3.56-5.16 3.56-8.805z"/>
+                            <path fill="#34A853" d="M12 24c3.24 0 5.955-1.075 7.94-2.91l-3.875-2.99c-1.075.72-2.45 1.15-4.065 1.15-3.125 0-5.77-2.11-6.715-4.945H1.28v3.085C3.255 21.31 7.31 24 12 24z"/>
+                            <path fill="#FBBC05" d="M5.285 14.305c-.24-.72-.38-1.49-.38-2.305s.14-1.585.38-2.305V6.61H1.28C.465 8.235 0 10.065 0 12s.465 3.765 1.28 5.39l4.005-3.085z"/>
+                            <path fill="#EA4335" d="M12 4.75c1.76 0 3.34.605 4.585 1.795l3.435-3.435C17.95 1.19 15.235 0 12 0 7.31 0 3.255 2.69 1.28 6.61l4.005 3.085C6.23 6.86 8.875 4.75 12 4.75z"/>
+                        </svg>
+                        <span data-i18n="auth_btn_google">المتابعة باستخدام Google</span>
                     </button>
-                    <button type="button" id="auth-tab-register" onclick="switchAuthMode('register')" data-i18n="auth_tab_register" class="py-2.5 border-b-2 border-transparent text-editorial-muted hover:text-editorial-ink cursor-pointer">
-                        إنشاء حساب جديد
+
+                    <!-- زر تسجيل الدخول بحساب Apple -->
+                    <button type="button" id="btn-oauth-apple" onclick="signInWithOAuthProvider('apple')" class="w-full py-2.5 px-4 rounded-[4px] bg-editorial-ink hover:opacity-90 text-editorial-sheet font-bold text-sm flex items-center justify-center gap-3 transition-opacity cursor-pointer">
+                        <svg class="w-5 h-5 shrink-0 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                        </svg>
+                        <span data-i18n="auth_btn_apple">المتابعة باستخدام Apple</span>
                     </button>
+
+                    <!-- فاصل وخيار البريد الإلكتروني البديل عند الحاجة -->
+                    <div class="pt-2">
+                        <button type="button" onclick="toggleEmailAuthPanel()" class="w-full flex items-center justify-center gap-2 text-[11px] text-editorial-muted hover:text-editorial-burgundy py-1.5 cursor-pointer">
+                            <span class="h-px flex-1 bg-editorial-rule"></span>
+                            <span data-i18n="auth_email_fallback_toggle">أو الدخول بالبريد الإلكتروني</span>
+                            <span class="h-px flex-1 bg-editorial-rule"></span>
+                        </button>
+                    </div>
+
+                    <div id="email-auth-panel" class="hidden pt-1 border-t border-editorial-rule/60">
+                        <div class="grid grid-cols-2 border-b border-editorial-rule bg-editorial-paper/50 text-xs font-bold mb-3">
+                            <button type="button" id="auth-tab-login" onclick="switchAuthMode('login')" data-i18n="auth_tab_login" class="py-2 border-b-2 border-editorial-burgundy text-editorial-burgundy cursor-pointer">
+                                تسجيل الدخول
+                            </button>
+                            <button type="button" id="auth-tab-register" onclick="switchAuthMode('register')" data-i18n="auth_tab_register" class="py-2 border-b-2 border-transparent text-editorial-muted hover:text-editorial-ink cursor-pointer">
+                                إنشاء حساب جديد
+                            </button>
+                        </div>
+
+                        <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="space-y-3">
+                            <div id="auth-register-fields" class="hidden space-y-3">
+                                <div>
+                                    <label data-i18n="auth_lbl_name" class="block text-xs font-bold text-editorial-ink mb-1">الاسم واللقب الكامل *</label>
+                                    <input type="text" id="auth-name" placeholder="الاسم واللقب" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3 py-1.5 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    <div>
+                                        <label data-i18n="lbl_dept" class="block text-xs font-bold text-editorial-ink mb-1">القسم *</label>
+                                        <select id="auth-dept" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-2.5 py-1.5 text-xs text-editorial-ink focus:outline-none focus:border-editorial-burgundy"></select>
+                                    </div>
+                                    <div>
+                                        <label data-i18n="lbl_year" class="block text-xs font-bold text-editorial-ink mb-1">المستوى الجامعي *</label>
+                                        <select id="auth-year" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-2.5 py-1.5 text-xs text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
+                                            <option value="السنة الأولى">السنة الأولى / 1ère Année</option>
+                                            <option value="السنة الثانية">السنة الثانية / 2ème Année</option>
+                                            <option value="السنة الثالثة">السنة الثالثة / 3ème Année</option>
+                                            <option value="السنة الرابعة">السنة الرابعة / 4ème Année</option>
+                                            <option value="السنة الخامسة">السنة الخامسة / 5ème Année</option>
+                                            <option value="السنة السادسة">السنة السادسة / 6ème Année</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label data-i18n="auth_lbl_email" class="block text-xs font-bold text-editorial-ink mb-1">البريد الإلكتروني *</label>
+                                <input type="email" id="auth-email" required placeholder="student@ens-lagh.dz" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3 py-1.5 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy" dir="ltr">
+                            </div>
+
+                            <div>
+                                <label data-i18n="auth_lbl_password" class="block text-xs font-bold text-editorial-ink mb-1">كلمة المرور *</label>
+                                <input type="password" id="auth-password" required minlength="6" placeholder="••••••••" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3 py-1.5 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy" dir="ltr">
+                            </div>
+
+                            <div class="pt-2 flex items-center justify-end gap-3">
+                                <button type="button" onclick="closeAuthModal()" data-i18n="cancel_btn" class="px-3 py-1.5 text-xs font-semibold text-editorial-muted hover:text-editorial-ink cursor-pointer">
+                                    إلغاء
+                                </button>
+                                <button type="submit" id="auth-submit-btn" data-i18n="auth_btn_login" class="px-4 py-1.5 rounded-[3px] text-xs font-bold bg-editorial-burgundy hover:opacity-90 text-white transition-opacity cursor-pointer">
+                                    دخول
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-
-                <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="p-6 space-y-4">
-                    <div id="auth-register-fields" class="hidden space-y-4">
-                        <div>
-                            <label data-i18n="auth_lbl_name" class="block text-xs font-bold text-editorial-ink mb-1">الاسم واللقب الكامل *</label>
-                            <input type="text" id="auth-name" placeholder="الاسم واللقب" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                                <label data-i18n="lbl_dept" class="block text-xs font-bold text-editorial-ink mb-1">القسم *</label>
-                                <select id="auth-dept" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3 py-2 text-xs text-editorial-ink focus:outline-none focus:border-editorial-burgundy"></select>
-                            </div>
-                            <div>
-                                <label data-i18n="lbl_year" class="block text-xs font-bold text-editorial-ink mb-1">المستوى الجامعي *</label>
-                                <select id="auth-year" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3 py-2 text-xs text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
-                                    <option value="السنة الأولى">السنة الأولى / 1ère Année</option>
-                                    <option value="السنة الثانية">السنة الثانية / 2ème Année</option>
-                                    <option value="السنة الثالثة">السنة الثالثة / 3ème Année</option>
-                                    <option value="السنة الرابعة">السنة الرابعة / 4ème Année</option>
-                                    <option value="السنة الخامسة">السنة الخامسة / 5ème Année</option>
-                                    <option value="السنة السادسة">السنة السادسة / 6ème Année</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label data-i18n="auth_lbl_email" class="block text-xs font-bold text-editorial-ink mb-1">البريد الإلكتروني *</label>
-                        <input type="email" id="auth-email" required placeholder="student@ens-lagh.dz" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy" dir="ltr">
-                    </div>
-
-                    <div>
-                        <label data-i18n="auth_lbl_password" class="block text-xs font-bold text-editorial-ink mb-1">كلمة المرور *</label>
-                        <input type="password" id="auth-password" required minlength="6" placeholder="••••••••" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy" dir="ltr">
-                    </div>
-
-                    <div class="pt-2 flex items-center justify-end gap-3 border-t border-editorial-rule">
-                        <button type="button" onclick="closeAuthModal()" data-i18n="cancel_btn" class="px-4 py-2 text-xs font-semibold text-editorial-muted hover:text-editorial-ink cursor-pointer">
-                            إلغاء
-                        </button>
-                        <button type="submit" id="auth-submit-btn" data-i18n="auth_btn_login" class="px-5 py-2 rounded-[3px] text-xs font-bold bg-editorial-burgundy hover:opacity-90 text-white transition-opacity cursor-pointer">
-                            دخول
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
@@ -843,6 +877,10 @@
                 all_depts_opt: "جميع الأقسام",
                 read_paper: "فتح الإسهام",
                 auth_login_title: "تسجيل الدخول إلى ساج",
+                auth_one_click_desc: "سجّل دخولك بنقرة واحدة عبر حسابك لحفظ إسهاماتك وملء بياناتك تلقائياً عند النشر.",
+                auth_btn_google: "المتابعة باستخدام Google",
+                auth_btn_apple: "المتابعة باستخدام Apple",
+                auth_email_fallback_toggle: "أو الدخول بالبريد الإلكتروني",
                 auth_register_title: "إنشاء حساب طالب جديد",
                 auth_subtitle: "بوابة طلبة المدرسة العليا للأساتذة بالأغواط",
                 auth_tab_login: "تسجيل الدخول",
@@ -912,6 +950,10 @@
                 all_depts_opt: "Tous les départements",
                 read_paper: "Ouvrir",
                 auth_login_title: "Connexion à SAJ",
+                auth_one_click_desc: "Connectez-vous en un clic avec votre compte pour enregistrer vos contributions et préremplir vos informations.",
+                auth_btn_google: "Continuer avec Google",
+                auth_btn_apple: "Continuer avec Apple",
+                auth_email_fallback_toggle: "Ou continuer par e-mail",
                 auth_register_title: "Créer un compte étudiant",
                 auth_subtitle: "Portail des étudiants de l'ENS Laghouat",
                 auth_tab_login: "Connexion",
@@ -981,6 +1023,10 @@
                 all_depts_opt: "All Departments",
                 read_paper: "Open Entry",
                 auth_login_title: "Sign in to SAJ",
+                auth_one_click_desc: "Sign in with one click using your account to save your contributions and auto-fill your details.",
+                auth_btn_google: "Continue with Google",
+                auth_btn_apple: "Continue with Apple",
+                auth_email_fallback_toggle: "Or continue with email",
                 auth_register_title: "Create Student Account",
                 auth_subtitle: "ENS Laghouat Student Portal",
                 auth_tab_login: "Sign In",
@@ -1200,25 +1246,101 @@
             });
         }
 
-        /* إدارة تسجيل الدخول والحساب */
+        /* إدارة تسجيل الدخول والحساب (Google / Apple OAuth + البريد الإلكتروني) */
+        function applySupabaseUser(user) {
+            if (!user) return;
+            const meta = user.user_metadata || {};
+            const appMeta = user.app_metadata || {};
+            const displayName = meta.full_name || meta.name || [meta.given_name, meta.family_name].filter(Boolean).join(' ') || (user.email || '').split('@')[0] || 'user';
+            currentUser = {
+                id: user.id,
+                email: user.email || '',
+                name: displayName,
+                avatar: meta.avatar_url || meta.picture || '',
+                provider: appMeta.provider || 'email',
+                department: meta.department || departmentsList[0].id,
+                year: meta.year || 'السنة الثانية'
+            };
+            safeStorageSet('saj_ensl_user', JSON.stringify(currentUser));
+            renderAuthNav();
+        }
+
+        function toggleEmailAuthPanel() {
+            const panel = document.getElementById('email-auth-panel');
+            if (panel) panel.classList.toggle('hidden');
+        }
+
+        async function signInWithOAuthProvider(provider) {
+            if (!(supabaseClient && supabaseClient.auth)) {
+                showToast(tr('خدمة المصادقة السحابية غير متاحة حالياً', 'Service d’authentification indisponible', 'Authentication service unavailable'));
+                return;
+            }
+            const btn = document.getElementById(provider === 'google' ? 'btn-oauth-google' : 'btn-oauth-apple');
+            if (btn) btn.disabled = true;
+
+            try {
+                // عنوان العودة النظيف بدون معاملات OAuth قديمة
+                const redirectUrl = window.location.origin + window.location.pathname;
+                const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                    provider,
+                    options: {
+                        redirectTo: redirectUrl,
+                        queryParams: provider === 'google' ? { prompt: 'select_account' } : undefined
+                    }
+                });
+                if (error) {
+                    if (btn) btn.disabled = false;
+                    const msg = (error.message || '').toLowerCase();
+                    if (msg.includes('provider is not enabled') || msg.includes('unsupported provider')) {
+                        showToast(tr(
+                            `مزوّد ${provider === 'google' ? 'Google' : 'Apple'} غير مفعّل بعد في إعدادات Supabase`,
+                            `Le fournisseur ${provider === 'google' ? 'Google' : 'Apple'} n’est pas activé dans Supabase`,
+                            `${provider === 'google' ? 'Google' : 'Apple'} provider is not enabled in Supabase`
+                        ));
+                    } else {
+                        showToast(tr('تعذّر بدء تسجيل الدخول، حاول مجدداً', 'Échec de la connexion, réessayez', 'Could not start sign-in, try again'));
+                    }
+                    return;
+                }
+                if (data && data.url) {
+                    window.location.assign(data.url);
+                }
+            } catch (err) {
+                if (btn) btn.disabled = false;
+                showToast(tr('تعذّر الاتصال بخدمة المصادقة', 'Erreur de connexion au service', 'Could not reach authentication service'));
+            }
+        }
+
         async function restoreUserSession() {
             let cloudChecked = false;
             if (supabaseClient && supabaseClient.auth) {
+                // الاستماع الفوري لعودة المستخدم من Google أو Apple OAuth
+                supabaseClient.auth.onAuthStateChange((event, session) => {
+                    if (session && session.user) {
+                        const wasSignedOut = !currentUser;
+                        applySupabaseUser(session.user);
+                        if (event === 'SIGNED_IN' && wasSignedOut) {
+                            closeAuthModal();
+                            showToast(tr('تم تسجيل الدخول بنجاح', 'Connecté avec succès', 'Signed in successfully'));
+                        }
+                    } else if (event === 'SIGNED_OUT') {
+                        currentUser = null;
+                        safeStorageRemove('saj_ensl_user');
+                        renderAuthNav();
+                    }
+                });
+
                 try {
                     const { data } = await supabaseClient.auth.getSession();
                     cloudChecked = true;
                     const user = data && data.session && data.session.user;
                     if (user) {
-                        const meta = user.user_metadata || {};
-                        currentUser = {
-                            id: user.id,
-                            email: user.email,
-                            name: meta.full_name || (user.email || '').split('@')[0] || 'user',
-                            department: meta.department || departmentsList[0].id,
-                            year: meta.year || 'السنة الثانية'
-                        };
-                        safeStorageSet('saj_ensl_user', JSON.stringify(currentUser));
-                        renderAuthNav();
+                        applySupabaseUser(user);
+                        // تنظيف معاملات OAuth من شريط العنوان إن وجدت
+                        if (window.location.hash.includes('access_token=') || window.location.search.includes('code=')) {
+                            const cleanUrl = window.location.origin + window.location.pathname;
+                            window.history.replaceState({}, document.title, cleanUrl);
+                        }
                         return;
                     }
                 } catch (e) {}
@@ -1228,7 +1350,6 @@
                 try {
                     const parsed = JSON.parse(savedUser);
                     const isLocalProfile = parsed && String(parsed.id || '').startsWith('local_');
-                    // حساب سحابي بلا جلسة سحابية فعلية = بيانات قديمة تُهمَل
                     if (parsed && (isLocalProfile || !cloudChecked)) {
                         currentUser = parsed;
                     } else {
@@ -1245,9 +1366,12 @@
             if (currentUser) {
                 const firstName = escapeHTML((currentUser.name || '').split(' ')[0]);
                 const logoutText = translations[currentLang].auth_logout;
+                const avatarHtml = isSafeUrl(currentUser.avatar)
+                    ? `<img src="${escapeHTML(currentUser.avatar)}" alt="" referrerpolicy="no-referrer" class="w-4 h-4 rounded-full object-cover shrink-0">`
+                    : `<i data-lucide="user-check" class="w-3.5 h-3.5 text-editorial-burgundy"></i>`;
                 slot.innerHTML = `
                     <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] border border-editorial-rule bg-editorial-paper text-editorial-ink">
-                        <i data-lucide="user-check" class="w-3.5 h-3.5 text-editorial-burgundy"></i>
+                        ${avatarHtml}
                         <span class="font-semibold max-w-[90px] truncate">${firstName}</span>
                         <button onclick="logoutUser()" class="text-editorial-muted hover:text-editorial-burgundy ms-1 underline cursor-pointer">${escapeHTML(logoutText)}</button>
                     </div>
