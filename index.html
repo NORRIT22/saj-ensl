@@ -47,6 +47,571 @@
                 }
             }
         }
+
+        /* =========================================================================
+           SAJ AI ACADEMIC INDEX — اكتشاف المصادر المفتوحة، التحقق من التراخيص،
+           التصنيف والتلخيص الذكي (مع تمييز واضح للمخرجات الآلية)، والمراجعة
+           ========================================================================= */
+        const ACADEMIC_STORAGE_KEY = 'saj_ensl_academic_index_v1';
+        const ACADEMIC_SOURCES_KEY = 'saj_ensl_academic_sources_v1';
+
+        const ACADEMIC_SOURCE_CONFIGS = [
+            { id: 'OpenAlex', name: 'OpenAlex', desc: 'بيانات وصفية أكاديمية، DOI، استشهادات، وروابط وصول مفتوح', enabled: true, lastSync: null, lastStatus: 'جاهز' },
+            { id: 'DOAJ', name: 'DOAJ', desc: 'مجلات ومقالات وصول مفتوح محكّمة مع فحص التراخيص', enabled: true, lastSync: null, lastStatus: 'جاهز' },
+            { id: 'arXiv', name: 'arXiv', desc: 'أبحاث ما قبل النشر (Preprints) في الرياضيات والفيزياء والحوسبة', enabled: true, lastSync: null, lastStatus: 'جاهز' },
+            { id: 'Zenodo', name: 'Zenodo', desc: 'موارد بحثية وملفات وبيانات مفتوحة مع حالة ترخيص صريحة', enabled: true, lastSync: null, lastStatus: 'جاهز' },
+            { id: 'HAL', name: 'HAL', desc: 'مستودع علمي مفتوح (مفعّل عند الضبط التدريجي للمزامنة)', enabled: false, lastSync: null, lastStatus: 'معطّل افتراضياً' },
+            { id: 'CORE', name: 'CORE', desc: 'مستودعات الوصول المفتوح (يتطلب مفتاح API عند التفعيل)', enabled: false, lastSync: null, lastStatus: 'بانتظار المفتاح' }
+        ];
+
+        let academicSourcesState = [];
+        let academicEntries = [];
+        let currentAcademicTrack = 'all';
+        let expandedAcademicId = null;
+
+        function loadAcademicState() {
+            try {
+                const rawSrc = JSON.parse(safeStorageGet(ACADEMIC_SOURCES_KEY) || 'null');
+                if (Array.isArray(rawSrc) && rawSrc.length > 0) {
+                    academicSourcesState = ACADEMIC_SOURCE_CONFIGS.map(def => {
+                        const saved = rawSrc.find(s => s.id === def.id);
+                        return saved ? { ...def, enabled: Boolean(saved.enabled), lastSync: saved.lastSync || null, lastStatus: saved.lastStatus || def.lastStatus } : { ...def };
+                    });
+                } else {
+                    academicSourcesState = ACADEMIC_SOURCE_CONFIGS.map(d => ({ ...d }));
+                }
+            } catch (e) {
+                academicSourcesState = ACADEMIC_SOURCE_CONFIGS.map(d => ({ ...d }));
+            }
+
+            try {
+                const rawItems = JSON.parse(safeStorageGet(ACADEMIC_STORAGE_KEY) || 'null');
+                if (Array.isArray(rawItems)) {
+                    academicEntries = rawItems;
+                } else {
+                    academicEntries = [];
+                }
+            } catch (e) {
+                academicEntries = [];
+            }
+
+            mergeOriginalStudentEntriesToAcademic();
+            refreshAcademicBadges();
+        }
+
+        function saveAcademicState() {
+            safeStorageSet(ACADEMIC_SOURCES_KEY, JSON.stringify(academicSourcesState));
+            safeStorageSet(ACADEMIC_STORAGE_KEY, JSON.stringify(academicEntries));
+            refreshAcademicBadges();
+        }
+
+        /* تقييم الترخيص وتحديد المسار القانوني (Open Library vs Discovery) */
+        function evaluateLicensePolicy(rawLicense, allowHostingFlag = false) {
+            const norm = String(rawLicense || '').trim().toLowerCase();
+            if (!norm) {
+                return {
+                    licenseCode: 'Unknown / غير محدد',
+                    track: 'discovery',
+                    badgeText: 'الترخيص قيد التحقق — لا توجد نسخة مستضافة',
+                    canHostCopy: false,
+                    needsReview: true,
+                    verifiedAt: new Date().toISOString().slice(0, 10)
+                };
+            }
+            if (norm.includes('cc0') || norm.includes('public domain') || norm.includes('pd')) {
+                return {
+                    licenseCode: norm.includes('public') ? 'Public Domain' : 'CC0 1.0',
+                    track: 'open_library',
+                    badgeText: 'مستضاف في ساج وفق الترخيص',
+                    canHostCopy: true,
+                    needsReview: false,
+                    verifiedAt: new Date().toISOString().slice(0, 10)
+                };
+            }
+            if (norm.includes('cc-by') || norm.includes('cc by')) {
+                const isNd = norm.includes('-nd') || norm.includes('nd');
+                const isNc = norm.includes('-nc') || norm.includes('nc');
+                const label = norm.includes('-sa') ? 'CC BY-SA' : (isNd ? 'CC BY-ND' : (isNc ? 'CC BY-NC' : 'CC BY'));
+                return {
+                    licenseCode: label,
+                    track: isNd ? 'discovery' : 'open_library',
+                    badgeText: isNd ? 'فهرس خارجي — اقرأ في المصدر الأصلي' : 'مستضاف في ساج وفق الترخيص',
+                    canHostCopy: Boolean(allowHostingFlag && !isNd),
+                    needsReview: isNc || isNd,
+                    verifiedAt: new Date().toISOString().slice(0, 10)
+                };
+            }
+            return {
+                licenseCode: rawLicense,
+                track: 'discovery',
+                badgeText: 'فهرس خارجي — اقرأ في المصدر الأصلي',
+                canHostCopy: false,
+                needsReview: true,
+                verifiedAt: new Date().toISOString().slice(0, 10)
+            };
+        }
+
+        /* تصنيف وتلخيص آلي شفاف مع درجة ثقة وتنبيه واضح */
+        function runAiClassificationAndSummary(record) {
+            const text = `${record.title || ''} ${record.abstract || ''} ${record.department || ''}`.toLowerCase();
+            let suggestedDept = record.department || 'قسم اللغة العربية';
+            let subSpecialty = 'دراسات عامة';
+            let confidence = 0.62;
+
+            if (/french|français|linguistique|didactique|littérature|FLE/i.test(text) || record.department === 'قسم اللغة الفرنسية') {
+                suggestedDept = 'قسم اللغة الفرنسية';
+                subSpecialty = /didactique|fle/i.test(text) ? 'Didactique du FLE' : 'Linguistique & Littérature';
+                confidence = 0.84;
+            } else if (/arabic|عربي|نحو|بلاغة|أدب|لسانيات/i.test(text) || record.department === 'قسم اللغة العربية') {
+                suggestedDept = 'قسم اللغة العربية';
+                subSpecialty = 'اللسانيات والدراسات الأدبية';
+                confidence = 0.82;
+            } else if (/math|algebra|calculus|رياضيات|تحليل/i.test(text) || record.department === 'قسم الرياضيات') {
+                suggestedDept = 'قسم الرياضيات';
+                subSpecialty = 'الرياضيات التطبيقية والنظرية';
+                confidence = 0.85;
+            } else if (/physics|quantum|فيزياء|ميكانيك/i.test(text) || record.department === 'قسم الفيزياء') {
+                suggestedDept = 'قسم الفيزياء';
+                subSpecialty = 'الفيزياء النظرية والتجريبية';
+                confidence = 0.83;
+            } else if (/education|pedagogy|psychology|تربية|بيداغوجيا|نفس/i.test(text)) {
+                suggestedDept = 'علوم التربية';
+                subSpecialty = 'البيداغوجيا وعلم النفس التربوي';
+                confidence = 0.79;
+            } else {
+                confidence = 0.58;
+            }
+
+            const cleanAbstract = (record.abstract || record.title || '').trim();
+            const sentences = cleanAbstract.split(/[.،؛
+]+/).map(s => s.trim()).filter(Boolean);
+            const aiSummaryAr = sentences.slice(0, 2).join(' — ') || record.title;
+            const keywords = cleanAbstract
+                .replace(/[^\p{L}\p{N}\s-]/gu, ' ')
+                .split(/\s+/)
+                .filter(w => w.length >= 4)
+                .slice(0, 5);
+
+            return {
+                aiSuggestedDept: suggestedDept,
+                aiSubSpecialty: subSpecialty,
+                aiConfidence: confidence,
+                aiLowConfidence: confidence < 0.72,
+                aiSummaryAr,
+                aiDisclaimer: 'ملخص وتصنيف مولّدان آلياً، وقد يحتويان على أخطاء؛ راجع المصدر الأصلي.',
+                aiKeywords: keywords.length ? keywords : ['بحث أكاديمي', 'وصول مفتوح']
+            };
+        }
+
+        function mergeOriginalStudentEntriesToAcademic() {
+            if (!Array.isArray(publications)) return;
+            let changed = false;
+            publications.forEach(pub => {
+                const key = `saj_orig_${pub.id}`;
+                const exists = academicEntries.some(e => e.dedupKey === key || Number(e.sourcePubId) === Number(pub.id));
+                if (!exists) {
+                    const ai = runAiClassificationAndSummary(pub);
+                    academicEntries.push({
+                        id: `orig_${pub.id}`,
+                        sourcePubId: pub.id,
+                        dedupKey: key,
+                        source: 'SAJ Original',
+                        track: 'saj_original',
+                        title: pub.title,
+                        authors: [pub.author || 'طالب باحث'],
+                        abstract: pub.abstract || '',
+                        doi: '',
+                        url: '',
+                        fullTextUrl: isSafeUrl(pub.file_url) ? pub.file_url : '',
+                        publishedDate: pub.date || '',
+                        language: /^[a-zA-Z\s]+$/.test(pub.title || '') ? 'en' : 'ar',
+                        contentType: pub.type || 'بحث',
+                        department: pub.department || 'قسم اللغة العربية',
+                        citations: 0,
+                        isPreprint: false,
+                        licenseCode: 'إسهام طلابي — SAJ Original',
+                        licenseBadge: 'مستضاف في ساج وفق الترخيص',
+                        canHostCopy: Boolean(isSafeUrl(pub.file_url)),
+                        needsReview: false,
+                        ai
+                    });
+                    changed = true;
+                }
+            });
+            if (changed) saveAcademicState();
+        }
+
+        function refreshAcademicBadges() {
+            const badge = document.getElementById('academic-items-badge');
+            const allC = document.getElementById('acad-count-all');
+            const openC = document.getElementById('acad-count-open');
+            const discC = document.getElementById('acad-count-discovery');
+            const revC = document.getElementById('acad-review-count');
+
+            const openItems = academicEntries.filter(e => e.track === 'open_library');
+            const discItems = academicEntries.filter(e => e.track === 'discovery');
+            const reviewItems = academicEntries.filter(e => e.needsReview || (e.ai && e.ai.aiLowConfidence));
+
+            if (badge) badge.textContent = String(academicEntries.length);
+            if (allC) allC.textContent = String(academicEntries.length);
+            if (openC) openC.textContent = String(openItems.length);
+            if (discC) discC.textContent = String(discItems.length);
+            if (revC) revC.textContent = String(reviewItems.length);
+        }
+
+        /* مزامنة رسمية تدريجية عبر OpenAlex API مع معالجة آمنة للأخطاء */
+        async function syncOpenAcademicSources(showFeedback = false) {
+            const btn = document.getElementById('btn-sync-academic');
+            const banner = document.getElementById('academic-status-banner');
+            if (btn) btn.disabled = true;
+            if (banner) {
+                banner.classList.remove('hidden');
+                banner.innerHTML = `<span>جاري مزامنة المصادر الأكاديمية المفعّلة (OpenAlex)...</span><span class="font-mono">SYNCING</span>`;
+            }
+
+            const openAlexEnabled = academicSourcesState.some(s => s.id === 'OpenAlex' && s.enabled);
+            let addedCount = 0;
+
+            if (openAlexEnabled) {
+                try {
+                    const controller = new AbortController();
+                    const timer = setTimeout(() => controller.abort(), 7000);
+                    const queryUrl = 'https://api.openalex.org/works?search=pedagogy+OR+linguistics+OR+mathematics&per-page=8&sort=publication_date:desc';
+                    const resp = await fetch(queryUrl, { signal: controller.signal });
+                    clearTimeout(timer);
+
+                    if (resp.ok) {
+                        const json = await resp.json();
+                        const works = Array.isArray(json.results) ? json.results : [];
+                        works.forEach(w => {
+                            const doi = (w.doi || '').trim();
+                            const idVal = (w.id || '').trim();
+                            const dedupKey = doi || idVal || (w.title || '').toLowerCase().slice(0, 80);
+                            if (!dedupKey || academicEntries.some(e => e.dedupKey === dedupKey)) return;
+
+                            const rawLicense = (w.best_oa_location && w.best_oa_location.license) || (w.primary_location && w.primary_location.license) || '';
+                            const policy = evaluateLicensePolicy(rawLicense, false);
+                            const authors = Array.isArray(w.authorships)
+                                ? w.authorships.slice(0, 4).map(a => (a.author && a.author.display_name) || '').filter(Boolean)
+                                : [];
+
+                            // إعادة بناء الملخص من inverted_index إن وُجد دون اختلاق حقول
+                            let abstractText = '';
+                            if (w.abstract_inverted_index && typeof w.abstract_inverted_index === 'object') {
+                                const pairs = [];
+                                Object.entries(w.abstract_inverted_index).forEach(([word, positions]) => {
+                                    if (Array.isArray(positions)) {
+                                        positions.forEach(pos => pairs.push([pos, word]));
+                                    }
+                                });
+                                pairs.sort((a, b) => a[0] - b[0]);
+                                abstractText = pairs.map(p => p[1]).join(' ').slice(0, 600);
+                            }
+
+                            const item = {
+                                id: `oa_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+                                dedupKey,
+                                source: 'OpenAlex',
+                                track: policy.track,
+                                title: w.title || 'بدون عنوان',
+                                authors: authors.length ? authors : ['مؤلف غير مذكور'],
+                                abstract: abstractText || 'الملخص غير متاح في السجل المستورد؛ راجع المصدر الأصلي.',
+                                doi,
+                                url: (w.primary_location && w.primary_location.landing_page_url) || w.id || '',
+                                fullTextUrl: policy.canHostCopy ? ((w.best_oa_location && w.best_oa_location.pdf_url) || '') : '',
+                                publishedDate: w.publication_date || '',
+                                language: w.language || 'other',
+                                contentType: w.type || 'article',
+                                department: 'قسم اللغة الفرنسية',
+                                citations: Number(w.cited_by_count) || 0,
+                                isPreprint: w.type === 'preprint',
+                                licenseCode: policy.licenseCode,
+                                licenseBadge: policy.badgeText,
+                                canHostCopy: policy.canHostCopy,
+                                needsReview: policy.needsReview,
+                                ai: null
+                            };
+                            item.ai = runAiClassificationAndSummary(item);
+                            academicEntries.unshift(item);
+                            addedCount++;
+                        });
+
+                        const oaSrc = academicSourcesState.find(s => s.id === 'OpenAlex');
+                        if (oaSrc) {
+                            oaSrc.lastSync = new Date().toLocaleTimeString('ar-DZ', { hour: '2-digit', minute: '2-digit' });
+                            oaSrc.lastStatus = `ناجح (+${addedCount})`;
+                        }
+                    }
+                } catch (err) {
+                    const oaSrc = academicSourcesState.find(s => s.id === 'OpenAlex');
+                    if (oaSrc) oaSrc.lastStatus = 'تعذّر الاتصال مؤقتاً';
+                }
+            }
+
+            mergeOriginalStudentEntriesToAcademic();
+            saveAcademicState();
+
+            const lastSyncEl = document.getElementById('acad-last-sync-label');
+            if (lastSyncEl) lastSyncEl.textContent = `آخر مزامنة: ${new Date().toLocaleTimeString('ar-DZ', { hour: '2-digit', minute: '2-digit' })}`;
+
+            if (banner) {
+                if (addedCount > 0) {
+                    banner.innerHTML = `<span class="text-emerald-700 dark:text-emerald-400 font-semibold">تمت مزامنة OpenAlex وإضافة ${addedCount} سجل جديد بعد فحص الترخيص والتصنيف الآلي.</span><button type="button" onclick="this.parentElement.classList.add('hidden')" class="underline cursor-pointer">إخفاء</button>`;
+                } else {
+                    banner.innerHTML = `<span>الفهرس الأكاديمي محدّث (${academicEntries.length} مادة مفهرسة).</span><button type="button" onclick="this.parentElement.classList.add('hidden')" class="underline cursor-pointer">إخفاء</button>`;
+                }
+            }
+
+            if (btn) btn.disabled = false;
+            renderAcademicSourcesAdmin();
+            renderAcademicIndex();
+            if (showFeedback) {
+                showToast(addedCount > 0 ? `تمت إضافة ${addedCount} مادة أكاديمية جديدة` : 'تم تحديث الفهرس الأكاديمي');
+            }
+        }
+
+        function setAcademicTrackFilter(track) {
+            currentAcademicTrack = track;
+            document.querySelectorAll('.acad-track-card').forEach(el => {
+                const active = el.id === `acad-track-${track}`;
+                el.classList.toggle('border-editorial-burgundy', active);
+                el.classList.toggle('border-editorial-rule', !active);
+            });
+            renderAcademicIndex();
+        }
+
+        function toggleAcademicAdminPanel() {
+            const panel = document.getElementById('academic-admin-panel');
+            if (!panel) return;
+            panel.classList.toggle('hidden');
+            renderAcademicSourcesAdmin();
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function toggleAcademicSource(sourceId) {
+            const src = academicSourcesState.find(s => s.id === sourceId);
+            if (!src) return;
+            src.enabled = !src.enabled;
+            src.lastStatus = src.enabled ? 'مفعّل' : 'معطّل';
+            saveAcademicState();
+            renderAcademicSourcesAdmin();
+        }
+
+        function runAiHeuristicPassOnAcademic() {
+            academicEntries.forEach(item => {
+                item.ai = runAiClassificationAndSummary(item);
+            });
+            saveAcademicState();
+            renderAcademicSourcesAdmin();
+            renderAcademicIndex();
+            showToast('تم تحديث التصنيف والملخصات الآلية مع إبقاء التنبيه');
+        }
+
+        function renderAcademicSourcesAdmin() {
+            const grid = document.getElementById('academic-sources-grid');
+            const queue = document.getElementById('academic-review-queue');
+            if (grid) {
+                grid.innerHTML = academicSourcesState.map(src => `
+                    <div class="p-3 rounded-[3px] bg-editorial-sheet border border-editorial-rule flex items-start justify-between gap-2">
+                        <div class="min-w-0">
+                            <div class="font-bold text-editorial-ink">${escapeHTML(src.name)}</div>
+                            <div class="text-[11px] text-editorial-muted leading-snug mt-0.5">${escapeHTML(src.desc)}</div>
+                            <div class="text-[10px] font-mono text-editorial-brass mt-1">${escapeHTML(src.lastStatus)}${src.lastSync ? ' • ' + escapeHTML(src.lastSync) : ''}</div>
+                        </div>
+                        <button type="button" onclick="toggleAcademicSource('${escapeHTML(src.id)}')" class="px-2.5 py-1 rounded-[3px] text-[11px] font-bold shrink-0 cursor-pointer ${src.enabled ? 'bg-editorial-burgundy text-white' : 'bg-editorial-paper border border-editorial-rule text-editorial-muted'}">
+                            ${src.enabled ? 'مفعّل' : 'تعطيل'}
+                        </button>
+                    </div>
+                `).join('');
+            }
+
+            if (queue) {
+                const pending = academicEntries.filter(e => e.needsReview || (e.ai && e.ai.aiLowConfidence)).slice(0, 6);
+                if (pending.length === 0) {
+                    queue.innerHTML = `<div class="p-3 rounded-[3px] bg-editorial-sheet border border-editorial-rule text-editorial-muted">لا توجد عناصر بانتظار المراجعة البشرية حالياً.</div>`;
+                } else {
+                    queue.innerHTML = pending.map(item => `
+                        <div class="p-2.5 rounded-[3px] bg-editorial-sheet border border-editorial-rule flex items-center justify-between gap-3">
+                            <div class="min-w-0">
+                                <span class="font-bold text-editorial-ink truncate block">${escapeHTML(item.title)}</span>
+                                <span class="text-[11px] text-editorial-muted">المصدر: ${escapeHTML(item.source)} • الترخيص: ${escapeHTML(item.licenseCode)} • ثقة التصنيف: ${Math.round(((item.ai && item.ai.aiConfidence) || 0.5) * 100)}%</span>
+                            </div>
+                            <button type="button" onclick="approveAcademicReview('${escapeHTML(item.id)}')" class="px-2.5 py-1 rounded-[3px] border border-editorial-burgundy text-editorial-burgundy hover:bg-editorial-burgundy hover:text-white text-[11px] font-bold shrink-0 cursor-pointer">
+                                اعتماد المراجعة
+                            </button>
+                        </div>
+                    `).join('');
+                }
+            }
+        }
+
+        function approveAcademicReview(itemId) {
+            const item = academicEntries.find(e => String(e.id) === String(itemId));
+            if (!item) return;
+            item.needsReview = false;
+            if (item.ai) item.ai.aiLowConfidence = false;
+            saveAcademicState();
+            renderAcademicSourcesAdmin();
+            renderAcademicIndex();
+            showToast('تم اعتماد مراجعة العنصر');
+        }
+
+        function toggleAcademicDetails(itemId) {
+            expandedAcademicId = expandedAcademicId === String(itemId) ? null : String(itemId);
+            renderAcademicIndex();
+        }
+
+        function renderAcademicIndex() {
+            const listEl = document.getElementById('academic-items-list');
+            if (!listEl) return;
+
+            const q = ((document.getElementById('acad-search-input') && document.getElementById('acad-search-input').value) || '').trim().toLowerCase();
+            const srcFilter = (document.getElementById('acad-source-filter') && document.getElementById('acad-source-filter').value) || 'all';
+            const langFilter = (document.getElementById('acad-lang-filter') && document.getElementById('acad-lang-filter').value) || 'all';
+            const sortBy = (document.getElementById('acad-sort-select') && document.getElementById('acad-sort-select').value) || 'newest';
+
+            let items = academicEntries.filter(item => {
+                if (currentAcademicTrack !== 'all' && item.track !== currentAcademicTrack) return false;
+                if (srcFilter !== 'all' && item.source !== srcFilter) return false;
+                if (langFilter !== 'all') {
+                    const lang = item.language || 'other';
+                    if (langFilter === 'other' && ['ar', 'fr', 'en'].includes(lang)) return false;
+                    if (langFilter !== 'other' && lang !== langFilter) return false;
+                }
+                if (q) {
+                    const hay = `${item.title || ''} ${(item.authors || []).join(' ')} ${item.doi || ''} ${item.abstract || ''} ${(item.ai && item.ai.aiKeywords ? item.ai.aiKeywords.join(' ') : '')}`.toLowerCase();
+                    if (!hay.includes(q)) return false;
+                }
+                return true;
+            });
+
+            if (sortBy === 'citations') {
+                items.sort((a, b) => (b.citations || 0) - (a.citations || 0));
+            } else {
+                items.sort((a, b) => String(b.publishedDate || '').localeCompare(String(a.publishedDate || '')));
+            }
+
+            if (items.length === 0) {
+                listEl.innerHTML = `
+                    <div class="p-10 text-center bg-editorial-paper border border-editorial-rule rounded-[4px] space-y-3">
+                        <p class="text-sm font-bold text-editorial-ink">لا توجد مواد أكاديمية مطابقة للترشيح الحالي</p>
+                        <p class="text-xs text-editorial-muted">جرّب مزامنة المصادر المفتوحة أو تغيير فلاتر المسار والمصدر واللغة.</p>
+                        <button type="button" onclick="syncOpenAcademicSources(true)" class="px-3.5 py-1.5 rounded-[3px] bg-editorial-burgundy text-white text-xs font-bold cursor-pointer">مزامنة الآن</button>
+                    </div>`;
+                return;
+            }
+
+            listEl.innerHTML = items.map(item => {
+                const isExpanded = expandedAcademicId === String(item.id);
+                const ai = item.ai || runAiClassificationAndSummary(item);
+                const safeSrcUrl = isSafeUrl(item.url) ? item.url : '';
+                const canDownload = Boolean(item.canHostCopy && isSafeUrl(item.fullTextUrl));
+
+                return `
+                <article class="bg-editorial-paper border border-editorial-rule rounded-[4px] p-4 space-y-2.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="font-bold text-editorial-burgundy">${escapeHTML(item.source)}</span>
+                            <span class="text-editorial-rule">•</span>
+                            <span class="font-semibold text-editorial-ink">${escapeHTML(item.licenseBadge || item.licenseCode)}</span>
+                            ${item.isPreprint ? '<span class="px-1.5 py-0.5 rounded-[2px] bg-editorial-sheet border border-editorial-brass text-[10px] font-mono text-editorial-brass">Preprint</span>' : ''}
+                            ${item.citations > 0 ? `<span class="text-[11px] font-mono text-editorial-muted">استشهادات: ${Number(item.citations)}</span>` : ''}
+                        </div>
+                        <span class="text-[11px] font-mono text-editorial-muted">${escapeHTML(item.publishedDate || '')}</span>
+                    </div>
+
+                    <h3 onclick="toggleAcademicDetails('${escapeHTML(item.id)}')" class="text-base sm:text-lg font-bold text-editorial-ink hover:text-editorial-burgundy cursor-pointer leading-snug">
+                        ${escapeHTML(item.title)}
+                    </h3>
+
+                    <p class="text-xs text-editorial-muted">
+                        <span class="font-semibold text-editorial-ink">${escapeHTML((item.authors || []).join('، '))}</span>
+                        ${item.doi ? ` • <span class="font-mono text-[11px]">DOI: ${escapeHTML(item.doi)}</span>` : ''}
+                    </p>
+
+                    <p class="text-xs sm:text-sm text-editorial-ink/90 leading-relaxed line-clamp-3">
+                        ${escapeHTML(item.abstract)}
+                    </p>
+
+                    <!-- مخرجات التصنيف والتلخيص الآلي مع تمييز واضح -->
+                    <div class="p-3 rounded-[3px] bg-editorial-sheet border border-editorial-rule/80 text-xs space-y-1.5">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <span class="font-bold text-editorial-burgundy">اقتراح تصنيف آلي: ${escapeHTML(ai.aiSuggestedDept)} — ${escapeHTML(ai.aiSubSpecialty)}</span>
+                            <span class="font-mono text-[11px] text-editorial-muted">ثقة التقدير: ${Math.round((ai.aiConfidence || 0.6) * 100)}%</span>
+                        </div>
+                        <p class="text-editorial-ink leading-relaxed"><strong class="text-editorial-burgundy">ملخص آلي:</strong> ${escapeHTML(ai.aiSummaryAr)}</p>
+                        <p class="text-[11px] text-editorial-muted">${escapeHTML(ai.aiDisclaimer)}</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-editorial-rule/60 text-xs">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <button type="button" onclick="toggleAcademicDetails('${escapeHTML(item.id)}')" class="font-bold text-editorial-burgundy hover:underline cursor-pointer">
+                                ${isExpanded ? 'إخفاء التفاصيل' : 'تفاصيل وعلاقات'}
+                            </button>
+                            ${safeSrcUrl ? `<a href="${escapeHTML(safeSrcUrl)}" target="_blank" rel="noopener noreferrer" class="font-semibold text-editorial-ink hover:text-editorial-burgundy underline">قراءة المصدر</a>` : ''}
+                            ${canDownload ? `<a href="${escapeHTML(item.fullTextUrl)}" target="_blank" rel="noopener noreferrer" class="font-semibold text-editorial-brass hover:underline">تنزيل النسخة المسموحة</a>` : ''}
+                        </div>
+                        <button type="button" onclick="openReportModal('academic', '${escapeHTML(item.id)}')" class="text-[11px] text-editorial-muted hover:text-editorial-burgundy cursor-pointer">إبلاغ عن بيانات أو حقوق</button>
+                    </div>
+
+                    ${isExpanded ? `
+                    <div class="pt-3 border-t border-editorial-rule text-xs space-y-2 bg-editorial-sheet/60 p-3 rounded-[3px]">
+                        <div><strong class="text-editorial-ink">الترخيص الموثق:</strong> <span>${escapeHTML(item.licenseCode)}</span></div>
+                        <div><strong class="text-editorial-ink">كلمات مفتاحية مقترحة:</strong> <span>${escapeHTML((ai.aiKeywords || []).join(' • '))}</span></div>
+                        <div><strong class="text-editorial-ink">مواد ذات صلة (اقتراحات آلية):</strong> <span>تُربط حسب التخصص والكلمات المفتاحية دون ادعاء علاقة بحثية قطعية.</span></div>
+                    </div>` : ''}
+                </article>`;
+            }).join('');
+        }
+
+        // ربط التهيئة والتحديث التلقائي دون كسر initApp أو switchPlatformView
+        const _origInitApp = typeof initApp === 'function' ? initApp : null;
+        if (_origInitApp) {
+            initApp = async function () {
+                await _origInitApp();
+                loadAcademicState();
+                renderAcademicSourcesAdmin();
+                renderAcademicIndex();
+                if (academicEntries.length <= (publications ? publications.length : 0)) {
+                    syncOpenAcademicSources(false);
+                }
+            };
+        }
+
+        const _origSwitchPlatformView = typeof switchPlatformView === 'function' ? switchPlatformView : null;
+        if (_origSwitchPlatformView) {
+            switchPlatformView = function (viewName) {
+                if (viewName === 'academic') {
+                    currentPlatformView = 'academic';
+                    ['library', 'forum', 'portfolio'].forEach(k => {
+                        const el = document.getElementById(`view-panel-${k}`);
+                        if (el) el.classList.add('hidden');
+                    });
+                    const acadPanel = document.getElementById('view-panel-academic');
+                    if (acadPanel) acadPanel.classList.remove('hidden');
+
+                    document.querySelectorAll('.platform-view-btn').forEach(btn => {
+                        const isActive = btn.id === 'view-tab-academic';
+                        btn.classList.toggle('bg-editorial-burgundy', isActive);
+                        btn.classList.toggle('text-white', isActive);
+                        btn.classList.toggle('font-bold', isActive);
+                        btn.classList.toggle('bg-editorial-paper', !isActive);
+                        btn.classList.toggle('text-editorial-ink', !isActive);
+                        btn.classList.toggle('border', !isActive);
+                        btn.classList.toggle('border-editorial-rule', !isActive);
+                    });
+                    loadAcademicState();
+                    renderAcademicSourcesAdmin();
+                    renderAcademicIndex();
+                    if (window.lucide) lucide.createIcons();
+                    return;
+                }
+                const acadPanel = document.getElementById('view-panel-academic');
+                if (acadPanel) acadPanel.classList.add('hidden');
+                _origSwitchPlatformView(viewName);
+            };
+        }
+
     </script>
 
     <style>
@@ -271,6 +836,11 @@
                     <span>محفظتي وملفي</span>
                     <span id="saved-items-badge" class="font-mono text-[10px] px-1.5 py-0.2 rounded bg-editorial-stone text-editorial-muted">0</span>
                 </button>
+                <button type="button" id="view-tab-academic" onclick="switchPlatformView('academic')" class="platform-view-btn px-3.5 py-2 rounded-[3px] font-semibold bg-editorial-paper hover:border-editorial-burgundy border border-editorial-rule text-editorial-ink transition-colors cursor-pointer inline-flex items-center gap-1.5">
+                    <i data-lucide="library" class="w-3.5 h-3.5 text-editorial-burgundy"></i>
+                    <span>المصادر الأكاديمية</span>
+                    <span id="academic-items-badge" class="font-mono text-[10px] px-1.5 py-0.2 rounded bg-editorial-stone text-editorial-muted">0</span>
+                </button>
             </div>
             <div class="text-[11px] text-editorial-muted px-2 hidden sm:block">
                 <span>منصة طلابية مستقلة • ENSL Laghouat</span>
@@ -429,6 +999,116 @@
                 </div>
 
                 <div id="forum-topics-list" class="space-y-3"></div>
+            </div>
+        </section>
+
+        <!-- قسم المصادر الأكاديمية والفهرس الذكي (SAJ AI Academic Index) -->
+        <section id="view-panel-academic" class="hidden space-y-6">
+            <div class="bg-editorial-sheet border border-editorial-rule rounded-[4px] p-5 space-y-5">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-editorial-rule pb-4">
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2 text-[11px] font-mono text-editorial-brass mb-1">
+                            <span>SAJ AI ACADEMIC INDEX</span>
+                            <span>•</span>
+                            <span>OPEN ACCESS &amp; DISCOVERY</span>
+                        </div>
+                        <h2 class="text-xl font-bold text-editorial-ink">المصادر الأكاديمية والمكتبة المفتوحة</h2>
+                        <p class="text-xs text-editorial-muted mt-0.5">
+                            اكتشاف وفهرسة المصادر الموثوقة مع التحقق من شروط الترخيص والفصل بين «المكتبة المفتوحة» و«فهرس الاكتشاف».
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                        <button type="button" onclick="toggleAcademicAdminPanel()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-[4px] border border-editorial-rule bg-editorial-paper hover:border-editorial-burgundy text-editorial-ink text-xs font-semibold cursor-pointer">
+                            <i data-lucide="sliders" class="w-3.5 h-3.5 text-editorial-burgundy"></i>
+                            <span>إدارة المصادر والمراجعة</span>
+                        </button>
+                        <button type="button" id="btn-sync-academic" onclick="syncOpenAcademicSources(true)" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[4px] bg-editorial-burgundy hover:opacity-90 text-white text-xs font-bold cursor-pointer">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                            <span>مزامنة المصادر</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- المسارات الثلاثة للمحتوى -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <button type="button" onclick="setAcademicTrackFilter('all')" id="acad-track-all" class="acad-track-card text-start p-3 rounded-[4px] border border-editorial-burgundy bg-editorial-paper cursor-pointer">
+                        <div class="flex items-center justify-between font-bold text-editorial-burgundy mb-0.5">
+                            <span>جميع المسارات المفهرسة</span>
+                            <span id="acad-count-all" class="font-mono">0</span>
+                        </div>
+                        <p class="text-[11px] text-editorial-muted">محتوى أصلي (SAJ Original) + مكتبة مفتوحة + فهرس اكتشاف</p>
+                    </button>
+                    <button type="button" onclick="setAcademicTrackFilter('open_library')" id="acad-track-open_library" class="acad-track-card text-start p-3 rounded-[4px] border border-editorial-rule bg-editorial-paper hover:border-editorial-burgundy cursor-pointer">
+                        <div class="flex items-center justify-between font-bold text-editorial-ink mb-0.5">
+                            <span>SAJ Open Library</span>
+                            <span id="acad-count-open" class="font-mono text-editorial-brass">0</span>
+                        </div>
+                        <p class="text-[11px] text-editorial-muted">مواد بتراخيص مفتوحة واضحة (CC BY / CC0 / Public Domain)</p>
+                    </button>
+                    <button type="button" onclick="setAcademicTrackFilter('discovery')" id="acad-track-discovery" class="acad-track-card text-start p-3 rounded-[4px] border border-editorial-rule bg-editorial-paper hover:border-editorial-burgundy cursor-pointer">
+                        <div class="flex items-center justify-between font-bold text-editorial-ink mb-0.5">
+                            <span>SAJ Discovery</span>
+                            <span id="acad-count-discovery" class="font-mono text-editorial-muted">0</span>
+                        </div>
+                        <p class="text-[11px] text-editorial-muted">بيانات وصفية ورابط المصدر الأصلي دون استضافة ملف محمي</p>
+                    </button>
+                </div>
+
+                <!-- لوحة إدارة المصادر والمراجعة (مخفية افتراضياً) -->
+                <div id="academic-admin-panel" class="hidden bg-editorial-paper border border-editorial-rule rounded-[4px] p-4 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-editorial-rule pb-2.5">
+                        <div>
+                            <h3 class="text-sm font-bold text-editorial-ink">لوحة إدارة المصادر والمراجعة والتصنيف</h3>
+                            <p class="text-[11px] text-editorial-muted">تفعيل/تعطيل المصادر، مراقبة حالة المزامنة، ومراجعة المواد منخفضة الثقة أو غير المحسومة الترخيص.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 text-[11px] font-mono">
+                            <span id="acad-last-sync-label" class="text-editorial-muted">آخر مزامنة: لم تتم بعد</span>
+                            <button type="button" onclick="runAiHeuristicPassOnAcademic()" class="px-2.5 py-1 rounded-[3px] border border-editorial-rule bg-editorial-sheet hover:border-editorial-burgundy text-editorial-ink font-sans font-semibold cursor-pointer">
+                                إعادة تقييم التصنيف والتلخيص
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="academic-sources-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 text-xs"></div>
+
+                    <div class="border-t border-editorial-rule pt-3 space-y-2">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="font-bold text-editorial-burgundy">قائمة المراجعة البشرية (ترخيص غير محسوم أو ثقة تصنيف منخفضة)</span>
+                            <span id="acad-review-count" class="font-mono text-editorial-muted">0</span>
+                        </div>
+                        <div id="academic-review-queue" class="space-y-2 text-xs"></div>
+                    </div>
+                </div>
+
+                <!-- بحث وفلاتر المصادر الأكاديمية -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 bg-editorial-paper border border-editorial-rule rounded-[4px] p-3 text-xs">
+                    <div class="lg:col-span-2">
+                        <input type="text" id="acad-search-input" oninput="renderAcademicIndex()" placeholder="ابحث في المصادر الأكاديمية بالعنوان، المؤلف، DOI، أو الكلمات المفتاحية..." class="w-full bg-editorial-sheet border border-editorial-rule rounded-[3px] px-3 py-1.5 text-xs text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
+                    </div>
+                    <select id="acad-source-filter" onchange="renderAcademicIndex()" class="bg-editorial-sheet border border-editorial-rule rounded-[3px] px-2.5 py-1.5 text-xs text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
+                        <option value="all">كل المصادر</option>
+                        <option value="SAJ Original">SAJ Original (الطلاب)</option>
+                        <option value="OpenAlex">OpenAlex</option>
+                        <option value="DOAJ">DOAJ</option>
+                        <option value="arXiv">arXiv</option>
+                        <option value="Zenodo">Zenodo</option>
+                    </select>
+                    <select id="acad-lang-filter" onchange="renderAcademicIndex()" class="bg-editorial-sheet border border-editorial-rule rounded-[3px] px-2.5 py-1.5 text-xs text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
+                        <option value="all">كل اللغات</option>
+                        <option value="ar">العربية</option>
+                        <option value="fr">الفرنسية</option>
+                        <option value="en">الإنجليزية</option>
+                        <option value="other">لغات أخرى</option>
+                    </select>
+                    <select id="acad-sort-select" onchange="renderAcademicIndex()" class="bg-editorial-sheet border border-editorial-rule rounded-[3px] px-2.5 py-1.5 text-xs text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
+                        <option value="newest">الأحدث</option>
+                        <option value="citations">الأكثر استشهاداً</option>
+                    </select>
+                </div>
+
+                <!-- حالة التحميل / الخطأ / القائمة -->
+                <div id="academic-status-banner" class="hidden p-3 rounded-[4px] bg-editorial-paper border border-editorial-rule text-xs text-editorial-muted flex items-center justify-between gap-2"></div>
+                <div id="academic-items-list" class="space-y-3"></div>
             </div>
         </section>
 
