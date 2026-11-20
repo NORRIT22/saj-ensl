@@ -1036,6 +1036,7 @@
 
             return {
                 ...raw,
+                id: String(raw.id),
                 readMinutes: parseMinutes(raw.read_time ?? raw.readTime),
                 views: Number(raw.views) || 1,
                 references: refs,
@@ -1097,8 +1098,8 @@
             renderAll(false);
 
             const params = new URLSearchParams(window.location.search);
-            const sharedId = Number(params.get('id'));
-            if (sharedId && publications.some(p => Number(p.id) === sharedId)) {
+            const sharedId = params.get('id');
+            if (sharedId && publications.some(p => String(p.id) === String(sharedId))) {
                 openReaderModal(sharedId);
             }
         }
@@ -1136,11 +1137,11 @@
                     e.preventDefault();
                     openCommandPalette();
                 } else if (e.key === 'Escape') {
-                    closeCommandPalette();
-                    closeReaderModal();
-                    closeSubmitModal();
-                    closeAboutModal();
-                    closeAuthModal();
+                    if (!document.getElementById('cmd-modal')?.classList.contains('hidden')) return closeCommandPalette();
+                    if (!document.getElementById('auth-modal')?.classList.contains('hidden')) return closeAuthModal();
+                    if (!document.getElementById('publish-modal')?.classList.contains('hidden')) return closeSubmitModal();
+                    if (!document.getElementById('about-modal')?.classList.contains('hidden')) return closeAboutModal();
+                    if (!document.getElementById('reader-modal')?.classList.contains('hidden')) return closeReaderModal();
                 }
             });
         }
@@ -1575,7 +1576,7 @@
                 filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
             } else {
                 filtered.sort((a, b) =>
-                    (new Date(b.created_at || 0) - new Date(a.created_at || 0)) || ((b.id || 0) - (a.id || 0)));
+                    (new Date(b.created_at || 0) - new Date(a.created_at || 0)) || String(b.id || '').localeCompare(String(a.id || ''), undefined, { numeric: true }));
             }
 
             if (statusEl) {
@@ -1608,7 +1609,7 @@
                 const typeLabel = getTypeLabel(pub.type);
                 const deptLabel = getDeptLabel(pub.department);
                 const readLabel = translations[currentLang].read_paper;
-                const pid = Number(pub.id);
+                const pid = String(pub.id);
                 const staggerIdx = Math.min(idx, 10);
                 const extBadge = pub.file_name
                     ? `<span class="text-[11px] font-mono px-1.5 py-0.5 bg-editorial-paper border border-editorial-brass/60 text-editorial-burgundy rounded-[2px]">${escapeHTML(pub.file_name.split('.').pop().toUpperCase() || 'FILE')}</span>`
@@ -1627,7 +1628,7 @@
                                 <span class="text-editorial-muted">${escapeHTML(pub.date)}</span>
                             </div>
 
-                            <h3 onclick="openReaderModal(${pid})" class="entry-title text-lg sm:text-xl font-bold text-editorial-ink leading-snug mb-2 cursor-pointer transition-colors">
+                            <h3 onclick="openReaderModal('${escapeAttr(pid)}')" class="entry-title text-lg sm:text-xl font-bold text-editorial-ink leading-snug mb-2 cursor-pointer transition-colors">
                                 ${escapeHTML(pub.title)}
                             </h3>
 
@@ -1645,7 +1646,7 @@
                                 <div class="flex items-center gap-3.5">
                                     ${extBadge}
                                     <span class="text-editorial-muted">${escapeHTML(formatMinutes(pub.readMinutes))}</span>
-                                    <button onclick="openReaderModal(${pid})" class="font-bold text-editorial-burgundy hover:underline underline-offset-4 cursor-pointer inline-flex items-center gap-1">
+                                    <button onclick="openReaderModal('${escapeAttr(pid)}')" class="font-bold text-editorial-burgundy hover:underline underline-offset-4 cursor-pointer inline-flex items-center gap-1">
                                         <span>${escapeHTML(readLabel)}</span>
                                         <span>${arrow}</span>
                                     </button>
@@ -1761,7 +1762,7 @@
         }
 
         function fillReaderModal(id) {
-            const pub = publications.find(p => Number(p.id) === Number(id));
+            const pub = publications.find(p => String(p.id) === String(id));
             if (!pub) return;
 
             document.getElementById('modal-type-badge').textContent = getTypeLabel(pub.type);
@@ -1820,9 +1821,9 @@
         }
 
         function openReaderModal(id) {
-            const pub = publications.find(p => Number(p.id) === Number(id));
+            const pub = publications.find(p => String(p.id) === String(id));
             if (!pub) return;
-            activePublicationId = pub.id;
+            activePublicationId = String(pub.id);
 
             pub.views = (pub.views || 0) + 1;
             savePublicationsLocal();
@@ -2012,6 +2013,7 @@
                 submitBtn.textContent = translations[currentLang].submit_now_btn;
             }
 
+            const hadFile = Boolean(selectedUploadFile);
             selectedUploadFile = null;
             const infoEl = document.getElementById('selected-file-info');
             if (infoEl) infoEl.textContent = 'لم يتم اختيار ملف بعد (يمكن نشر نص فقط أو ملف مع وصف مختصر).';
@@ -2021,7 +2023,9 @@
             resetAllFilters();
             renderAll(true);
 
-            if (!insertedItem.localOnly || uploadedToCloud) {
+            if (hadFile && !uploadedToCloud) {
+                showToast(currentLang === 'ar' ? 'تم النشر، لكن تعذّر رفع الملف إلى السحابة (تحقق من إعدادات Storage في Supabase)' : currentLang === 'fr' ? 'Publié, mais le fichier n’a pas pu être téléversé sur le cloud' : 'Published, but cloud file upload failed');
+            } else if (!insertedItem.localOnly || uploadedToCloud) {
                 showToast(currentLang === 'ar' ? 'تم نشر الملف والإسهام بنجاح' : currentLang === 'fr' ? 'Fichier et contribution publiés' : 'File and entry published');
             }
         }
@@ -2094,7 +2098,7 @@
             ).slice(0, 3);
 
             let html = matchedPubs.map((p, i) => `
-                <button onclick="closeCommandPalette(); openReaderModal(${Number(p.id)})" class="cmd-item w-full px-4 py-2.5 text-start hover:bg-editorial-paper flex items-center justify-between gap-3 cursor-pointer ${i === 0 ? 'bg-editorial-paper' : ''}">
+                <button onclick="closeCommandPalette(); openReaderModal('${escapeAttr(String(p.id))}')" class="cmd-item w-full px-4 py-2.5 text-start hover:bg-editorial-paper flex items-center justify-between gap-3 cursor-pointer ${i === 0 ? 'bg-editorial-paper' : ''}">
                     <div class="min-w-0">
                         <div class="text-sm font-bold text-editorial-ink truncate">${escapeHTML(p.title)}</div>
                         <div class="text-[11px] text-editorial-muted">${escapeHTML(p.author)} • ${escapeHTML(getDeptLabel(p.department))}</div>
@@ -2128,6 +2132,10 @@
             const div = document.createElement('div');
             div.textContent = String(str);
             return div.innerHTML;
+        }
+
+        function escapeAttr(str) {
+            return String(str ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
         }
     </script>
 </body>
