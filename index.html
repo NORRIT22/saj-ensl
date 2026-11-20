@@ -367,25 +367,25 @@
 
     <!-- 1. شريط التنقل -->
     <nav class="border-b border-editorial-rule bg-editorial-sheet/95 sticky top-0 z-40 backdrop-blur-sm">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 h-14 py-2 flex items-center justify-between gap-3 text-xs">
-            <a href="#" onclick="resetAllFilters(); return false;" class="flex items-center gap-2.5 text-editorial-ink font-bold shrink-0">
-                <span id="nav-badge-slot" class="w-8 h-8 shrink-0"></span>
-                <span data-i18n="masthead_title" class="text-lg font-bold text-editorial-burgundy">ساج</span>
-                <span class="hidden sm:inline text-editorial-muted font-mono text-[11px] tracking-wider">ENSL LAGHOUAT</span>
+        <div class="max-w-5xl mx-auto px-3 sm:px-6 min-h-14 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <a href="#" onclick="resetAllFilters(); return false;" class="flex items-center gap-2 text-editorial-ink font-bold shrink-0">
+                <span id="nav-badge-slot" class="w-7 h-7 sm:w-8 sm:h-8 shrink-0"></span>
+                <span data-i18n="masthead_title" class="text-base sm:text-lg font-bold text-editorial-burgundy">ساج</span>
+                <span class="hidden md:inline text-editorial-muted font-mono text-[11px] tracking-wider">ENSL LAGHOUAT</span>
             </a>
 
-            <div class="flex items-center gap-2 shrink-0">
-                <button onclick="openCommandPalette()" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-[4px] border border-editorial-rule bg-editorial-paper hover:border-editorial-burgundy text-editorial-ink transition-colors cursor-pointer" title="Ctrl+K">
-                    <i data-lucide="search" class="w-3.5 h-3.5 text-editorial-burgundy"></i>
+            <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0">
+                <button onclick="openCommandPalette()" class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-[4px] border border-editorial-rule bg-editorial-paper hover:border-editorial-burgundy text-editorial-ink transition-colors cursor-pointer" title="Ctrl+K">
+                    <i data-lucide="search" class="w-3.5 h-3.5 text-editorial-burgundy shrink-0"></i>
                     <span data-i18n="quick_search" class="hidden sm:inline">بحث سريع</span>
                     <kbd class="hidden md:inline text-[10px] font-mono text-editorial-muted">Ctrl+K</kbd>
                 </button>
 
-                <button onclick="toggleTheme()" id="theme-toggle-btn" class="p-1.5 rounded-[4px] border border-editorial-rule bg-editorial-paper hover:border-editorial-burgundy text-editorial-ink transition-colors cursor-pointer" aria-label="تبديل المظهر">
+                <button onclick="toggleTheme()" id="theme-toggle-btn" class="p-1.5 rounded-[4px] border border-editorial-rule bg-editorial-paper hover:border-editorial-burgundy text-editorial-ink transition-colors cursor-pointer shrink-0" aria-label="تبديل المظهر">
                     <i data-lucide="moon" id="theme-icon" class="w-3.5 h-3.5"></i>
                 </button>
 
-                <button onclick="cycleLanguage()" class="px-2.5 py-1.5 rounded-[4px] border border-editorial-rule bg-editorial-paper hover:border-editorial-burgundy font-semibold text-editorial-ink transition-colors cursor-pointer">
+                <button onclick="cycleLanguage()" class="px-2 sm:px-2.5 py-1.5 rounded-[4px] border border-editorial-rule bg-editorial-paper hover:border-editorial-burgundy font-semibold text-editorial-ink transition-colors cursor-pointer shrink-0">
                     <span id="lang-label">Français</span>
                 </button>
 
@@ -394,10 +394,13 @@
                 </button>
 
                 <!-- حالة حساب الطالب -->
-                <div id="auth-nav-slot" class="flex items-center"></div>
+                <div id="auth-nav-slot" class="flex items-center min-w-0"></div>
 
-                <button onclick="openSubmitModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] bg-editorial-burgundy hover:opacity-90 text-white font-semibold transition-opacity cursor-pointer">
-                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <button onclick="openSubmitModal()" class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-[4px] bg-editorial-burgundy hover:opacity-90 text-white font-semibold transition-opacity cursor-pointer shrink-0">
+                    <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
                     <span data-i18n="btn_publish">نشر إسهام</span>
                 </button>
             </div>
@@ -478,11 +481,11 @@
                             </button>
                         </div>
 
-                        <div class="flex items-center gap-2 shrink-0">
-                            <select id="dept-filter" onchange="setDepartmentFilter(this.value)" class="bg-editorial-paper border border-editorial-rule text-editorial-ink text-xs rounded-[4px] px-2.5 py-1.5 focus:outline-none focus:border-editorial-burgundy">
+                        <div class="grid grid-cols-1 sm:flex items-center gap-2 w-full sm:w-auto shrink-0 min-w-0">
+                            <select id="dept-filter" onchange="setDepartmentFilter(this.value)" class="w-full sm:w-auto max-w-full min-w-0 bg-editorial-paper border border-editorial-rule text-editorial-ink text-xs rounded-[4px] px-2.5 py-1.5 focus:outline-none focus:border-editorial-burgundy">
                                 <option value="all">جميع الأقسام</option>
                             </select>
-                            <select id="sort-select" onchange="setSortOrder(this.value)" class="bg-editorial-paper border border-editorial-rule text-editorial-ink text-xs rounded-[4px] px-2.5 py-1.5 focus:outline-none focus:border-editorial-burgundy">
+                            <select id="sort-select" onchange="setSortOrder(this.value)" class="w-full sm:w-auto max-w-full min-w-0 bg-editorial-paper border border-editorial-rule text-editorial-ink text-xs rounded-[4px] px-2.5 py-1.5 focus:outline-none focus:border-editorial-burgundy">
                                 <option value="newest" data-i18n="sort_newest">الأحدث</option>
                                 <option value="popular" data-i18n="sort_popular">الأكثر قراءة</option>
                             </select>
@@ -772,20 +775,20 @@
                     </button>
                 </div>
 
-                <form id="contribution-form" onsubmit="handleFormSubmit(event)" class="p-6 space-y-4">
-                    <div>
+                <form id="contribution-form" onsubmit="handleFormSubmit(event)" class="p-4 sm:p-6 space-y-4 min-w-0">
+                    <div class="min-w-0">
                         <label data-i18n="lbl_title" class="block text-xs font-bold text-editorial-ink mb-1">عنوان الملف أو الورقة أو الملخص *</label>
-                        <input type="text" id="input-title" required placeholder="مثال: مطبوعة التحليل الرياضي — السنة الثانية..." class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
+                        <input type="text" id="input-title" required placeholder="مثال: مطبوعة التحليل الرياضي — السنة الثانية..." class="w-full min-w-0 bg-editorial-paper border border-editorial-rule rounded-[3px] px-3 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
+                        <div class="min-w-0">
                             <label data-i18n="lbl_author" class="block text-xs font-bold text-editorial-ink mb-1">اسم الطالب(ة) *</label>
-                            <input type="text" id="input-author" required placeholder="الاسم واللقب" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
+                            <input type="text" id="input-author" required placeholder="الاسم واللقب" class="w-full min-w-0 bg-editorial-paper border border-editorial-rule rounded-[3px] px-3 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
                         </div>
-                        <div>
+                        <div class="min-w-0">
                             <label data-i18n="lbl_year" class="block text-xs font-bold text-editorial-ink mb-1">المستوى الجامعي (6 سنوات) *</label>
-                            <select id="input-year" required class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
+                            <select id="input-year" required class="w-full max-w-full min-w-0 bg-editorial-paper border border-editorial-rule rounded-[3px] px-3 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
                                 <option value="السنة الأولى">السنة الأولى / 1ère Année</option>
                                 <option value="السنة الثانية">السنة الثانية / 2ème Année</option>
                                 <option value="السنة الثالثة">السنة الثالثة / 3ème Année</option>
@@ -796,14 +799,14 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
+                        <div class="min-w-0">
                             <label data-i18n="lbl_dept" class="block text-xs font-bold text-editorial-ink mb-1">القسم *</label>
-                            <select id="input-dept" required class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy"></select>
+                            <select id="input-dept" required class="w-full max-w-full min-w-0 bg-editorial-paper border border-editorial-rule rounded-[3px] px-3 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy"></select>
                         </div>
-                        <div>
+                        <div class="min-w-0">
                             <label data-i18n="lbl_type" class="block text-xs font-bold text-editorial-ink mb-1">طبيعة المادة *</label>
-                            <select id="input-type" required class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3.5 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
+                            <select id="input-type" required class="w-full max-w-full min-w-0 bg-editorial-paper border border-editorial-rule rounded-[3px] px-3 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
                                 <option value="بحث">بحث أو فصل مذكرة / Recherche</option>
                                 <option value="مقال">مقال أو قراءة نقدية / Article</option>
                                 <option value="ملخص درس">ملخص درس أو أعمال موجهة / Cours & TD</option>
@@ -811,8 +814,8 @@
                         </div>
                     </div>
 
-                    <div class="bg-editorial-paper border border-dashed border-editorial-brass rounded-[4px] p-3.5">
-                        <label for="input-file-upload" data-i18n="lbl_file_upload" class="block text-xs font-bold text-editorial-burgundy mb-1.5">
+                    <div class="bg-editorial-paper border border-dashed border-editorial-brass rounded-[4px] p-3 sm:p-3.5 min-w-0 overflow-hidden">
+                        <label for="input-file-upload" data-i18n="lbl_file_upload" class="block text-xs font-bold text-editorial-burgundy mb-1.5 break-words">
                             إرفاق ملف من الجهاز (PDF, DOC, DOCX, PPT, PPTX, TXT, MD, ZIP — حتى 15MB)
                         </label>
                         <input
@@ -820,9 +823,9 @@
                             id="input-file-upload"
                             accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.md,.zip,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,text/markdown,application/zip"
                             onchange="handleFileSelection(event)"
-                            class="block w-full text-xs text-editorial-ink file:me-3 file:py-1.5 file:px-3 file:rounded-[3px] file:border file:border-editorial-rule file:text-xs file:font-bold file:bg-editorial-sheet file:text-editorial-ink hover:file:border-editorial-burgundy cursor-pointer"
+                            class="block w-full max-w-full min-w-0 text-xs text-editorial-ink file:me-2 sm:file:me-3 file:py-1.5 file:px-2.5 sm:file:px-3 file:rounded-[3px] file:border file:border-editorial-rule file:text-xs file:font-bold file:bg-editorial-sheet file:text-editorial-ink hover:file:border-editorial-burgundy cursor-pointer"
                         >
-                        <p id="selected-file-info" class="text-[11px] text-editorial-muted mt-1.5">لم يتم اختيار ملف بعد (يمكن نشر نص فقط أو ملف مع وصف مختصر).</p>
+                        <p id="selected-file-info" class="text-[11px] text-editorial-muted mt-1.5 break-words">لم يتم اختيار ملف بعد (يمكن نشر نص فقط أو ملف مع وصف مختصر).</p>
                     </div>
 
                     <div>
@@ -1432,6 +1435,10 @@
             renderAll(false);
             initRealtimeSync();
 
+            window.addEventListener('load', () => {
+                if (window.lucide) lucide.createIcons();
+            }, { once: true });
+
             const params = new URLSearchParams(window.location.search);
             const sharedId = Number(params.get('id'));
             if (sharedId && publications.some(p => Number(p.id) === sharedId)) {
@@ -1651,7 +1658,7 @@
                 slot.innerHTML = `
                     <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] border border-editorial-rule bg-editorial-paper text-editorial-ink">
                         ${avatarHtml}
-                        <span class="font-semibold max-w-[90px] truncate">${firstName}</span>
+                        <span class="font-semibold max-w-[68px] sm:max-w-[100px] truncate">${firstName}</span>
                         <button onclick="logoutUser()" class="text-editorial-muted hover:text-editorial-burgundy ms-1 underline cursor-pointer">${escapeHTML(logoutText)}</button>
                     </div>
                 `;
