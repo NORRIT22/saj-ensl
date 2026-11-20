@@ -1430,6 +1430,7 @@
 
             await syncCloudPublications();
             renderAll(false);
+            initRealtimeSync();
 
             const params = new URLSearchParams(window.location.search);
             const sharedId = Number(params.get('id'));
@@ -2041,9 +2042,14 @@
             publications = [];
         }
 
-        async function syncCloudPublications() {
+        let lastCloudErrorReason = '';
+
+        async function syncCloudPublications(forceRender = false) {
             const dot = document.getElementById('sync-status-dot');
-            if (!supabaseClient) return;
+            if (!supabaseClient) {
+                lastCloudErrorReason = 'supabaseClient غير مهيأ';
+                return false;
+            }
             try {
                 const { data, error } = await supabaseClient
                     .from('contributions')
@@ -2051,18 +2057,50 @@
                     .order('id', { ascending: false });
 
                 if (!error && Array.isArray(data)) {
+                    lastCloudErrorReason = '';
                     const normalizedCloud = data.map(normalizePublication);
                     const cloudIds = new Set(normalizedCloud.map(d => String(d.id)));
                     const localOnly = publications.filter(p => p.localOnly && !cloudIds.has(String(p.id)));
                     publications = [...localOnly, ...normalizedCloud];
                     savePublicationsLocal();
                     if (dot) {
-                        dot.classList.remove('bg-editorial-brass');
+                        dot.classList.remove('bg-editorial-brass', 'bg-rose-600');
                         dot.classList.add('bg-emerald-600');
-                        dot.title = 'متصل بالسحابة';
+                        dot.title = `متصل بالسحابة (${data.length} سجل في قاعدة البيانات)`;
                     }
+                    if (forceRender) renderAll(false);
+                    return true;
+                } else {
+                    lastCloudErrorReason = (error && (error.message || error.code)) || 'خطأ في قراءة جدول contributions';
+                    if (dot) {
+                        dot.classList.remove('bg-emerald-600');
+                        dot.classList.add('bg-rose-600');
+                        dot.title = 'خطأ في مزامنة السحابة: ' + lastCloudErrorReason;
+                    }
+                    return false;
                 }
+            } catch (e) {
+                lastCloudErrorReason = (e && e.message) || 'تعذّر الاتصال بقاعدة البيانات';
+                return false;
+            }
+        }
+
+        function initRealtimeSync() {
+            if (!supabaseClient || typeof supabaseClient.channel !== 'function') return;
+            try {
+                supabaseClient
+                    .channel('public:contributions-live')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'contributions' }, () => {
+                        syncCloudPublications(true);
+                    })
+                    .subscribe();
             } catch (e) {}
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    syncCloudPublications(true);
+                }
+            });
         }
 
         function savePublicationsLocal() {
@@ -2535,9 +2573,11 @@
                             });
                         } else {
                             insertedItem.localOnly = true;
+                            insertedItem.cloudError = (error && (error.message || error.code)) || 'رفض الإدراج من قاعدة البيانات';
                         }
                     } catch (err) {
                         insertedItem.localOnly = true;
+                        insertedItem.cloudError = (err && err.message) || 'خطأ شبكة أثناء الإرسال';
                     }
                 } else {
                     insertedItem.localOnly = true;
@@ -2558,9 +2598,13 @@
                 if (fileNotStored) {
                     showToast(tr('تعذّر حفظ الملف (حجمه كبير والرفع السحابي غير متاح) — نُشر الوصف فقط', 'Fichier non enregistré (trop volumineux, envoi cloud indisponible) — description publiée seule', 'File not stored (too large, cloud upload unavailable) — description published only'));
                 } else if (insertedItem.localOnly) {
-                    showToast(tr('تم الحفظ محلياً في المتصفح', 'Enregistré localement', 'Saved locally'));
+                    showToast(tr(
+                        'تنبيه: حُفظ محلياً على هذا الجهاز فقط ولم يُرفع لقاعدة البيانات (' + (insertedItem.cloudError || 'تحقق من صلاحيات RLS') + ')',
+                        'Attention : enregistré localement uniquement (' + (insertedItem.cloudError || 'vérifiez RLS') + ')',
+                        'Warning: saved locally on this device only (' + (insertedItem.cloudError || 'check RLS policy') + ')'
+                    ));
                 } else {
-                    showToast(tr('تم نشر الملف والإسهام بنجاح', 'Fichier et contribution publiés', 'File and entry published'));
+                    showToast(tr('تم نشر الملف والإسهام بنجاح في السحابة', 'Fichier et contribution publiés dans le cloud', 'File and entry published to cloud'));
                 }
             } catch (err) {
                 console.error(err);
