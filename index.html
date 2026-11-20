@@ -761,9 +761,9 @@
     </div>
 
     <!-- 6. نافذة النشر (ملفات + نصوص) -->
-    <div id="publish-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-stone-950/75 p-3 sm:p-6" onclick="if(event.target === this) closeSubmitModal()">
-        <div class="min-h-screen flex items-center justify-center" onclick="if(event.target === this) closeSubmitModal()">
-            <div class="bg-editorial-sheet w-full max-w-2xl border border-editorial-rule shadow-2xl my-4 rounded-[4px] modal-panel">
+    <div id="publish-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-stone-950/75 p-3 sm:p-6" style="-webkit-overflow-scrolling: touch; overscroll-behavior: contain;" onclick="if(event.target === this) closeSubmitModal()">
+        <div class="min-h-full flex items-start sm:items-center justify-center py-2 sm:py-4" onclick="if(event.target === this) closeSubmitModal()">
+            <div class="bg-editorial-sheet w-full max-w-2xl border border-editorial-rule shadow-2xl my-auto rounded-[4px] modal-panel">
 
                 <div class="border-b border-editorial-rule px-6 py-4 flex items-center justify-between bg-editorial-paper rounded-t-[4px]">
                     <div>
@@ -1915,7 +1915,13 @@
         function readFileAsDataUrl(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
+                reader.onload = () => {
+                    let res = String(reader.result || '');
+                    if (res.startsWith('data:;base64,')) {
+                        res = res.replace('data:;base64,', 'data:application/octet-stream;base64,');
+                    }
+                    resolve(res);
+                };
                 reader.onerror = reject;
                 reader.readAsDataURL(file);
             });
@@ -1942,7 +1948,7 @@
                     }
                 } catch (err) {}
             }
-            if (file.size <= 3 * 1024 * 1024) {
+            if (file.size <= 8 * 1024 * 1024) {
                 const dataUrl = await readFileAsDataUrl(file);
                 return { url: dataUrl, name: file.name, uploadedCloud: false };
             }
@@ -2191,7 +2197,7 @@
                 const typeLabel = getTypeLabel(pub.type);
                 const deptLabel = getDeptLabel(pub.department);
                 const readLabel = translations[currentLang].read_paper;
-                const pid = Number(pub.id);
+                const pidArg = `'${escapeHTML(encodeURIComponent(String(pub.id)))}'`;
                 const staggerIdx = Math.min(idx, 10);
                 const extBadge = pub.file_name
                     ? `<span class="text-[11px] font-mono px-1.5 py-0.5 bg-editorial-paper border border-editorial-brass/60 text-editorial-burgundy rounded-[2px]">${escapeHTML(fileExtLabel(pub.file_name))}</span>`
@@ -2210,7 +2216,7 @@
                                 <span class="text-editorial-muted">${escapeHTML(pub.date)}</span>
                             </div>
 
-                            <h3 onclick="openReaderModal(${pid})" class="entry-title text-lg sm:text-xl font-bold text-editorial-ink leading-snug mb-2 cursor-pointer transition-colors">
+                            <h3 onclick="openReaderModal(${pidArg})" class="entry-title text-lg sm:text-xl font-bold text-editorial-ink leading-snug mb-2 cursor-pointer transition-colors">
                                 ${escapeHTML(pub.title)}
                             </h3>
 
@@ -2228,7 +2234,7 @@
                                 <div class="flex items-center gap-3.5">
                                     ${extBadge}
                                     <span class="text-editorial-muted">${escapeHTML(formatMinutes(pub.readMinutes))}</span>
-                                    <button onclick="openReaderModal(${pid})" class="font-bold text-editorial-burgundy hover:underline underline-offset-4 cursor-pointer inline-flex items-center gap-1">
+                                    <button onclick="openReaderModal(${pidArg})" class="font-bold text-editorial-burgundy hover:underline underline-offset-4 cursor-pointer inline-flex items-center gap-1">
                                         <span>${escapeHTML(readLabel)}</span>
                                         <span>${arrow}</span>
                                     </button>
@@ -2343,7 +2349,8 @@
         }
 
         function fillReaderModal(id) {
-            const pub = publications.find(p => Number(p.id) === Number(id));
+            const targetId = String(id ?? '');
+            const pub = publications.find(p => String(p.id) === targetId || Number(p.id) === Number(targetId));
             if (!pub) return;
 
             document.getElementById('modal-type-badge').textContent = getTypeLabel(pub.type);
@@ -2402,8 +2409,12 @@
         }
 
         function openReaderModal(id) {
-            const pub = publications.find(p => Number(p.id) === Number(id));
-            if (!pub) return;
+            const decodedId = safeDecode(String(id ?? ''));
+            const pub = publications.find(p => String(p.id) === decodedId || Number(p.id) === Number(decodedId));
+            if (!pub) {
+                showToast(tr('تعذّر فتح الإسهام، حاول تحديث الصفحة', 'Impossible d’ouvrir l’entrée', 'Unable to open entry'));
+                return;
+            }
             activePublicationId = pub.id;
 
             pub.views = (pub.views || 0) + 1;
