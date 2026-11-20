@@ -254,6 +254,30 @@
 
     <!-- 3. المحتوى الرئيسي -->
     <main class="max-w-5xl mx-auto w-full px-4 sm:px-6 pb-16 flex-grow">
+        <!-- شريط أقسام المنصة الرئيسية -->
+        <div class="bg-editorial-sheet border border-editorial-rule rounded-[4px] p-2 mb-6 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div class="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="أقسام منصة ساج">
+                <button type="button" id="view-tab-library" onclick="switchPlatformView('library')" class="platform-view-btn px-3.5 py-2 rounded-[3px] font-bold bg-editorial-burgundy text-white transition-colors cursor-pointer inline-flex items-center gap-1.5">
+                    <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+                    <span>المكتبة والفهرس</span>
+                </button>
+                <button type="button" id="view-tab-forum" onclick="switchPlatformView('forum')" class="platform-view-btn px-3.5 py-2 rounded-[3px] font-semibold bg-editorial-paper hover:border-editorial-burgundy border border-editorial-rule text-editorial-ink transition-colors cursor-pointer inline-flex items-center gap-1.5">
+                    <i data-lucide="message-square" class="w-3.5 h-3.5 text-editorial-burgundy"></i>
+                    <span>المنتدى الأكاديمي</span>
+                    <span id="forum-topics-badge" class="font-mono text-[10px] px-1.5 py-0.2 rounded bg-editorial-stone text-editorial-muted">0</span>
+                </button>
+                <button type="button" id="view-tab-portfolio" onclick="switchPlatformView('portfolio')" class="platform-view-btn px-3.5 py-2 rounded-[3px] font-semibold bg-editorial-paper hover:border-editorial-burgundy border border-editorial-rule text-editorial-ink transition-colors cursor-pointer inline-flex items-center gap-1.5">
+                    <i data-lucide="bookmark" class="w-3.5 h-3.5 text-editorial-burgundy"></i>
+                    <span>محفظتي وملفي</span>
+                    <span id="saved-items-badge" class="font-mono text-[10px] px-1.5 py-0.2 rounded bg-editorial-stone text-editorial-muted">0</span>
+                </button>
+            </div>
+            <div class="text-[11px] text-editorial-muted px-2 hidden sm:block">
+                <span>منصة طلابية مستقلة • ENSL Laghouat</span>
+            </div>
+        </div>
+
+        <div id="view-panel-library">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
             <section class="lg:col-span-8">
@@ -309,6 +333,7 @@
                     </button>
                 </div>
 
+                <div id="active-filters-bar" class="hidden flex-wrap items-center gap-2 mb-3"></div>
                 <div id="contributions-list" class="space-y-3"></div>
 
                 <div id="empty-state" class="hidden py-14 px-4 text-center bg-editorial-sheet border border-editorial-rule rounded-[4px]">
@@ -338,7 +363,163 @@
                 </section>
             </aside>
         </div>
+            </div><!-- /#view-panel-library -->
+
+        <!-- قسم المنتدى الأكاديمي -->
+        <section id="view-panel-forum" class="hidden space-y-6">
+            <div class="bg-editorial-sheet border border-editorial-rule rounded-[4px] p-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-editorial-rule pb-4 mb-5">
+                    <div>
+                        <h2 class="text-xl font-bold text-editorial-ink">المنتدى الأكاديمي لطلبة المدرسة</h2>
+                        <p class="text-xs text-editorial-muted mt-0.5">مناقشة الدروس والمذكرات واللغات والمشاريع الطلابية وتبادل الإجابات المفيدة.</p>
+                    </div>
+                    <button type="button" onclick="toggleForumTopicForm()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[4px] bg-editorial-burgundy hover:opacity-90 text-white text-xs font-bold cursor-pointer shrink-0">
+                        <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                        <span>فتح موضوع جديد</span>
+                    </button>
+                </div>
+
+                <!-- نموذج إضافة موضوع جديد -->
+                <form id="forum-topic-form" onsubmit="handleForumTopicSubmit(event)" class="hidden bg-editorial-paper border border-editorial-rule rounded-[4px] p-4 mb-6 space-y-3.5">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-bold text-editorial-ink mb-1">عنوان الموضوع *</label>
+                            <input type="text" id="forum-topic-title" required placeholder="مثال: استفسار حول منهجية البحث في اللسانيات..." class="w-full bg-editorial-sheet border border-editorial-rule rounded-[3px] px-3 py-1.5 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-editorial-ink mb-1">التصنيف *</label>
+                            <select id="forum-topic-tag" class="w-full bg-editorial-sheet border border-editorial-rule rounded-[3px] px-2.5 py-1.5 text-xs text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
+                                <option value="أسئلة ومذاكرات">أسئلة ومذاكرات</option>
+                                <option value="قراءات ومراجع">قراءات ومراجع</option>
+                                <option value="لغات وترجمة">لغات وترجمة</option>
+                                <option value="مشاريع ومذكرات">مشاريع ومذكرات</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-editorial-ink mb-1">القسم *</label>
+                            <select id="forum-topic-dept" class="w-full bg-editorial-sheet border border-editorial-rule rounded-[3px] px-2.5 py-1.5 text-xs text-editorial-ink focus:outline-none focus:border-editorial-burgundy"></select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-editorial-ink mb-1">اسم كاتب الموضوع *</label>
+                            <input type="text" id="forum-topic-author" required placeholder="الاسم واللقب" class="w-full bg-editorial-sheet border border-editorial-rule rounded-[3px] px-3 py-1.5 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-editorial-ink mb-1">نص الموضوع أو السؤال *</label>
+                        <textarea id="forum-topic-body" rows="3" required placeholder="اكتب تفاصيل سؤالك أو نقاشك بوضوح..." class="w-full bg-editorial-sheet border border-editorial-rule rounded-[3px] px-3 py-2 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy"></textarea>
+                    </div>
+                    <div class="flex items-center justify-end gap-2">
+                        <button type="button" onclick="toggleForumTopicForm(false)" class="px-3 py-1.5 text-xs font-semibold text-editorial-muted hover:text-editorial-ink cursor-pointer">إلغاء</button>
+                        <button type="submit" class="px-4 py-1.5 rounded-[3px] bg-editorial-burgundy text-white text-xs font-bold cursor-pointer">نشر الموضوع</button>
+                    </div>
+                </form>
+
+                <!-- فلاتر المنتدى -->
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-editorial-rule/60 text-xs">
+                    <div class="flex flex-wrap items-center gap-1.5" id="forum-tag-filters">
+                        <button type="button" data-ftag="all" onclick="setForumTagFilter('all')" class="ftag-btn px-2.5 py-1 rounded-[3px] font-bold bg-editorial-burgundy text-white cursor-pointer">الكل</button>
+                        <button type="button" data-ftag="أسئلة ومذاكرات" onclick="setForumTagFilter('أسئلة ومذاكرات')" class="ftag-btn px-2.5 py-1 rounded-[3px] font-medium bg-editorial-paper border border-editorial-rule text-editorial-ink hover:border-editorial-burgundy cursor-pointer">أسئلة ومذاكرات</button>
+                        <button type="button" data-ftag="قراءات ومراجع" onclick="setForumTagFilter('قراءات ومراجع')" class="ftag-btn px-2.5 py-1 rounded-[3px] font-medium bg-editorial-paper border border-editorial-rule text-editorial-ink hover:border-editorial-burgundy cursor-pointer">قراءات ومراجع</button>
+                        <button type="button" data-ftag="لغات وترجمة" onclick="setForumTagFilter('لغات وترجمة')" class="ftag-btn px-2.5 py-1 rounded-[3px] font-medium bg-editorial-paper border border-editorial-rule text-editorial-ink hover:border-editorial-burgundy cursor-pointer">لغات وترجمة</button>
+                        <button type="button" data-ftag="مشاريع ومذكرات" onclick="setForumTagFilter('مشاريع ومذكرات')" class="ftag-btn px-2.5 py-1 rounded-[3px] font-medium bg-editorial-paper border border-editorial-rule text-editorial-ink hover:border-editorial-burgundy cursor-pointer">مشاريع ومذكرات</button>
+                    </div>
+                    <select id="forum-dept-filter" onchange="setForumDeptFilter(this.value)" class="bg-editorial-paper border border-editorial-rule text-editorial-ink text-xs rounded-[4px] px-2.5 py-1.5 focus:outline-none focus:border-editorial-burgundy"></select>
+                </div>
+
+                <div id="forum-topics-list" class="space-y-3"></div>
+            </div>
+        </section>
+
+        <!-- قسم محفظتي وملفي الشخصي -->
+        <section id="view-panel-portfolio" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <div class="lg:col-span-5 bg-editorial-sheet border border-editorial-rule rounded-[4px] p-5 space-y-4">
+                    <div class="border-b border-editorial-rule pb-3">
+                        <h2 class="text-lg font-bold text-editorial-ink">الملف الدراسي والتفضيلات</h2>
+                        <p class="text-xs text-editorial-muted mt-0.5">إدارة بياناتك الأكاديمية وتفضيلات العرض على هذا الجهاز.</p>
+                    </div>
+
+                    <form id="profile-prefs-form" onsubmit="handleProfilePrefsSubmit(event)" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-editorial-ink mb-1">الاسم الظاهر</label>
+                            <input type="text" id="pref-name" placeholder="الاسم واللقب" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3 py-1.5 text-sm text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div>
+                                <label class="block text-xs font-bold text-editorial-ink mb-1">القسم</label>
+                                <select id="pref-dept" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-2.5 py-1.5 text-xs text-editorial-ink focus:outline-none focus:border-editorial-burgundy"></select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-editorial-ink mb-1">المستوى</label>
+                                <select id="pref-year" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-2.5 py-1.5 text-xs text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
+                                    <option value="السنة الأولى">السنة الأولى</option>
+                                    <option value="السنة الثانية">السنة الثانية</option>
+                                    <option value="السنة الثالثة">السنة الثالثة</option>
+                                    <option value="السنة الرابعة">السنة الرابعة</option>
+                                    <option value="السنة الخامسة">السنة الخامسة</option>
+                                    <option value="السنة السادسة">السنة السادسة</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-editorial-ink mb-1">نبذة أو اهتمامات بحثية</label>
+                            <textarea id="pref-bio" rows="2" placeholder="مجالات الاهتمام أو التخصص الدقيق..." class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3 py-1.5 text-xs text-editorial-ink focus:outline-none focus:border-editorial-burgundy"></textarea>
+                        </div>
+                        <div class="flex items-center justify-between pt-2">
+                            <span id="reports-counter-label" class="text-[11px] font-mono text-editorial-muted">البلاغات المسجلة: 0</span>
+                            <button type="submit" class="px-4 py-1.5 rounded-[3px] bg-editorial-burgundy text-white text-xs font-bold cursor-pointer">حفظ التفضيلات</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="lg:col-span-7 bg-editorial-sheet border border-editorial-rule rounded-[4px] p-5 space-y-4">
+                    <div class="flex items-center justify-between border-b border-editorial-rule pb-3">
+                        <h2 class="text-lg font-bold text-editorial-ink">المحفوظات والمواد المرجعية</h2>
+                        <span id="saved-count-text" class="text-xs font-mono text-editorial-brass">0 محفوظ</span>
+                    </div>
+                    <div id="saved-publications-list" class="space-y-3"></div>
+                </div>
+            </div>
+        </section>
     </main>
+
+    <!-- نافذة البلاغ -->
+    <div id="report-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-stone-950/75 p-4" onclick="if(event.target === this) closeReportModal()">
+        <div class="min-h-screen flex items-center justify-center" onclick="if(event.target === this) closeReportModal()">
+            <div class="bg-editorial-sheet w-full max-w-md border border-editorial-rule shadow-2xl rounded-[4px] p-6 modal-panel">
+                <div class="flex items-center justify-between border-b border-editorial-rule pb-3 mb-4">
+                    <h3 class="text-base font-bold text-editorial-ink">إرسال بلاغ للمراجعة</h3>
+                    <button type="button" onclick="closeReportModal()" class="text-editorial-muted hover:text-editorial-ink cursor-pointer">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <form id="report-form" onsubmit="handleReportSubmit(event)" class="space-y-3.5">
+                    <input type="hidden" id="report-target-type" value="publication">
+                    <input type="hidden" id="report-target-id" value="">
+                    <div>
+                        <label class="block text-xs font-bold text-editorial-ink mb-1">سبب البلاغ *</label>
+                        <select id="report-reason" class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3 py-1.5 text-xs text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
+                            <option value="معلومات غير دقيقة أو خارج السياق">معلومات غير دقيقة أو خارج السياق</option>
+                            <option value="ملف تالف أو رابط غير صالح">ملف تالف أو رابط غير صالح</option>
+                            <option value="مخالفة حقوق نشر أو اقتباس">مخالفة حقوق نشر أو اقتباس</option>
+                            <option value="محتوى غير لائق أو سبام">محتوى غير لائق أو سبام</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-editorial-ink mb-1">توضيح إضافي *</label>
+                        <textarea id="report-details" rows="3" required placeholder="اذكر تفاصيل موجزة تساعد في مراجعة البلاغ..." class="w-full bg-editorial-paper border border-editorial-rule rounded-[3px] px-3 py-1.5 text-xs text-editorial-ink focus:outline-none focus:border-editorial-burgundy"></textarea>
+                    </div>
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button type="button" onclick="closeReportModal()" class="px-3 py-1.5 text-xs font-semibold text-editorial-muted hover:text-editorial-ink cursor-pointer">إلغاء</button>
+                        <button type="submit" class="px-4 py-1.5 rounded-[3px] bg-editorial-burgundy text-white text-xs font-bold cursor-pointer">إرسال البلاغ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 
     <!-- 4. نافذة تسجيل الدخول السريع (Google + البريد الإلكتروني) -->
     <div id="auth-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-stone-950/75 p-3 sm:p-6" onclick="if(event.target === this) closeAuthModal()">
@@ -486,6 +667,16 @@
                             <span class="text-editorial-rule">|</span>
                             <button onclick="changeFontSize(1)" class="px-2 py-1 text-xs font-bold hover:bg-editorial-stone cursor-pointer" title="تكبير الخط">A+</button>
                         </div>
+
+                        <button type="button" id="modal-save-btn" onclick="toggleSaveActivePublication()" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] border border-editorial-rule bg-editorial-sheet hover:border-editorial-burgundy text-xs font-semibold text-editorial-ink cursor-pointer">
+                            <i data-lucide="bookmark" class="w-3.5 h-3.5 text-editorial-burgundy"></i>
+                            <span id="modal-save-label">حفظ</span>
+                        </button>
+
+                        <button type="button" onclick="openReportModal('publication', activePublicationId)" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] border border-editorial-rule bg-editorial-sheet hover:border-editorial-burgundy text-xs font-semibold text-editorial-muted hover:text-editorial-burgundy cursor-pointer" title="إبلاغ">
+                            <i data-lucide="flag" class="w-3.5 h-3.5"></i>
+                            <span>إبلاغ</span>
+                        </button>
 
                         <button onclick="copyShareLink()" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] border border-editorial-rule bg-editorial-sheet hover:border-editorial-burgundy text-xs font-semibold text-editorial-ink cursor-pointer">
                             <i data-lucide="share-2" class="w-3.5 h-3.5 text-editorial-burgundy"></i>
@@ -1171,6 +1362,7 @@
             if (!icon) return;
             const isDark = document.documentElement.classList.contains('dark');
             icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            syncReaderSaveButton();
             if (window.lucide) lucide.createIcons();
         }
 
@@ -1183,6 +1375,7 @@
 
             // العرض الأول من التخزين المحلي مباشرة دون انتظار الشبكة
             loadLocalPublicationsSync();
+            loadPlatformExtensionsState();
             renderAll(true);
             initScrollProgress();
             initShortcuts();
@@ -1837,6 +2030,7 @@
             }
             renderPublicationsList(animate);
             renderDepartmentsIndex();
+            renderActiveFilterChips();
         }
 
         function renderPublicationsList(animate = true) {
@@ -2435,6 +2629,407 @@
             div.textContent = String(str);
             return div.innerHTML;
         }
+    
+        /* --- توسعة المنصة: التنقل بين الأقسام، الفلاتر النشطة، المحفوظات، المنتدى، البلاغات، والملف --- */
+        let currentPlatformView = 'library';
+        let savedPublicationIds = [];
+        let forumTopics = [];
+        let currentForumTag = 'all';
+        let currentForumDept = 'all';
+        let expandedForumTopicId = null;
+        let platformReports = [];
+
+        function loadPlatformExtensionsState() {
+            try {
+                const s = JSON.parse(safeStorageGet('saj_ensl_saved_ids') || '[]');
+                savedPublicationIds = Array.isArray(s) ? s.map(Number) : [];
+            } catch (e) { savedPublicationIds = []; }
+
+            try {
+                const r = JSON.parse(safeStorageGet('saj_ensl_reports') || '[]');
+                platformReports = Array.isArray(r) ? r : [];
+            } catch (e) { platformReports = []; }
+
+            try {
+                const f = JSON.parse(safeStorageGet('saj_ensl_forum_topics') || 'null');
+                if (Array.isArray(f) && f.length > 0) {
+                    forumTopics = f;
+                } else {
+                    forumTopics = [
+                        {
+                            id: 101,
+                            title: "منهجية إعداد بطاقة قراءة لمقال علمي أو بحث جامعي",
+                            tag: "أسئلة ومذاكرات",
+                            department: "قسم اللغة الفرنسية",
+                            author: "أمانة التحرير الطلابية",
+                            date: "نوفمبر 2026",
+                            body: "ما هي العناصر الأساسية التي تحرصون على تدوينها عند تلخيص بحث أو محاضرة لتسهيل مراجعتها لاحقاً؟",
+                            bestReplyId: 201,
+                            replies: [
+                                {
+                                    id: 201,
+                                    author: "طالب مشارك — السنة الثانية",
+                                    date: "نوفمبر 2026",
+                                    text: "تحديد الإشكالية المركزية، المفاهيم الأساسية، الخلاصة، والمراجع المعتمدة في صفحة واحدة موجزة."
+                                }
+                            ]
+                        }
+                    ];
+                }
+            } catch (e) { forumTopics = []; }
+
+            updateExtensionBadges();
+            populateForumAndProfileSelects();
+        }
+
+        function updateExtensionBadges() {
+            const fBadge = document.getElementById('forum-topics-badge');
+            const sBadge = document.getElementById('saved-items-badge');
+            const sCount = document.getElementById('saved-count-text');
+            const rCount = document.getElementById('reports-counter-label');
+            if (fBadge) fBadge.textContent = String(forumTopics.length);
+            if (sBadge) sBadge.textContent = String(savedPublicationIds.length);
+            if (sCount) sCount.textContent = `${savedPublicationIds.length} محفوظ`;
+            if (rCount) rCount.textContent = `البلاغات المسجلة: ${platformReports.length}`;
+        }
+
+        function populateForumAndProfileSelects() {
+            const opts = departmentsList.map(d => `<option value="${d.id}">${escapeHTML(d[currentLang] || d.ar)}</option>`).join('');
+            const fDept = document.getElementById('forum-topic-dept');
+            const fFilter = document.getElementById('forum-dept-filter');
+            const pDept = document.getElementById('pref-dept');
+            if (fDept && !fDept.innerHTML) fDept.innerHTML = opts;
+            if (fFilter && !fFilter.innerHTML) fFilter.innerHTML = `<option value="all">${translations[currentLang].all_depts_opt}</option>` + opts;
+            if (pDept && !pDept.innerHTML) pDept.innerHTML = opts;
+
+            const pName = document.getElementById('pref-name');
+            const pYear = document.getElementById('pref-year');
+            const pBio = document.getElementById('pref-bio');
+            let extraPrefs = {};
+            try { extraPrefs = JSON.parse(safeStorageGet('saj_ensl_prefs') || '{}') || {}; } catch (e) {}
+            if (pName) pName.value = (currentUser && currentUser.name) || extraPrefs.name || '';
+            if (pDept) pDept.value = (currentUser && currentUser.department) || extraPrefs.department || departmentsList[0].id;
+            if (pYear) pYear.value = (currentUser && currentUser.year) || extraPrefs.year || 'السنة الثانية';
+            if (pBio) pBio.value = extraPrefs.bio || '';
+        }
+
+        function switchPlatformView(viewName) {
+            currentPlatformView = viewName;
+            const panels = {
+                library: document.getElementById('view-panel-library'),
+                forum: document.getElementById('view-panel-forum'),
+                portfolio: document.getElementById('view-panel-portfolio')
+            };
+            Object.entries(panels).forEach(([k, el]) => {
+                if (el) el.classList.toggle('hidden', k !== viewName);
+            });
+
+            document.querySelectorAll('.platform-view-btn').forEach(btn => {
+                const isActive = btn.id === `view-tab-${viewName}`;
+                btn.classList.toggle('bg-editorial-burgundy', isActive);
+                btn.classList.toggle('text-white', isActive);
+                btn.classList.toggle('font-bold', isActive);
+                btn.classList.toggle('bg-editorial-paper', !isActive);
+                btn.classList.toggle('text-editorial-ink', !isActive);
+                btn.classList.toggle('border', !isActive);
+                btn.classList.toggle('border-editorial-rule', !isActive);
+            });
+
+            if (viewName === 'forum') renderForumTopics();
+            if (viewName === 'portfolio') {
+                populateForumAndProfileSelects();
+                renderSavedPublications();
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function renderActiveFilterChips() {
+            const bar = document.getElementById('active-filters-bar');
+            if (!bar) return;
+            const chips = [];
+            if (currentTypeFilter !== 'all') {
+                chips.push(`<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] bg-editorial-sheet border border-editorial-burgundy/50 text-xs font-semibold text-editorial-burgundy"><span>النوع: ${escapeHTML(getTypeLabel(currentTypeFilter))}</span><button type="button" onclick="setTypeFilter('all')" class="cursor-pointer font-bold">×</button></span>`);
+            }
+            if (currentDeptFilter !== 'all') {
+                chips.push(`<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] bg-editorial-sheet border border-editorial-burgundy/50 text-xs font-semibold text-editorial-burgundy"><span>${escapeHTML(getDeptLabel(currentDeptFilter))}</span><button type="button" onclick="setDepartmentFilter('all'); const s=document.getElementById('dept-filter'); if(s) s.value='all';" class="cursor-pointer font-bold">×</button></span>`);
+            }
+            if (currentSearchQuery.trim()) {
+                chips.push(`<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] bg-editorial-sheet border border-editorial-burgundy/50 text-xs font-semibold text-editorial-burgundy"><span>بحث: ${escapeHTML(currentSearchQuery.trim())}</span><button type="button" onclick="clearSearch()" class="cursor-pointer font-bold">×</button></span>`);
+            }
+            if (chips.length > 0) {
+                bar.innerHTML = chips.join('');
+                bar.classList.remove('hidden');
+                bar.classList.add('flex');
+            } else {
+                bar.innerHTML = '';
+                bar.classList.add('hidden');
+                bar.classList.remove('flex');
+            }
+        }
+
+        function toggleSavePublication(pubId) {
+            const idNum = Number(pubId);
+            if (!idNum) return;
+            const idx = savedPublicationIds.indexOf(idNum);
+            if (idx >= 0) {
+                savedPublicationIds.splice(idx, 1);
+                showToast('تمت الإزالة من المحفوظات');
+            } else {
+                savedPublicationIds.unshift(idNum);
+                showToast('تمت الإضافة إلى المحفوظات');
+            }
+            safeStorageSet('saj_ensl_saved_ids', JSON.stringify(savedPublicationIds));
+            updateExtensionBadges();
+            syncReaderSaveButton();
+            if (currentPlatformView === 'portfolio') renderSavedPublications();
+        }
+
+        function toggleSaveActivePublication() {
+            if (activePublicationId) toggleSavePublication(activePublicationId);
+        }
+
+        function syncReaderSaveButton() {
+            const label = document.getElementById('modal-save-label');
+            if (!label || !activePublicationId) return;
+            const isSaved = savedPublicationIds.includes(Number(activePublicationId));
+            label.textContent = isSaved ? 'محفوظ' : 'حفظ';
+        }
+
+        function renderSavedPublications() {
+            const box = document.getElementById('saved-publications-list');
+            if (!box) return;
+            const savedItems = publications.filter(p => savedPublicationIds.includes(Number(p.id)));
+            if (savedItems.length === 0) {
+                box.innerHTML = `<div class="p-8 text-center bg-editorial-paper border border-editorial-rule rounded-[4px] text-xs text-editorial-muted">لا توجد مواد محفوظة بعد. يمكنك حفظ أي بحث أو ملخص من المكتبة لقراءته لاحقاً.</div>`;
+                return;
+            }
+            box.innerHTML = savedItems.map(pub => `
+                <div class="p-3.5 bg-editorial-paper border border-editorial-rule rounded-[4px] flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <div class="text-[11px] text-editorial-burgundy font-bold mb-0.5">${escapeHTML(getTypeLabel(pub.type))} • ${escapeHTML(getDeptLabel(pub.department))}</div>
+                        <button type="button" onclick="openReaderModal(${Number(pub.id)})" class="text-sm font-bold text-editorial-ink hover:text-editorial-burgundy text-start cursor-pointer block truncate">${escapeHTML(pub.title)}</button>
+                        <div class="text-xs text-editorial-muted mt-0.5">${escapeHTML(pub.author)} — ${escapeHTML(pub.year)}</div>
+                    </div>
+                    <button type="button" onclick="toggleSavePublication(${Number(pub.id)})" class="text-xs text-editorial-muted hover:text-editorial-burgundy underline shrink-0 cursor-pointer">إزالة</button>
+                </div>
+            `).join('');
+        }
+
+        function handleProfilePrefsSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('pref-name').value.trim();
+            const department = document.getElementById('pref-dept').value;
+            const year = document.getElementById('pref-year').value;
+            const bio = document.getElementById('pref-bio').value.trim();
+            safeStorageSet('saj_ensl_prefs', JSON.stringify({ name, department, year, bio }));
+            if (currentUser) {
+                currentUser = { ...currentUser, name: name || currentUser.name, department, year, bio };
+                safeStorageSet('saj_ensl_user', JSON.stringify(currentUser));
+                renderAuthNav();
+            }
+            showToast('تم حفظ تفضيلات الملف الدراسي');
+        }
+
+        /* المنتدى الأكاديمي */
+        function toggleForumTopicForm(forceState) {
+            const form = document.getElementById('forum-topic-form');
+            if (!form) return;
+            const shouldOpen = typeof forceState === 'boolean' ? forceState : form.classList.contains('hidden');
+            form.classList.toggle('hidden', !shouldOpen);
+            if (shouldOpen) {
+                const authorInp = document.getElementById('forum-topic-author');
+                if (authorInp && currentUser && !authorInp.value) authorInp.value = currentUser.name || '';
+            }
+        }
+
+        function setForumTagFilter(tag) {
+            currentForumTag = tag;
+            document.querySelectorAll('.ftag-btn').forEach(b => {
+                const active = b.dataset.ftag === tag;
+                b.classList.toggle('bg-editorial-burgundy', active);
+                b.classList.toggle('text-white', active);
+                b.classList.toggle('font-bold', active);
+                b.classList.toggle('bg-editorial-paper', !active);
+                b.classList.toggle('text-editorial-ink', !active);
+            });
+            renderForumTopics();
+        }
+
+        function setForumDeptFilter(dept) {
+            currentForumDept = dept;
+            renderForumTopics();
+        }
+
+        function handleForumTopicSubmit(e) {
+            e.preventDefault();
+            const title = document.getElementById('forum-topic-title').value.trim();
+            const tag = document.getElementById('forum-topic-tag').value;
+            const department = document.getElementById('forum-topic-dept').value;
+            const author = document.getElementById('forum-topic-author').value.trim();
+            const body = document.getElementById('forum-topic-body').value.trim();
+            if (!title || !author || !body) return;
+
+            const today = new Date();
+            const monthsAr = ["جانفي", "فيفري", "مارس", "أفريل", "ماي", "جوان", "جويلية", "أوت", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+            const newTopic = {
+                id: Date.now(),
+                title,
+                tag,
+                department,
+                author,
+                date: `${today.getDate()} ${monthsAr[today.getMonth()]} ${today.getFullYear()}`,
+                body,
+                bestReplyId: null,
+                replies: []
+            };
+            forumTopics.unshift(newTopic);
+            safeStorageSet('saj_ensl_forum_topics', JSON.stringify(forumTopics));
+            updateExtensionBadges();
+            document.getElementById('forum-topic-form').reset();
+            toggleForumTopicForm(false);
+            expandedForumTopicId = newTopic.id;
+            renderForumTopics();
+            showToast('تم نشر الموضوع في المنتدى');
+        }
+
+        function toggleForumThread(topicId) {
+            expandedForumTopicId = expandedForumTopicId === Number(topicId) ? null : Number(topicId);
+            renderForumTopics();
+        }
+
+        function addForumReply(event, topicId) {
+            event.preventDefault();
+            const input = document.getElementById(`forum-reply-input-${topicId}`);
+            if (!input) return;
+            const text = input.value.trim();
+            if (!text) return;
+            const topic = forumTopics.find(t => Number(t.id) === Number(topicId));
+            if (!topic) return;
+            topic.replies = topic.replies || [];
+            topic.replies.push({
+                id: Date.now(),
+                author: (currentUser && currentUser.name) || 'طالب مساهم',
+                date: 'الآن',
+                text
+            });
+            safeStorageSet('saj_ensl_forum_topics', JSON.stringify(forumTopics));
+            renderForumTopics();
+            showToast('تمت إضافة الرد');
+        }
+
+        function markBestForumReply(topicId, replyId) {
+            const topic = forumTopics.find(t => Number(t.id) === Number(topicId));
+            if (!topic) return;
+            topic.bestReplyId = topic.bestReplyId === Number(replyId) ? null : Number(replyId);
+            safeStorageSet('saj_ensl_forum_topics', JSON.stringify(forumTopics));
+            renderForumTopics();
+            showToast('تم تحديث أفضل إجابة');
+        }
+
+        function renderForumTopics() {
+            const list = document.getElementById('forum-topics-list');
+            if (!list) return;
+            const items = forumTopics.filter(t => {
+                const matchTag = currentForumTag === 'all' || t.tag === currentForumTag;
+                const matchDept = currentForumDept === 'all' || t.department === currentForumDept;
+                return matchTag && matchDept;
+            });
+
+            if (items.length === 0) {
+                list.innerHTML = `<div class="p-8 text-center bg-editorial-paper border border-editorial-rule rounded-[4px] text-xs text-editorial-muted">لا توجد مواضيع مطابقة للتصفية الحالية.</div>`;
+                return;
+            }
+
+            list.innerHTML = items.map(t => {
+                const isOpen = expandedForumTopicId === Number(t.id);
+                const replies = t.replies || [];
+                return `
+                <article class="bg-editorial-paper border border-editorial-rule rounded-[4px] p-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 text-xs mb-1.5">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="font-bold text-editorial-burgundy">${escapeHTML(t.tag)}</span>
+                            <span class="text-editorial-rule">•</span>
+                            <span class="text-editorial-muted">${escapeHTML(getDeptLabel(t.department))}</span>
+                            <span class="text-editorial-rule">•</span>
+                            <span class="text-editorial-muted">${escapeHTML(t.date)}</span>
+                        </div>
+                        <button type="button" onclick="openReportModal('forum', ${Number(t.id)})" class="text-[11px] text-editorial-muted hover:text-editorial-burgundy cursor-pointer">إبلاغ</button>
+                    </div>
+                    <h3 onclick="toggleForumThread(${Number(t.id)})" class="text-base font-bold text-editorial-ink hover:text-editorial-burgundy cursor-pointer mb-1.5">${escapeHTML(t.title)}</h3>
+                    <p class="text-sm text-editorial-muted leading-relaxed mb-3">${escapeHTML(t.body)}</p>
+                    <div class="flex items-center justify-between text-xs pt-2 border-t border-editorial-rule/60">
+                        <span class="font-semibold text-editorial-ink">${escapeHTML(t.author)}</span>
+                        <button type="button" onclick="toggleForumThread(${Number(t.id)})" class="font-bold text-editorial-burgundy hover:underline cursor-pointer">
+                            ${isOpen ? 'إخفاء المناقشة' : `المناقشة (${replies.length})`}
+                        </button>
+                    </div>
+                    ${isOpen ? `
+                    <div class="mt-4 pt-3 border-t border-editorial-rule space-y-2.5">
+                        ${replies.map(r => {
+                            const isBest = Number(t.bestReplyId) === Number(r.id);
+                            return `
+                            <div class="p-3 rounded-[3px] bg-editorial-sheet border ${isBest ? 'border-editorial-brass' : 'border-editorial-rule/70'} text-xs">
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <span class="font-bold text-editorial-ink">${escapeHTML(r.author)} ${isBest ? '<span class="text-editorial-brass ms-1">★ أفضل إجابة</span>' : ''}</span>
+                                    <button type="button" onclick="markBestForumReply(${Number(t.id)}, ${Number(r.id)})" class="text-[11px] text-editorial-muted hover:text-editorial-burgundy cursor-pointer">تحديد كأفضل إجابة</button>
+                                </div>
+                                <p class="text-editorial-ink leading-relaxed">${escapeHTML(r.text)}</p>
+                            </div>`;
+                        }).join('')}
+                        <form onsubmit="addForumReply(event, ${Number(t.id)})" class="flex items-center gap-2 pt-1">
+                            <input type="text" id="forum-reply-input-${Number(t.id)}" required placeholder="أضف رداً أو فائدة علمية..." class="flex-grow bg-editorial-sheet border border-editorial-rule rounded-[3px] px-3 py-1.5 text-xs text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
+                            <button type="submit" class="px-3.5 py-1.5 rounded-[3px] bg-editorial-burgundy text-white text-xs font-bold cursor-pointer shrink-0">إرسال الرد</button>
+                        </form>
+                    </div>` : ''}
+                </article>`;
+            }).join('');
+        }
+
+        /* البلاغات */
+        function openReportModal(targetType, targetId) {
+            const typeEl = document.getElementById('report-target-type');
+            const idEl = document.getElementById('report-target-id');
+            const modal = document.getElementById('report-modal');
+            if (typeEl) typeEl.value = targetType || 'publication';
+            if (idEl) idEl.value = targetId ? String(targetId) : '';
+            if (modal) {
+                modal.classList.remove('hidden');
+                syncScrollLock();
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        function closeReportModal() {
+            const modal = document.getElementById('report-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+                syncScrollLock();
+            }
+        }
+
+        function handleReportSubmit(e) {
+            e.preventDefault();
+            const targetType = document.getElementById('report-target-type').value;
+            const targetId = document.getElementById('report-target-id').value;
+            const reason = document.getElementById('report-reason').value;
+            const details = document.getElementById('report-details').value.trim();
+            if (!details) return;
+
+            platformReports.unshift({
+                id: Date.now(),
+                targetType,
+                targetId,
+                reason,
+                details,
+                createdAt: new Date().toISOString()
+            });
+            safeStorageSet('saj_ensl_reports', JSON.stringify(platformReports));
+            updateExtensionBadges();
+            document.getElementById('report-form').reset();
+            closeReportModal();
+            showToast('تم تسجيل البلاغ للمراجعة');
+        }
+
     </script>
 </body>
 </html>
