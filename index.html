@@ -6,7 +6,16 @@
     <title>ساج — كراسات ومطارحات طلبة المدرسة العليا للأساتذة بالأغواط</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23EFE4CE' stroke='%23B8934A' stroke-width='3'/%3E%3Cpath d='M32 12l8 18-5 10h-6l-5-10z' fill='%235A1424'/%3E%3C/svg%3E">
 
-    <script>try{if(localStorage.getItem('saj_ensl_theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}</script>
+    <script>
+        (function () {
+            try {
+                const savedTheme = localStorage.getItem('saj_ensl_palette') || 'parchment';
+                const savedDark = localStorage.getItem('saj_ensl_theme') === 'dark';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                if (savedDark) document.documentElement.classList.add('dark');
+            } catch (e) {}
+        })();
+    </script>
 
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
 
@@ -46,11 +55,12 @@
                     }
                 }
             }
-        }
+        };
     </script>
 
     <style>
-        :root {
+        :root,
+        :root[data-theme="parchment"] {
             --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
             --paper: #F7F5F0;
             --sheet: #FCFBF8;
@@ -63,7 +73,8 @@
             --brass: #B8934A;
         }
 
-        html.dark {
+        :root[data-theme="parchment"].dark,
+        html[data-theme="parchment"].dark {
             --paper: #141312;
             --sheet: #1C1A18;
             --stone: #25221F;
@@ -73,6 +84,84 @@
             --burgundy: #D46A82;
             --nib-rose: #E58298;
             --brass: #C9A55C;
+        }
+
+        :root[data-theme="olive"] {
+            --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
+            --paper: #F2F5F0;
+            --sheet: #F9FBF7;
+            --stone: #E3EAE0;
+            --rule: #CBD6C7;
+            --ink: #172119;
+            --muted: #4D5E51;
+            --burgundy: #28533B;
+            --nib-rose: #5A8F70;
+            --brass: #9C7E3B;
+        }
+
+        :root[data-theme="olive"].dark,
+        html[data-theme="olive"].dark {
+            --paper: #101612;
+            --sheet: #17201A;
+            --stone: #202C24;
+            --rule: #2E3E33;
+            --ink: #E5ECE7;
+            --muted: #9AAEA0;
+            --burgundy: #6BB38B;
+            --nib-rose: #8AC9A6;
+            --brass: #C4A45E;
+        }
+
+        :root[data-theme="indigo"] {
+            --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
+            --paper: #F2F4F8;
+            --sheet: #FAFBFD;
+            --stone: #E4E8F0;
+            --rule: #CCD3E0;
+            --ink: #151C2C;
+            --muted: #4E5B75;
+            --burgundy: #1E3A5F;
+            --nib-rose: #4B74A8;
+            --brass: #B0893E;
+        }
+
+        :root[data-theme="indigo"].dark,
+        html[data-theme="indigo"].dark {
+            --paper: #0F141F;
+            --sheet: #161D2C;
+            --stone: #1F283C;
+            --rule: #2D3952;
+            --ink: #E6ECF7;
+            --muted: #9BA8C2;
+            --burgundy: #6D9AD4;
+            --nib-rose: #8FB4E3;
+            --brass: #C8A257;
+        }
+
+        :root[data-theme="obsidian"] {
+            --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
+            --paper: #F6F4F2;
+            --sheet: #FDFCFA;
+            --stone: #EAE5DF;
+            --rule: #D6CFC5;
+            --ink: #161514;
+            --muted: #54504B;
+            --burgundy: #6E1D2B;
+            --nib-rose: #C85A6E;
+            --brass: #8C6D32;
+        }
+
+        :root[data-theme="obsidian"].dark,
+        html[data-theme="obsidian"].dark {
+            --paper: #0E0D0C;
+            --sheet: #171514;
+            --stone: #221F1D;
+            --rule: #332E2B;
+            --ink: #F2EEE8;
+            --muted: #A8A096;
+            --burgundy: #E07A8D;
+            --nib-rose: #EE96A6;
+            --brass: #D4AE63;
         }
 
         body {
@@ -354,12 +443,17 @@
     <div id="toast-container" class="fixed bottom-6 left-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
     <nav class="border-b border-editorial-rule bg-editorial-sheet/95 sticky top-0 z-40 backdrop-blur-sm">
-        <div class="max-w-5xl mx-auto px-3 sm:px-6 min-h-14 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
-            <a href="#" onclick="resetAllFilters(); return false;" class="flex items-center gap-2 text-editorial-ink font-bold shrink-0">
-                <span id="nav-badge-slot" class="w-7 h-7 sm:w-8 sm:h-8 shrink-0"></span>
-                <span data-i18n="masthead_title" class="text-base sm:text-lg font-bold text-editorial-burgundy">ساج</span>
-                <span class="hidden md:inline text-editorial-muted font-mono text-[11px] tracking-wider">ENSL LAGHOUAT</span>
-            </a>
+        <div class="max-w-6xl mx-auto px-3 sm:px-6 min-h-14 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="openMobileDrawer()" class="lg:hidden p-1.5 rounded-[4px] border border-editorial-rule bg-editorial-paper hover:border-editorial-burgundy text-editorial-ink transition-colors cursor-pointer" aria-label="القائمة الجانبية">
+                    <i data-lucide="panel-right" class="w-4 h-4 text-editorial-burgundy"></i>
+                </button>
+                <a href="#" onclick="resetAllFilters(); return false;" class="flex items-center gap-2 text-editorial-ink font-bold shrink-0">
+                    <span id="nav-badge-slot" class="w-7 h-7 sm:w-8 sm:h-8 shrink-0"></span>
+                    <span data-i18n="masthead_title" class="text-base sm:text-lg font-bold text-editorial-burgundy">ساج</span>
+                    <span class="hidden md:inline text-editorial-muted font-mono text-[11px] tracking-wider">ENSL LAGHOUAT</span>
+                </a>
+            </div>
 
             <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0">
                 <button onclick="openCommandPalette()" class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-[4px] border border-editorial-rule bg-editorial-paper hover:border-editorial-burgundy text-editorial-ink transition-colors cursor-pointer" title="Ctrl+K">
@@ -367,6 +461,13 @@
                     <span data-i18n="quick_search" class="hidden sm:inline">بحث سريع</span>
                     <kbd class="hidden md:inline text-[10px] font-mono text-editorial-muted">Ctrl+K</kbd>
                 </button>
+
+                <select id="palette-select" onchange="setColorPalette(this.value)" aria-label="اختيار الثيم" class="bg-editorial-paper border border-editorial-rule text-editorial-ink text-xs rounded-[4px] px-2 py-1.5 focus:outline-none focus:border-editorial-burgundy cursor-pointer shrink-0">
+                    <option value="parchment">ورقي كلاسيكي</option>
+                    <option value="olive">أكاديمي زيتوني</option>
+                    <option value="indigo">مخطوطة نيلية</option>
+                    <option value="obsidian">عنابي داكن</option>
+                </select>
 
                 <button onclick="toggleTheme()" id="theme-toggle-btn" class="p-1.5 rounded-[4px] border border-editorial-rule bg-editorial-paper hover:border-editorial-burgundy text-editorial-ink transition-colors cursor-pointer shrink-0" aria-label="تبديل المظهر">
                     <i data-lucide="moon" id="theme-icon" class="w-3.5 h-3.5"></i>
@@ -393,7 +494,7 @@
         </div>
     </nav>
 
-    <header class="max-w-5xl mx-auto w-full px-4 sm:px-6 pt-7 pb-6">
+    <header class="max-w-6xl mx-auto w-full px-4 sm:px-6 pt-7 pb-6">
         <div class="bg-editorial-sheet border border-editorial-rule rounded-[4px] p-5 sm:p-6">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-5">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-6">
@@ -428,10 +529,48 @@
         </div>
     </header>
 
-    <main class="max-w-5xl mx-auto w-full px-4 sm:px-6 pb-16 flex-grow">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <div id="mobile-drawer" class="fixed inset-0 z-50 hidden bg-stone-950/70" onclick="if(event.target === this) closeMobileDrawer()">
+        <div class="w-80 max-w-[88vw] h-full bg-editorial-sheet border-e border-editorial-rule overflow-y-auto p-4 space-y-5 shadow-2xl modal-panel" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between border-b border-editorial-rule pb-3">
+                <span class="text-sm font-bold text-editorial-burgundy">قوائم ساج الجانبية</span>
+                <button type="button" onclick="closeMobileDrawer()" class="p-1 text-editorial-muted hover:text-editorial-ink cursor-pointer" aria-label="إغلاق">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div id="mobile-drawer-content" class="space-y-5"></div>
+        </div>
+    </div>
 
-            <section class="lg:col-span-8">
+    <main class="max-w-6xl mx-auto w-full px-4 sm:px-6 pb-16 flex-grow">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            <aside id="right-sidebar" class="hidden lg:block lg:col-span-3 space-y-5">
+                <section class="bg-editorial-sheet border border-editorial-rule rounded-[4px] p-4">
+                    <div class="flex items-center justify-between border-b border-editorial-rule pb-2 mb-3">
+                        <h2 class="text-sm font-bold text-editorial-ink">تصفح التصنيفات</h2>
+                        <span class="text-[10px] font-mono text-editorial-brass">INDEX</span>
+                    </div>
+                    <ul id="right-nav-types" class="space-y-1 text-xs"></ul>
+                </section>
+
+                <section class="bg-editorial-sheet border border-editorial-rule rounded-[4px] p-4">
+                    <div class="flex items-center justify-between border-b border-editorial-rule pb-2 mb-3">
+                        <h2 class="text-sm font-bold text-editorial-ink">موجز الفهرس</h2>
+                        <span class="text-[10px] font-mono text-editorial-muted">STATS</span>
+                    </div>
+                    <dl id="right-sidebar-stats" class="grid grid-cols-2 gap-2 text-xs"></dl>
+                </section>
+
+                <section class="bg-editorial-sheet border border-editorial-rule rounded-[4px] p-4">
+                    <div class="flex items-center justify-between border-b border-editorial-rule pb-2 mb-3">
+                        <h2 class="text-sm font-bold text-editorial-ink">المحفوظات</h2>
+                        <span id="bookmarks-count-badge" class="text-[10px] font-mono px-1.5 py-0.5 bg-editorial-paper border border-editorial-rule rounded-[2px] text-editorial-burgundy">0</span>
+                    </div>
+                    <div id="bookmarks-list" class="space-y-2 text-xs"></div>
+                </section>
+            </aside>
+
+            <section class="lg:col-span-6 min-w-0">
                 <div class="bg-editorial-sheet border border-editorial-rule rounded-[4px] p-4 mb-6">
                     <div class="relative flex items-center bg-editorial-paper border border-editorial-rule focus-within:border-editorial-burgundy rounded-[4px] px-3 py-2 mb-4 transition-colors">
                         <i data-lucide="search" class="w-4 h-4 text-editorial-burgundy shrink-0"></i>
@@ -495,10 +634,10 @@
                 </div>
             </section>
 
-            <aside class="lg:col-span-4 space-y-6">
+            <aside id="left-sidebar" class="hidden lg:block lg:col-span-3 space-y-5">
                 <section class="bg-editorial-sheet border border-editorial-rule rounded-[4px] p-4">
                     <div class="flex items-center justify-between border-b border-editorial-rule pb-2 mb-3">
-                        <h2 data-i18n="sidebar_depts_title" class="text-base font-bold text-editorial-ink">الأقسام والتخصصات</h2>
+                        <h2 data-i18n="sidebar_depts_title" class="text-sm font-bold text-editorial-ink">الأقسام والتخصصات</h2>
                         <span id="dept-count" class="text-[11px] font-mono text-editorial-brass">9</span>
                     </div>
                     <ul id="departments-index" class="divide-y divide-editorial-rule/60 text-sm"></ul>
@@ -506,7 +645,7 @@
 
                 <section class="bg-editorial-sheet border border-editorial-rule rounded-[4px] p-4">
                     <div class="flex items-center justify-between border-b border-editorial-rule pb-2 mb-3">
-                        <h2 data-i18n="sidebar_notes_title" class="text-base font-bold text-editorial-ink">تنبيهات الطلبة</h2>
+                        <h2 data-i18n="sidebar_notes_title" class="text-sm font-bold text-editorial-ink">تنبيهات الطلبة</h2>
                         <span class="text-[11px] font-mono text-editorial-muted">NOTES</span>
                     </div>
                     <div id="student-notes-list" class="space-y-3 divide-y divide-editorial-rule/60"></div>
@@ -515,7 +654,6 @@
         </div>
     </main>
 
-    <!-- نافذة تسجيل الدخول السريع -->
     <div id="auth-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-stone-950/75 p-3 sm:p-6" onclick="if(event.target === this) closeAuthModal()">
         <div class="min-h-screen flex items-center justify-center" onclick="if(event.target === this) closeAuthModal()">
             <div class="bg-editorial-sheet w-full max-w-md border border-editorial-rule shadow-2xl my-4 rounded-[4px] modal-panel">
@@ -615,7 +753,6 @@
         </div>
     </div>
 
-    <!-- نافذة تأكيد تسجيل الخروج -->
     <div id="logout-confirm-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-stone-950/75 p-4" onclick="if(event.target === this) closeLogoutConfirmModal()">
         <div class="min-h-screen flex items-center justify-center" onclick="if(event.target === this) closeLogoutConfirmModal()">
             <div class="bg-editorial-sheet w-full max-w-sm border border-editorial-rule shadow-2xl rounded-[4px] p-6 modal-panel">
@@ -640,7 +777,6 @@
         </div>
     </div>
 
-    <!-- نافذة القراءة والطباعة -->
     <div id="reader-modal" class="fixed inset-0 z-50 hidden overflow-y-scroll bg-stone-950/75 p-2 sm:p-6" style="height: 100dvh; -webkit-overflow-scrolling: touch;" onclick="if(event.target === this) closeReaderModal()">
         <div class="w-full max-w-3xl mx-auto my-2 sm:my-6" onclick="event.stopPropagation()">
             <div class="bg-editorial-sheet w-full border border-editorial-rule shadow-2xl rounded-[4px]">
@@ -658,6 +794,11 @@
                             <span class="text-editorial-rule">|</span>
                             <button onclick="changeFontSize(1)" class="px-2 py-1 text-xs font-bold hover:bg-editorial-stone cursor-pointer" title="تكبير الخط">A+</button>
                         </div>
+
+                        <button type="button" id="modal-bookmark-btn" onclick="if(activePublicationId) toggleBookmark(activePublicationId)" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] border border-editorial-rule bg-editorial-sheet hover:border-editorial-burgundy text-xs font-semibold text-editorial-ink cursor-pointer">
+                            <i data-lucide="bookmark" class="w-3.5 h-3.5 text-editorial-burgundy"></i>
+                            <span id="modal-bookmark-label">حفظ</span>
+                        </button>
 
                         <button onclick="copyShareLink()" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] border border-editorial-rule bg-editorial-sheet hover:border-editorial-burgundy text-xs font-semibold text-editorial-ink cursor-pointer">
                             <i data-lucide="share-2" class="w-3.5 h-3.5 text-editorial-burgundy"></i>
@@ -741,7 +882,6 @@
         </div>
     </div>
 
-    <!-- نافذة النشر -->
     <div id="publish-modal" class="fixed inset-0 z-50 hidden overflow-y-scroll bg-stone-950/75 p-3 sm:p-6" style="height: 100dvh; -webkit-overflow-scrolling: touch;" onclick="if(event.target === this) closeSubmitModal()">
         <div class="w-full max-w-2xl mx-auto my-2 sm:my-6" onclick="event.stopPropagation()">
             <div class="bg-editorial-sheet w-full border border-editorial-rule shadow-2xl rounded-[4px]">
@@ -851,7 +991,6 @@
         </div>
     </div>
 
-    <!-- نافذة عن المبادرة -->
     <div id="about-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-stone-950/75 p-3 sm:p-6" onclick="if(event.target === this) closeAboutModal()">
         <div class="min-h-screen flex items-center justify-center" onclick="if(event.target === this) closeAboutModal()">
             <div class="bg-editorial-sheet w-full max-w-xl border border-editorial-rule shadow-2xl p-6 sm:p-8 rounded-[4px] modal-panel">
@@ -874,7 +1013,6 @@
         </div>
     </div>
 
-    <!-- لوحة البحث السريع -->
     <div id="cmd-modal" class="fixed inset-0 z-50 hidden bg-stone-950/65 p-4 sm:pt-20" onclick="if(event.target === this) closeCommandPalette()">
         <div class="max-w-lg mx-auto bg-editorial-sheet border border-editorial-rule shadow-2xl rounded-[4px] overflow-hidden modal-panel">
             <div class="flex items-center border-b border-editorial-rule px-3.5 py-2.5">
@@ -886,9 +1024,8 @@
         </div>
     </div>
 
-    <!-- التذييل الموحد الهوية -->
     <footer class="border-t border-editorial-rule bg-editorial-sheet mt-auto">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-editorial-muted">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-editorial-muted">
             <div class="flex items-center gap-3">
                 <span id="footer-badge-slot" class="w-10 h-10 shrink-0"></span>
                 <div>
@@ -925,6 +1062,13 @@
                 supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             }
         } catch (e) { supabaseClient = null; }
+
+        const COLOR_PALETTES = {
+            parchment: { ar: 'ورقي كلاسيكي', fr: 'Parchemin', en: 'Parchment' },
+            olive: { ar: 'أكاديمي زيتوني', fr: 'Olive académique', en: 'Olive Academy' },
+            indigo: { ar: 'مخطوطة نيلية', fr: 'Manuscrit indigo', en: 'Indigo Folio' },
+            obsidian: { ar: 'عنابي داكن', fr: 'Bordeaux sombre', en: 'Deep Burgundy' }
+        };
 
         const NEUTRAL_AVATARS = [
             { id: 'arch-sand', labelAr: 'قوس رملي', labelFr: 'Arche sable', labelEn: 'Sand Arch', bg: '#EFE4CE', fg: '#5A1424', accent: '#B8934A', motif: 'arch' },
@@ -998,6 +1142,162 @@
         let fileInfoState = { kind: 'none', name: '', size: '0' };
         let currentUser = null;
         let authMode = 'login';
+        let bookmarkedIds = [];
+
+        function loadBookmarks() {
+            try {
+                const raw = localStorage.getItem('saj_ensl_bookmarks_v1');
+                const arr = raw ? JSON.parse(raw) : [];
+                bookmarkedIds = Array.isArray(arr) ? arr.map(String) : [];
+            } catch (e) { bookmarkedIds = []; }
+        }
+
+        function saveBookmarks() {
+            safeStorageSet('saj_ensl_bookmarks_v1', JSON.stringify(bookmarkedIds));
+        }
+
+        function isBookmarked(id) {
+            return bookmarkedIds.includes(String(id));
+        }
+
+        function toggleBookmark(id) {
+            const key = String(id);
+            const idx = bookmarkedIds.indexOf(key);
+            if (idx >= 0) {
+                bookmarkedIds.splice(idx, 1);
+                showToast(tr('تمت الإزالة من المحفوظات', 'Retiré des favoris', 'Removed from saved'));
+            } else {
+                bookmarkedIds.unshift(key);
+                showToast(tr('تمت الإضافة إلى المحفوظات', 'Ajouté aux favoris', 'Added to saved'));
+            }
+            saveBookmarks();
+            renderRightSidebar();
+            updateReaderBookmarkButton();
+        }
+
+        function updateReaderBookmarkButton() {
+            const labelEl = document.getElementById('modal-bookmark-label');
+            if (!labelEl || !activePublicationId) return;
+            const saved = isBookmarked(activePublicationId);
+            labelEl.textContent = saved
+                ? tr('محفوظ', 'Enregistré', 'Saved')
+                : tr('حفظ', 'Enregistrer', 'Save');
+        }
+
+        function openMobileDrawer() {
+            const drawer = document.getElementById('mobile-drawer');
+            const target = document.getElementById('mobile-drawer-content');
+            const rightSb = document.getElementById('right-sidebar');
+            const leftSb = document.getElementById('left-sidebar');
+            if (!drawer || !target) return;
+            target.innerHTML = [rightSb ? rightSb.innerHTML : '', leftSb ? leftSb.innerHTML : ''].join('');
+            drawer.classList.remove('hidden');
+            syncScrollLock();
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function closeMobileDrawer() {
+            const drawer = document.getElementById('mobile-drawer');
+            if (drawer && !drawer.classList.contains('hidden')) {
+                drawer.classList.add('hidden');
+                syncScrollLock();
+            }
+        }
+
+        function renderRightSidebar() {
+            const typesList = document.getElementById('right-nav-types');
+            const statsEl = document.getElementById('right-sidebar-stats');
+            const bmList = document.getElementById('bookmarks-list');
+            const bmCount = document.getElementById('bookmarks-count-badge');
+
+            const typeDefs = [
+                { key: 'all', label: translations[currentLang].tab_all, count: publications.length },
+                { key: 'بحث', label: translations[currentLang].tab_research, count: publications.filter(p => p.type === 'بحث').length },
+                { key: 'مقال', label: translations[currentLang].tab_articles, count: publications.filter(p => p.type === 'مقال').length },
+                { key: 'ملخص درس', label: translations[currentLang].tab_lessons, count: publications.filter(p => p.type === 'ملخص درس').length }
+            ];
+
+            if (typesList) {
+                typesList.innerHTML = typeDefs.map(t => {
+                    const active = currentTypeFilter === t.key;
+                    return `
+                        <li>
+                            <button type="button" onclick="setTypeFilter('${t.key}'); closeMobileDrawer();" class="w-full px-2.5 py-1.5 rounded-[3px] flex items-center justify-between transition-colors cursor-pointer ${active ? 'bg-editorial-burgundy text-white font-bold' : 'text-editorial-ink hover:bg-editorial-paper'}">
+                                <span>${escapeHTML(t.label)}</span>
+                                <span class="text-[11px] font-mono ${active ? 'text-white/90' : 'text-editorial-muted'}">${t.count}</span>
+                            </button>
+                        </li>
+                    `;
+                }).join('');
+            }
+
+            if (statsEl) {
+                const totalViews = publications.reduce((acc, p) => acc + (Number(p.views) || 0), 0);
+                const filesCount = publications.filter(p => !!p.file_url).length;
+                statsEl.innerHTML = `
+                    <div class="bg-editorial-paper border border-editorial-rule/70 rounded-[3px] p-2.5">
+                        <div class="text-[10px] text-editorial-muted">${escapeHTML(tr('الإسهامات', 'Contributions', 'Entries'))}</div>
+                        <div class="text-base font-bold font-mono text-editorial-burgundy">${publications.length}</div>
+                    </div>
+                    <div class="bg-editorial-paper border border-editorial-rule/70 rounded-[3px] p-2.5">
+                        <div class="text-[10px] text-editorial-muted">${escapeHTML(tr('المشاهدات', 'Lectures', 'Reads'))}</div>
+                        <div class="text-base font-bold font-mono text-editorial-ink">${totalViews}</div>
+                    </div>
+                    <div class="bg-editorial-paper border border-editorial-rule/70 rounded-[3px] p-2.5">
+                        <div class="text-[10px] text-editorial-muted">${escapeHTML(tr('ملفات مرفقة', 'Fichiers', 'Files'))}</div>
+                        <div class="text-base font-bold font-mono text-editorial-brass">${filesCount}</div>
+                    </div>
+                    <div class="bg-editorial-paper border border-editorial-rule/70 rounded-[3px] p-2.5">
+                        <div class="text-[10px] text-editorial-muted">${escapeHTML(tr('المحفوظات', 'Favoris', 'Saved'))}</div>
+                        <div class="text-base font-bold font-mono text-editorial-ink">${bookmarkedIds.length}</div>
+                    </div>
+                `;
+            }
+
+            if (bmCount) bmCount.textContent = String(bookmarkedIds.length);
+            if (bmList) {
+                const savedPubs = bookmarkedIds
+                    .map(id => publications.find(p => String(p.id) === String(id)))
+                    .filter(Boolean);
+
+                if (savedPubs.length === 0) {
+                    bmList.innerHTML = `<p class="text-editorial-muted text-[11px] leading-relaxed">${escapeHTML(tr('لا توجد مواد محفوظة بعد. افتح أي إسهام واضغط حفظ لإضافته هنا.', 'Aucun élément enregistré.', 'No saved items yet.'))}</p>`;
+                } else {
+                    bmList.innerHTML = savedPubs.slice(0, 6).map(p => `
+                        <div class="flex items-center justify-between gap-2 p-2 rounded-[3px] bg-editorial-paper border border-editorial-rule/70">
+                            <button type="button" onclick="openReaderModal(${Number(p.id)}); closeMobileDrawer();" class="text-start font-semibold text-editorial-ink hover:text-editorial-burgundy truncate cursor-pointer">
+                                ${escapeHTML(p.title)}
+                            </button>
+                            <button type="button" onclick="toggleBookmark(${Number(p.id)})" class="text-editorial-muted hover:text-editorial-burgundy shrink-0 cursor-pointer" title="${escapeHTML(tr('إزالة', 'Retirer', 'Remove'))}">
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    `).join('');
+                }
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function setColorPalette(paletteId) {
+            const chosen = COLOR_PALETTES[paletteId] ? paletteId : 'parchment';
+            document.documentElement.setAttribute('data-theme', chosen);
+            safeStorageSet('saj_ensl_palette', chosen);
+            const sel = document.getElementById('palette-select');
+            if (sel) sel.value = chosen;
+            renderLogos();
+            renderPublishAvatarPicker();
+            renderAll(false);
+        }
+
+        function populatePaletteSelect() {
+            const sel = document.getElementById('palette-select');
+            if (!sel) return;
+            const cur = document.documentElement.getAttribute('data-theme') || 'parchment';
+            sel.innerHTML = Object.entries(COLOR_PALETTES).map(([id, labels]) =>
+                `<option value="${id}">${escapeHTML(labels[currentLang] || labels.ar)}</option>`
+            ).join('');
+            sel.value = cur;
+        }
 
         const sajBrandLogoSVG = `
         <svg viewBox="0 0 470 150" direction="ltr" class="w-full h-full logo-surface __ANIM_CLASS__" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شعار منصة ساج SAJ — ENSL Laghouat">
@@ -1408,7 +1708,7 @@
 
         function syncScrollLock() {
             const anyOpen = document.querySelector(
-                '#reader-modal:not(.hidden), #publish-modal:not(.hidden), #about-modal:not(.hidden), #cmd-modal:not(.hidden), #auth-modal:not(.hidden), #logout-confirm-modal:not(.hidden)'
+                '#reader-modal:not(.hidden), #publish-modal:not(.hidden), #about-modal:not(.hidden), #cmd-modal:not(.hidden), #auth-modal:not(.hidden), #logout-confirm-modal:not(.hidden), #mobile-drawer:not(.hidden)'
             );
             document.documentElement.style.overflow = anyOpen ? 'hidden' : '';
             document.body.style.overflow = anyOpen ? 'hidden' : '';
@@ -1455,6 +1755,8 @@
 
         async function initApp() {
             initTheme();
+            populatePaletteSelect();
+            loadBookmarks();
             renderLogos();
             runSplashTransition();
             populateDepartments();
@@ -1540,6 +1842,7 @@
                     closeAboutModal();
                     closeAuthModal();
                     closeLogoutConfirmModal();
+                    closeMobileDrawer();
                 }
             });
         }
@@ -2068,7 +2371,7 @@
                 const active = currentDeptFilter === d.id;
                 return `
                 <li>
-                    <button onclick="quickFilterDept('${d.id}')" class="w-full py-2 flex items-center justify-between text-start hover:text-editorial-burgundy transition-colors cursor-pointer ${active ? 'font-bold text-editorial-burgundy' : 'text-editorial-ink'}">
+                    <button onclick="quickFilterDept('${d.id}'); closeMobileDrawer();" class="w-full py-2 flex items-center justify-between text-start hover:text-editorial-burgundy transition-colors cursor-pointer ${active ? 'font-bold text-editorial-burgundy' : 'text-editorial-ink'}">
                         <span class="text-xs">${escapeHTML(d[currentLang] || d.ar)}</span>
                         <span class="text-[11px] font-mono px-1.5 py-0.5 rounded-[2px] bg-editorial-paper border border-editorial-rule text-editorial-muted">${count}</span>
                     </button>
@@ -2174,6 +2477,7 @@
             }
             renderPublicationsList(animate);
             renderDepartmentsIndex();
+            renderRightSidebar();
         }
 
         function renderPublicationsList(animate = true) {
@@ -2270,6 +2574,9 @@
                                 <div class="flex items-center gap-3.5">
                                     ${extBadge}
                                     <span class="text-editorial-muted">${escapeHTML(formatMinutes(pub.readMinutes))}</span>
+                                    <button type="button" onclick="toggleBookmark(${Number(pub.id)})" class="text-editorial-muted hover:text-editorial-burgundy cursor-pointer ${isBookmarked(pub.id) ? 'text-editorial-burgundy font-bold' : ''}" title="${escapeHTML(tr('حفظ', 'Enregistrer', 'Save'))}">
+                                        <i data-lucide="bookmark" class="w-3.5 h-3.5 inline"></i>
+                                    </button>
                                     <button onclick="openReaderModal(${pidArg})" class="font-bold text-editorial-burgundy hover:underline underline-offset-4 cursor-pointer inline-flex items-center gap-1">
                                         <span>${escapeHTML(readLabel)}</span>
                                         <span>${arrow}</span>
@@ -2281,6 +2588,7 @@
                 </article>
                 `;
             }).join('');
+            if (window.lucide) lucide.createIcons();
         }
 
         function setTypeFilter(type, btnEl) {
@@ -2297,6 +2605,7 @@
             });
             if (target) updateTabUnderline(target);
             renderPublicationsList(true);
+            renderRightSidebar();
         }
 
         function setDepartmentFilter(dept) {
@@ -2348,6 +2657,7 @@
             if (deptSel) deptSel.value = 'all';
             setTypeFilter('all');
             renderDepartmentsIndex();
+            renderRightSidebar();
         }
 
         function cycleLanguage() {
@@ -2372,6 +2682,7 @@
                 if (translations[currentLang][key]) el.setAttribute('placeholder', translations[currentLang][key]);
             });
 
+            populatePaletteSelect();
             populateDepartments();
             renderStudentNotes();
             renderAuthNav();
@@ -2380,7 +2691,10 @@
             switchAuthMode(authMode);
             renderAll(false);
 
-            if (activePublicationId) fillReaderModal(activePublicationId);
+            if (activePublicationId) {
+                fillReaderModal(activePublicationId);
+                updateReaderBookmarkButton();
+            }
 
             requestAnimationFrame(refreshTabUnderline);
         }
@@ -2458,12 +2772,14 @@
             pub.views = (pub.views || 0) + 1;
             savePublicationsLocal();
             renderPublicationsList(false);
+            renderRightSidebar();
 
             if (supabaseClient && pub.created_at && !pub.localOnly) {
                 supabaseClient.rpc('increment_views', { pub_id: pub.id }).then(() => {}, () => {});
             }
 
             fillReaderModal(pub.id);
+            updateReaderBookmarkButton();
             document.getElementById('reader-modal').classList.remove('hidden');
             syncScrollLock();
         }
