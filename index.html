@@ -214,9 +214,6 @@
             mix-blend-mode: normal;
         }
 
-        /* =========================================================
-           حركات بناء الشعار الدائري وتقارب النصوص + شاشة الانتظار
-           ========================================================= */
         #saj-splash-screen {
             position: fixed;
             inset: 0;
@@ -788,12 +785,17 @@
                         <span id="modal-dept-label" class="text-editorial-muted"></span>
                     </div>
 
-                    <div class="flex items-center gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
                         <div class="flex items-center border border-editorial-rule bg-editorial-sheet rounded-[3px]">
                             <button onclick="changeFontSize(-1)" class="px-2 py-1 text-xs font-bold hover:bg-editorial-stone cursor-pointer" title="تصغير الخط">A-</button>
                             <span class="text-editorial-rule">|</span>
                             <button onclick="changeFontSize(1)" class="px-2 py-1 text-xs font-bold hover:bg-editorial-stone cursor-pointer" title="تكبير الخط">A+</button>
                         </div>
+
+                        <button type="button" id="modal-heart-btn" onclick="if(activePublicationId) toggleHeart(activePublicationId)" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] border border-editorial-rule bg-editorial-sheet hover:border-editorial-burgundy text-xs font-semibold text-editorial-ink cursor-pointer">
+                            <span id="modal-heart-icon" class="inline-flex items-center"></span>
+                            <span id="modal-heart-count" class="font-mono">0</span>
+                        </button>
 
                         <button type="button" id="modal-bookmark-btn" onclick="if(activePublicationId) toggleBookmark(activePublicationId)" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] border border-editorial-rule bg-editorial-sheet hover:border-editorial-burgundy text-xs font-semibold text-editorial-ink cursor-pointer">
                             <i data-lucide="bookmark" class="w-3.5 h-3.5 text-editorial-burgundy"></i>
@@ -868,6 +870,36 @@
                     <div id="modal-references-box" class="mt-10 pt-5 border-t border-editorial-rule">
                         <h4 data-i18n="refs_heading" class="text-base font-bold text-editorial-ink mb-2.5">المصادر والمراجع</h4>
                         <ul id="modal-references" class="list-disc list-inside space-y-1 text-xs sm:text-sm text-editorial-muted"></ul>
+                    </div>
+
+                    <div id="modal-comments-section" class="no-print mt-10 pt-6 border-t border-editorial-rule">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 id="comments-heading" class="text-base font-bold text-editorial-ink flex items-center gap-2">
+                                <i data-lucide="message-square" class="w-4 h-4 text-editorial-burgundy"></i>
+                                <span>تعليقات الطلبة</span>
+                                <span id="comments-count-badge" class="text-xs font-mono px-2 py-0.5 rounded-[3px] bg-editorial-paper border border-editorial-rule text-editorial-burgundy">0</span>
+                            </h4>
+                        </div>
+
+                        <form id="comment-form" onsubmit="handleCommentSubmit(event)" class="bg-editorial-paper border border-editorial-rule rounded-[4px] p-3.5 mb-5 space-y-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                    <label id="comment-author-label" for="comment-author-input" class="block text-xs font-bold text-editorial-ink mb-1">الاسم *</label>
+                                    <input type="text" id="comment-author-input" required placeholder="اسمك أو لقبك" class="w-full bg-editorial-sheet border border-editorial-rule rounded-[3px] px-3 py-1.5 text-xs text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label id="comment-body-label" for="comment-body-input" class="block text-xs font-bold text-editorial-ink mb-1">التعليق أو الملاحظة *</label>
+                                    <input type="text" id="comment-body-input" required placeholder="أضف تعليقاً أو سؤالاً أو ملاحظة علمية..." class="w-full bg-editorial-sheet border border-editorial-rule rounded-[3px] px-3 py-1.5 text-xs text-editorial-ink focus:outline-none focus:border-editorial-burgundy">
+                                </div>
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="submit" id="comment-submit-btn" class="px-4 py-1.5 rounded-[3px] bg-editorial-burgundy hover:opacity-90 text-white text-xs font-bold transition-opacity cursor-pointer">
+                                    إضافة تعليق
+                                </button>
+                            </div>
+                        </form>
+
+                        <div id="comments-list" class="space-y-2.5"></div>
                     </div>
 
                     <div class="no-print mt-8 pt-4 border-t border-editorial-rule">
@@ -1143,6 +1175,8 @@
         let currentUser = null;
         let authMode = 'login';
         let bookmarkedIds = [];
+        let heartedIds = [];
+        let commentsByPub = {};
 
         function loadBookmarks() {
             try {
@@ -1172,6 +1206,7 @@
             }
             saveBookmarks();
             renderRightSidebar();
+            renderPublicationsList(false);
             updateReaderBookmarkButton();
         }
 
@@ -1182,6 +1217,234 @@
             labelEl.textContent = saved
                 ? tr('محفوظ', 'Enregistré', 'Saved')
                 : tr('حفظ', 'Enregistrer', 'Save');
+        }
+
+        /* =========================================================
+           ميزة القلب (الإعجاب) على الإسهامات
+           ========================================================= */
+        function loadHearts() {
+            try {
+                const raw = localStorage.getItem('saj_ensl_hearts_v1');
+                const arr = raw ? JSON.parse(raw) : [];
+                heartedIds = Array.isArray(arr) ? arr.map(String) : [];
+            } catch (e) { heartedIds = []; }
+        }
+
+        function saveHearts() {
+            safeStorageSet('saj_ensl_hearts_v1', JSON.stringify(heartedIds));
+        }
+
+        function isHearted(id) {
+            return heartedIds.includes(String(id));
+        }
+
+        function renderHeartSVG(active) {
+            if (active) {
+                return `<svg class="w-3.5 h-3.5 text-editorial-burgundy fill-editorial-burgundy shrink-0" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
+            }
+            return `<svg class="w-3.5 h-3.5 text-editorial-burgundy shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+        }
+
+        function updateReaderHeartButton(pub) {
+            const iconEl = document.getElementById('modal-heart-icon');
+            const countEl = document.getElementById('modal-heart-count');
+            const btnEl = document.getElementById('modal-heart-btn');
+            if (!pub || !iconEl || !countEl) return;
+            const liked = isHearted(pub.id);
+            iconEl.innerHTML = renderHeartSVG(liked);
+            countEl.textContent = String(Number(pub.hearts) || 0);
+            if (btnEl) {
+                btnEl.classList.toggle('border-editorial-burgundy', liked);
+                btnEl.classList.toggle('bg-editorial-burgundy/10', liked);
+            }
+        }
+
+        function toggleHeart(id) {
+            const key = String(id);
+            const pub = publications.find(p => String(p.id) === key || Number(p.id) === Number(key));
+            if (!pub) return;
+
+            const idx = heartedIds.indexOf(key);
+            let delta = 0;
+            if (idx >= 0) {
+                heartedIds.splice(idx, 1);
+                delta = -1;
+                pub.hearts = Math.max(0, (Number(pub.hearts) || 0) - 1);
+                showToast(tr('تمت إزالة القلب', 'Cœur retiré', 'Heart removed'));
+            } else {
+                heartedIds.unshift(key);
+                delta = 1;
+                pub.hearts = (Number(pub.hearts) || 0) + 1;
+                showToast(tr('تم تسجيل قلبك على الإسهام', 'Cœur ajouté', 'Hearted contribution'));
+            }
+
+            saveHearts();
+            savePublicationsLocal();
+            renderPublicationsList(false);
+            updateReaderHeartButton(pub);
+
+            if (supabaseClient && !pub.localOnly && typeof pub.id === 'number') {
+                supabaseClient
+                    .from('contributions')
+                    .update({ hearts: pub.hearts })
+                    .eq('id', pub.id)
+                    .then(() => {}, () => {});
+            }
+        }
+
+        /* =========================================================
+           ميزة التعليقات على الإسهامات
+           ========================================================= */
+        function loadCommentsLocal() {
+            try {
+                const raw = localStorage.getItem('saj_ensl_comments_v1');
+                const parsed = raw ? JSON.parse(raw) : {};
+                commentsByPub = (parsed && typeof parsed === 'object') ? parsed : {};
+            } catch (e) { commentsByPub = {}; }
+        }
+
+        function saveCommentsLocal() {
+            safeStorageSet('saj_ensl_comments_v1', JSON.stringify(commentsByPub));
+        }
+
+        function getCommentsForPub(pubId) {
+            const key = String(pubId);
+            return Array.isArray(commentsByPub[key]) ? commentsByPub[key] : [];
+        }
+
+        function formatCommentDate() {
+            const today = new Date();
+            const monthsAr = ["جانفي", "فيفري", "مارس", "أفريل", "ماي", "جوان", "جويلية", "أوت", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+            if (currentLang === 'ar') {
+                return `${today.getDate()} ${monthsAr[today.getMonth()]} ${today.getFullYear()}`;
+            }
+            return today.toISOString().slice(0, 10);
+        }
+
+        function renderCommentsUI(pubId) {
+            const listEl = document.getElementById('comments-list');
+            const badgeEl = document.getElementById('comments-count-badge');
+            const headingEl = document.getElementById('comments-heading');
+            const authorLbl = document.getElementById('comment-author-label');
+            const bodyLbl = document.getElementById('comment-body-label');
+            const authorInp = document.getElementById('comment-author-input');
+            const bodyInp = document.getElementById('comment-body-input');
+            const submitBtn = document.getElementById('comment-submit-btn');
+
+            if (headingEl) {
+                const spans = headingEl.querySelectorAll('span');
+                if (spans[0]) spans[0].textContent = tr('تعليقات الطلبة', 'Commentaires des étudiants', 'Student Comments');
+            }
+            if (authorLbl) authorLbl.textContent = tr('الاسم *', 'Nom *', 'Name *');
+            if (bodyLbl) bodyLbl.textContent = tr('التعليق أو الملاحظة *', 'Commentaire *', 'Comment *');
+            if (authorInp) {
+                authorInp.placeholder = tr('اسمك أو لقبك', 'Votre nom', 'Your name');
+                if (currentUser && currentUser.name && !authorInp.value) {
+                    authorInp.value = currentUser.name;
+                }
+            }
+            if (bodyInp) {
+                bodyInp.placeholder = tr('أضف تعليقاً أو سؤالاً أو ملاحظة علمية...', 'Ajoutez un commentaire ou une remarque...', 'Add a comment, question, or academic note...');
+            }
+            if (submitBtn) {
+                submitBtn.textContent = tr('إضافة تعليق', 'Publier le commentaire', 'Post Comment');
+            }
+
+            const list = getCommentsForPub(pubId);
+            if (badgeEl) badgeEl.textContent = String(list.length);
+            if (!listEl) return;
+
+            if (list.length === 0) {
+                listEl.innerHTML = `<p class="text-xs text-editorial-muted py-2">${escapeHTML(tr('لا توجد تعليقات بعد. كن أول من يعلّق على هذا الإسهام.', 'Aucun commentaire pour le moment.', 'No comments yet. Be the first to comment.'))}</p>`;
+                return;
+            }
+
+            listEl.innerHTML = list.map(c => `
+                <div class="bg-editorial-paper border border-editorial-rule/80 rounded-[4px] p-3">
+                    <div class="flex items-center justify-between gap-2 text-xs mb-1">
+                        <span class="font-bold text-editorial-burgundy">${escapeHTML(c.author || tr('طالب', 'Étudiant', 'Student'))}</span>
+                        <span class="text-[11px] font-mono text-editorial-muted">${escapeHTML(c.date || '')}</span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-editorial-ink leading-relaxed">${escapeHTML(c.body)}</p>
+                </div>
+            `).join('');
+        }
+
+        async function loadCommentsForPub(pubId) {
+            const key = String(pubId);
+            if (supabaseClient && /^\d+$/.test(key)) {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('contribution_comments')
+                        .select('*')
+                        .eq('contribution_id', Number(key))
+                        .order('id', { ascending: true });
+                    if (!error && Array.isArray(data)) {
+                        const cloudMapped = data.map(row => ({
+                            id: row.id,
+                            author: row.author_name || row.author || tr('طالب', 'Étudiant', 'Student'),
+                            body: row.body || row.content || '',
+                            date: row.created_date || (row.created_at ? String(row.created_at).slice(0, 10) : formatCommentDate())
+                        })).filter(r => r.body);
+                        const existingLocal = (commentsByPub[key] || []).filter(c => c.localOnly);
+                        commentsByPub[key] = [...cloudMapped, ...existingLocal];
+                        saveCommentsLocal();
+                    }
+                } catch (e) {}
+            }
+            renderCommentsUI(pubId);
+        }
+
+        async function handleCommentSubmit(e) {
+            e.preventDefault();
+            if (!activePublicationId) return;
+            const authorInp = document.getElementById('comment-author-input');
+            const bodyInp = document.getElementById('comment-body-input');
+            const submitBtn = document.getElementById('comment-submit-btn');
+            if (!authorInp || !bodyInp) return;
+
+            const author = authorInp.value.trim();
+            const body = bodyInp.value.trim();
+            if (!author || !body) return;
+
+            if (submitBtn) submitBtn.disabled = true;
+
+            const key = String(activePublicationId);
+            const newComment = {
+                id: 'cmt_' + Date.now(),
+                author,
+                body,
+                date: formatCommentDate(),
+                localOnly: true
+            };
+
+            if (supabaseClient && /^\d+$/.test(key)) {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('contribution_comments')
+                        .insert([{
+                            contribution_id: Number(key),
+                            author_name: author,
+                            body,
+                            created_date: newComment.date
+                        }])
+                        .select()
+                        .single();
+                    if (!error && data) {
+                        newComment.id = data.id;
+                        newComment.localOnly = false;
+                    }
+                } catch (err) {}
+            }
+
+            if (!Array.isArray(commentsByPub[key])) commentsByPub[key] = [];
+            commentsByPub[key].push(newComment);
+            saveCommentsLocal();
+
+            bodyInp.value = '';
+            renderCommentsUI(activePublicationId);
+            if (submitBtn) submitBtn.disabled = false;
+            showToast(tr('تمت إضافة تعليقك', 'Commentaire ajouté', 'Comment posted'));
         }
 
         function openMobileDrawer() {
@@ -1233,6 +1496,7 @@
 
             if (statsEl) {
                 const totalViews = publications.reduce((acc, p) => acc + (Number(p.views) || 0), 0);
+                const totalHearts = publications.reduce((acc, p) => acc + (Number(p.hearts) || 0), 0);
                 const filesCount = publications.filter(p => !!p.file_url).length;
                 statsEl.innerHTML = `
                     <div class="bg-editorial-paper border border-editorial-rule/70 rounded-[3px] p-2.5">
@@ -1244,12 +1508,12 @@
                         <div class="text-base font-bold font-mono text-editorial-ink">${totalViews}</div>
                     </div>
                     <div class="bg-editorial-paper border border-editorial-rule/70 rounded-[3px] p-2.5">
-                        <div class="text-[10px] text-editorial-muted">${escapeHTML(tr('ملفات مرفقة', 'Fichiers', 'Files'))}</div>
-                        <div class="text-base font-bold font-mono text-editorial-brass">${filesCount}</div>
+                        <div class="text-[10px] text-editorial-muted">${escapeHTML(tr('القلوب', 'Cœurs', 'Hearts'))}</div>
+                        <div class="text-base font-bold font-mono text-editorial-burgundy">${totalHearts}</div>
                     </div>
                     <div class="bg-editorial-paper border border-editorial-rule/70 rounded-[3px] p-2.5">
-                        <div class="text-[10px] text-editorial-muted">${escapeHTML(tr('المحفوظات', 'Favoris', 'Saved'))}</div>
-                        <div class="text-base font-bold font-mono text-editorial-ink">${bookmarkedIds.length}</div>
+                        <div class="text-[10px] text-editorial-muted">${escapeHTML(tr('ملفات مرفقة', 'Fichiers', 'Files'))}</div>
+                        <div class="text-base font-bold font-mono text-editorial-brass">${filesCount}</div>
                     </div>
                 `;
             }
@@ -1699,6 +1963,7 @@
                 ...raw,
                 readMinutes: parseMinutes(raw.read_time ?? raw.readTime),
                 views: Number(raw.views) || 1,
+                hearts: Math.max(0, Number(raw.hearts) || 0),
                 references: refs,
                 file_url: fileLink,
                 file_name: raw.file_name || ((fileLink && !fileLink.startsWith('data:')) ? deriveFileName(fileLink) : null),
@@ -1757,6 +2022,8 @@
             initTheme();
             populatePaletteSelect();
             loadBookmarks();
+            loadHearts();
+            loadCommentsLocal();
             renderLogos();
             runSplashTransition();
             populateDepartments();
@@ -2542,6 +2809,8 @@
                 const extBadge = pub.file_name
                     ? `<span class="text-[11px] font-mono px-1.5 py-0.5 bg-editorial-paper border border-editorial-brass/60 text-editorial-burgundy rounded-[2px]">${escapeHTML(fileExtLabel(pub.file_name))}</span>`
                     : '';
+                const liked = isHearted(pub.id);
+                const cmtCount = getCommentsForPub(pub.id).length;
 
                 return `
                 <article style="--i: ${staggerIdx}" class="${animate ? 'editorial-entry' : ''} bg-editorial-sheet/85 border border-editorial-rule hover:border-editorial-burgundy/50 rounded-[4px] p-4 sm:p-5">
@@ -2571,8 +2840,16 @@
                                     <span class="text-editorial-muted">${escapeHTML(pub.year)}</span>
                                 </div>
 
-                                <div class="flex items-center gap-3.5">
+                                <div class="flex items-center gap-3">
                                     ${extBadge}
+                                    <button type="button" onclick="toggleHeart(${Number(pub.id)})" class="inline-flex items-center gap-1 text-editorial-ink hover:text-editorial-burgundy cursor-pointer ${liked ? 'font-bold text-editorial-burgundy' : ''}" title="${escapeHTML(tr('قلب', 'Cœur', 'Heart'))}">
+                                        ${renderHeartSVG(liked)}
+                                        <span class="font-mono text-[11px]">${Number(pub.hearts) || 0}</span>
+                                    </button>
+                                    <button type="button" onclick="openReaderModal(${pidArg})" class="inline-flex items-center gap-1 text-editorial-muted hover:text-editorial-burgundy cursor-pointer" title="${escapeHTML(tr('تعليقات', 'Commentaires', 'Comments'))}">
+                                        <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+                                        <span class="font-mono text-[11px]">${cmtCount}</span>
+                                    </button>
                                     <span class="text-editorial-muted">${escapeHTML(formatMinutes(pub.readMinutes))}</span>
                                     <button type="button" onclick="toggleBookmark(${Number(pub.id)})" class="text-editorial-muted hover:text-editorial-burgundy cursor-pointer ${isBookmarked(pub.id) ? 'text-editorial-burgundy font-bold' : ''}" title="${escapeHTML(tr('حفظ', 'Enregistrer', 'Save'))}">
                                         <i data-lucide="bookmark" class="w-3.5 h-3.5 inline"></i>
@@ -2694,6 +2971,9 @@
             if (activePublicationId) {
                 fillReaderModal(activePublicationId);
                 updateReaderBookmarkButton();
+                const curPub = publications.find(p => String(p.id) === String(activePublicationId));
+                if (curPub) updateReaderHeartButton(curPub);
+                renderCommentsUI(activePublicationId);
             }
 
             requestAnimationFrame(refreshTabUnderline);
@@ -2757,6 +3037,9 @@
                     ? `${pub.author} (${yr}). « ${pub.title} ». Plateforme étudiante SAJ — ENSL (${dept}), Laghouat.`
                     : `${pub.author} (${yr}). "${pub.title}." SAJ Student Platform — ENSL (${dept}), Laghouat.`;
 
+            updateReaderHeartButton(pub);
+            renderCommentsUI(pub.id);
+
             if (window.lucide) lucide.createIcons();
         }
 
@@ -2780,6 +3063,7 @@
 
             fillReaderModal(pub.id);
             updateReaderBookmarkButton();
+            loadCommentsForPub(pub.id);
             document.getElementById('reader-modal').classList.remove('hidden');
             syncScrollLock();
         }
@@ -2918,6 +3202,7 @@
                     date: formattedDate,
                     read_time: String(mins),
                     views: 1,
+                    hearts: 0,
                     abstract,
                     content: content || (attachedName ? `الملف المرفق: ${attachedName}` : abstract),
                     references,
