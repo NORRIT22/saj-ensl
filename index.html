@@ -1219,9 +1219,6 @@
                 : tr('حفظ', 'Enregistrer', 'Save');
         }
 
-        /* =========================================================
-           ميزة القلب (الإعجاب) على الإسهامات
-           ========================================================= */
         function loadHearts() {
             try {
                 const raw = localStorage.getItem('saj_ensl_hearts_v1');
@@ -1265,15 +1262,12 @@
             if (!pub) return;
 
             const idx = heartedIds.indexOf(key);
-            let delta = 0;
             if (idx >= 0) {
                 heartedIds.splice(idx, 1);
-                delta = -1;
                 pub.hearts = Math.max(0, (Number(pub.hearts) || 0) - 1);
                 showToast(tr('تمت إزالة القلب', 'Cœur retiré', 'Heart removed'));
             } else {
                 heartedIds.unshift(key);
-                delta = 1;
                 pub.hearts = (Number(pub.hearts) || 0) + 1;
                 showToast(tr('تم تسجيل قلبك على الإسهام', 'Cœur ajouté', 'Hearted contribution'));
             }
@@ -1292,9 +1286,6 @@
             }
         }
 
-        /* =========================================================
-           ميزة التعليقات على الإسهامات
-           ========================================================= */
         function loadCommentsLocal() {
             try {
                 const raw = localStorage.getItem('saj_ensl_comments_v1');
